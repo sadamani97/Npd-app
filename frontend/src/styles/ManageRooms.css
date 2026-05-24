@@ -1,0 +1,69 @@
+.manage-rooms-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.manage-rooms-header h2 {
+  margin: 12px 0 4px;
+  color: #2c3e50;
+}
+
+.manage-rooms-header p {
+  margin: 0 0 16px;
+  color: #7f8c8d;
+}
+
+.manage-rooms-card,
+.manage-rooms-list {
+  background: #fff;
+  border: 1px solid #e8ecf1;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.manage-rooms-card h3,
+.manage-rooms-list h3 {
+  margin: 0 0 12px;
+  color: #2c3e50;
+}
+
+.manage-rooms-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.manage-rooms-form input,
+.manage-rooms-form select,
+.manage-rooms-list-header select {
+  border: 1px solid #d7dde6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.manage-rooms-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.manage-rooms-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rooms-actions-cell {
+  display: flex;
+  gap: 6px;
+}
+
+.room-action-btn.danger {
+  background: #fbe9e9;
+  color: #b33030;
+}

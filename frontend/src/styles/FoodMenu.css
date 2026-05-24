@@ -1,0 +1,243 @@
+/* FoodMenu.css */
+.food-menu-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.menu-header {
+  margin-bottom: 30px;
+}
+
+.menu-header h2 {
+  font-size: 28px;
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.menu-header .subtitle {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 14px;
+}
+
+.date-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.date-selector input,
+.btn-date-nav,
+.btn-today {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.date-selector input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-date-nav,
+.btn-today {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-date-nav:hover,
+.btn-today:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.date-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.date-input {
+  flex: 1;
+}
+
+.date-text {
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.menus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.meal-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.meal-section:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.meal-title {
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+  color: #2c3e50;
+}
+
+.meal-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meal-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.tag {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag.veg {
+  background: #d4edda;
+  color: #155724;
+}
+
+.tag.non-veg {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.item-description {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin: 8px 0;
+}
+
+.item-status {
+  display: flex;
+  gap: 10px;
+}
+
+.available,
+.unavailable {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.unavailable {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.no-items {
+  color: #7f8c8d;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #f5c6cb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .food-menu-container {
+    padding: 15px;
+  }
+
+  .menu-header h2 {
+    font-size: 24px;
+  }
+
+  .date-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-date-nav,
+  .btn-today,
+  .date-selector input {
+    width: 100%;
+  }
+
+  .date-display {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-input {
+    width: 100%;
+  }
+
+  .menus-grid {
+    grid-template-columns: 1fr;
+  }
+}

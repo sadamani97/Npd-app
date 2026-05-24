@@ -1,0 +1,137 @@
+/* src/styles/Complaints.css */
+.complaints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.complaints-header h2 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #bdc3c7;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background-color: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.complaints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.complaint-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.complaint-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.complaint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.complaint-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.complaint-body {
+  margin-bottom: 15px;
+}
+
+.complaint-body p {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.category {
+  color: #667eea;
+  font-weight: 500;
+}
+
+.description {
+  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.resident-info {
+  background: #f5f7fa;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.date {
+  color: #95a5a6;
+  font-size: 12px;
+}
+
+.complaint-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.status-select {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 13px;
+  background-color: white;
+}
+
+@media (max-width: 768px) {
+  .complaints-container {
+    margin-left: 0;
+  }
+
+  .complaints-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .filter-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .complaints-grid {
+    grid-template-columns: 1fr;
+  }
+}

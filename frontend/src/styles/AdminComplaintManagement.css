@@ -1,0 +1,520 @@
+/* AdminComplaintManagement.css */
+
+.admin-complaints-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.complaints-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.complaints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.complaints-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.complaints-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.complaints-header .subtitle {
+  color: #999;
+  font-size: 13px;
+  margin: 0;
+}
+
+.back-btn {
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+.back-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+/* Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.stat-label {
+  color: #999;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.stat-number {
+  color: #667eea;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+/* Filter Buttons */
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  color: #666;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.filter-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* Complaints Table */
+.complaints-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.complaints-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.complaints-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.complaints-table thead th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.complaints-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.2s ease;
+}
+
+.complaints-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.complaints-table tbody td {
+  padding: 15px;
+  font-size: 13px;
+  color: #666;
+}
+
+.cell-title {
+  max-width: 250px;
+  display: flex;
+  gap: 10px;
+}
+
+.cell-title span {
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.category-cell {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.cell-user {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cell-user p {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.cell-user small {
+  color: #999;
+  font-size: 11px;
+}
+
+.cell-date {
+  color: #999;
+  font-size: 12px;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.status-open {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-progress {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-resolved {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.action-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #764ba2;
+  transform: translateY(-2px);
+}
+
+/* Empty State */
+.empty-state {
+  background: white;
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #999;
+}
+
+/* Detail View */
+.complaint-detail-view {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.detail-header {
+  margin-bottom: 30px;
+}
+
+.complaint-detail-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.detail-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.title-section {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.detail-header-section h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  line-height: 1.3;
+}
+
+.detail-header-section .category-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.subcategory {
+  color: #999;
+  font-size: 13px;
+  margin: 8px 0 0 0;
+}
+
+.detail-user-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.detail-user-info h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.user-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.user-details p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.user-details strong {
+  color: #333;
+  margin-right: 5px;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-content h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.description-text {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  line-height: 1.6;
+  color: #666;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #999;
+}
+
+.detail-meta p {
+  margin: 0;
+}
+
+.detail-meta strong {
+  color: #666;
+}
+
+/* Status Update Section */
+.status-update-section {
+  background: #fffbf0;
+  border: 2px solid #ffc069;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.status-update-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.status-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.status-option {
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.status-option:hover:not(:disabled) {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.status-option.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.status-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.updating-message {
+  color: #ffc069;
+  font-size: 12px;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* Error Message */
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .complaints-table thead th:nth-child(3),
+  .complaints-table tbody td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-complaints-page {
+    padding: 12px;
+  }
+
+  .complaints-table-container {
+    overflow-x: auto;
+  }
+
+  .status-options {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .complaints-table thead th:nth-child(2),
+  .complaints-table tbody td:nth-child(2),
+  .complaints-table thead th:nth-child(3),
+  .complaints-table tbody td:nth-child(3) {
+    display: none;
+  }
+
+  .detail-header-section {
+    flex-direction: column;
+  }
+
+  .user-details {
+    grid-template-columns: 1fr;
+  }
+
+  .complaint-detail-card {
+    padding: 20px;
+  }
+}

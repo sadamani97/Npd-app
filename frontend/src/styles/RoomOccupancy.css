@@ -1,0 +1,632 @@
+/* styles/RoomOccupancy.css */
+
+.occupancy-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.occupancy-header {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.back-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 15px;
+  transition: background 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #5568d3;
+}
+
+.occupancy-header h2 {
+  font-size: 26px;
+  color: #333;
+  margin: 0;
+}
+
+.occupancy-header p {
+  font-size: 14px;
+  color: #666;
+  margin: 8px 0 0 0;
+}
+
+.occupancy-filter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.occupancy-filter label {
+  font-weight: 600;
+  color: #333;
+}
+
+.occupancy-filter select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+  color: #333;
+}
+
+.occupancy-sections {
+  display: grid;
+  gap: 30px;
+}
+
+.block-occupancy-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.room-count {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rooms-occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.occupancy-room-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.occupancy-room-card.occupied {
+  border-color: #ff9800;
+  background: #fff8f0;
+}
+
+.occupancy-room-card.available {
+  border-color: #4CAF50;
+  background: #f1f8f5;
+}
+
+.occupancy-room-card.maintenance {
+  border-color: #f44336;
+  background: #ffebee;
+}
+
+.occupancy-room-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+}
+
+.room-label {
+  font-size: 16px;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.occupancy-info {
+  margin: 10px 0;
+}
+
+.occupancy-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.occupancy-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.occupancy-text {
+  font-size: 12px;
+  color: #999;
+}
+
+.room-occupancy-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: width 0.3s ease;
+}
+
+.room-details-compact {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  font-size: 11px;
+}
+
+.detail-item {
+  display: inline-block;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #666;
+}
+
+.room-status-footer {
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+  margin-top: 8px;
+}
+
+.status-indicator {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.card-overlay-interactive {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+  padding: 4px;
+  font-size: 11px;
+  transition: bottom 0.3s ease;
+  opacity: 0;
+}
+
+.occupancy-room-card:hover .card-overlay-interactive {
+  bottom: 5px;
+  opacity: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  color: #999;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #666;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .occupancy-container {
+    padding: 15px;
+  }
+
+  .occupancy-header {
+    margin-bottom: 25px;
+  }
+
+  .occupancy-header h2 {
+    font-size: 24px;
+  }
+
+  .rooms-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .block-occupancy-section {
+    padding: 18px;
+  }
+
+  .section-header h3 {
+    font-size: 18px;
+  }
+
+  .occupancy-room-card {
+    padding: 12px;
+  }
+
+  .room-label {
+    font-size: 15px;
+  }
+
+  .occupancy-number {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .occupancy-container {
+    padding: 12px;
+  }
+
+  .occupancy-header {
+    margin-bottom: 20px;
+  }
+
+  .back-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .occupancy-header h2 {
+    font-size: 20px;
+  }
+
+  .occupancy-header p {
+    font-size: 12px;
+  }
+
+  .occupancy-filter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .occupancy-filter label {
+    font-size: 12px;
+  }
+
+  .occupancy-filter select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .occupancy-sections {
+    gap: 20px;
+  }
+
+  .block-occupancy-section {
+    padding: 15px;
+  }
+
+  .section-header {
+    margin-bottom: 15px;
+  }
+
+  .section-header h3 {
+    font-size: 16px;
+  }
+
+  .room-count {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .rooms-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .occupancy-room-card {
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .room-label {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .occupancy-number {
+    font-size: 24px;
+  }
+
+  .occupancy-text {
+    font-size: 11px;
+  }
+
+  .room-occupancy-bar {
+    height: 6px;
+    margin: 8px 0;
+  }
+
+  .room-details-compact {
+    gap: 6px;
+    margin: 8px 0;
+    font-size: 10px;
+  }
+
+  .detail-item {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  .room-status-footer {
+    padding-top: 6px;
+    margin-top: 6px;
+  }
+
+  .status-indicator {
+    font-size: 12px;
+  }
+
+  .empty-state {
+    padding: 30px 15px;
+  }
+
+  .loading-spinner {
+    min-height: 250px;
+  }
+
+  .spinner {
+    width: 35px;
+    height: 35px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+  }
+}
+
+@media (max-width: 480px) {
+  .occupancy-container {
+    padding: 10px;
+  }
+
+  .occupancy-header {
+    margin-bottom: 15px;
+  }
+
+  .back-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .occupancy-header h2 {
+    font-size: 18px;
+  }
+
+  .occupancy-header p {
+    font-size: 11px;
+  }
+
+  .occupancy-filter {
+    gap: 6px;
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+
+  .occupancy-filter label {
+    font-size: 11px;
+  }
+
+  .occupancy-filter select {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .occupancy-sections {
+    gap: 15px;
+  }
+
+  .block-occupancy-section {
+    padding: 12px;
+  }
+
+  .section-header {
+    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-header h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .room-count {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .rooms-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .occupancy-room-card {
+    padding: 10px;
+    border-width: 1px;
+  }
+
+  .room-label {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .occupancy-info {
+    margin: 8px 0;
+  }
+
+  .occupancy-number {
+    font-size: 20px;
+  }
+
+  .occupancy-text {
+    font-size: 10px;
+  }
+
+  .room-occupancy-bar {
+    height: 5px;
+    margin: 6px 0;
+  }
+
+  .room-details-compact {
+    gap: 5px;
+    margin: 6px 0;
+    font-size: 9px;
+  }
+
+  .detail-item {
+    padding: 2px 5px;
+    font-size: 9px;
+    border-radius: 3px;
+  }
+
+  .room-status-footer {
+    padding-top: 5px;
+    margin-top: 5px;
+  }
+
+  .status-indicator {
+    font-size: 11px;
+  }
+
+  .empty-state {
+    padding: 25px 10px;
+  }
+
+  .loading-spinner {
+    min-height: 200px;
+  }
+
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+  }
+}
+
+@media (max-width: 360px) {
+  .occupancy-container {
+    padding: 8px;
+  }
+
+  .back-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .occupancy-header h2 {
+    font-size: 16px;
+  }
+
+  .occupancy-header p {
+    font-size: 10px;
+  }
+
+  .occupancy-filter {
+    padding: 8px;
+    gap: 5px;
+  }
+
+  .block-occupancy-section {
+    padding: 10px;
+  }
+
+  .section-header h3 {
+    font-size: 13px;
+  }
+
+  .room-count {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .rooms-occupancy-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .occupancy-room-card {
+    padding: 8px;
+  }
+
+  .room-label {
+    font-size: 12px;
+  }
+
+  .occupancy-number {
+    font-size: 18px;
+  }
+
+  .room-details-compact {
+    font-size: 8px;
+  }
+
+  .detail-item {
+    font-size: 8px;
+    padding: 2px 4px;
+  }
+
+  .status-indicator {
+    font-size: 10px;
+  }
+}
