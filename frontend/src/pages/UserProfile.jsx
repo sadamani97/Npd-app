@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/UserProfile.css";
+import { Button, Alert } from "../components/ui";
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -193,27 +194,28 @@ export default function UserProfile() {
             <div className="profile-actions">
               {!isEditing ? (
                 <>
-                  <button onClick={() => setIsEditing(true)} className="btn-edit">
+                  <Button onClick={() => setIsEditing(true)} className="btn-edit" variant="secondary">
                     ✏️ Edit Profile
-                  </button>
-                  <button onClick={handleLogout} className="btn-logout">
+                  </Button>
+                  <Button onClick={handleLogout} className="btn-logout" variant="secondary">
                     🚪 Logout
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button onClick={handleSave} disabled={loading} className="btn-save">
+                  <Button onClick={handleSave} disabled={loading} className="btn-save" variant="primary">
                     {loading ? "Saving..." : "💾 Save Changes"}
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
                     onClick={() => {
                       setIsEditing(false);
                       setFormData(user);
                     }} 
                     className="btn-cancel"
+                    variant="secondary"
                   >
                     ✕ Cancel
-                  </button>
+                  </Button>
                 </>
               )}
             </div>

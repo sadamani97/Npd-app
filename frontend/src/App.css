@@ -26,17 +26,15 @@ body {
 
 .dashboard-container {
   display: flex;
-  min-height: 100vh;
   background-color: #f5f7fa;
 }
 
 .main-content {
   flex: 1;
   width: calc(100% - 250px);
-  min-height: 100vh;
   margin-left: 250px;
   padding: 40px;
-  overflow-x: hidden;
+  overflow: auto;
 }
 
 .loading-container {
@@ -72,7 +70,9 @@ body {
   font-weight: 500;
   transition: all 0.3s ease;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary {

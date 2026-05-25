@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/BlocksHierarchy.css";
+import { Button, Alert } from "../components/ui";
 
 export default function BlocksPage() {
   const [blocks, setBlocks] = useState([]);
@@ -72,21 +73,21 @@ export default function BlocksPage() {
           <p className="hierarchy-sub">{availableBlocks.length} block(s)</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         <div className="blocks-simple-grid">
           {availableBlocks.map((num) => (
-            <button
+            <Button
               key={String(num)}
-              type="button"
               className="block-simple-card"
+              variant="secondary"
               onClick={() => navigate(`/block/${encodeURIComponent(num)}`)}
             >
               <div className="block-simple-header">
                 <h3>Block {num}</h3>
               </div>
               <p className="block-simple-hint">View floors and manage rooms →</p>
-            </button>
+            </Button>
           ))}
         </div>
       </div>

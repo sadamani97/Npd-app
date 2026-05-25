@@ -4,6 +4,7 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Dashboard.css";
+import { Button, Alert } from "../components/ui";
 
 export default function Dashboard() {
   const [residents, setResidents] = useState([]);
@@ -200,7 +201,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      <Alert>{error}</Alert>
 
       {/* Main Stats Cards - Now Clickable */}
       <div className="stats-container">
@@ -231,24 +232,27 @@ export default function Dashboard() {
 
       {/* View Toggle Buttons */}
       <div className="view-toggle">
-        <button 
+        <Button
+          variant="secondary"
           className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveView('stats')}
         >
           📈 Block Statistics
-        </button>
-        <button 
+        </Button>
+        <Button
+          variant="secondary"
           className={`toggle-btn ${activeView === 'blocks' ? 'active' : ''}`}
           onClick={() => setActiveView('blocks')}
         >
           🏗️ Vacant rooms
-        </button>
-        <button 
+        </Button>
+        <Button
+          variant="secondary"
           className={`toggle-btn ${activeView === 'residents' ? 'active' : ''}`}
           onClick={() => setActiveView('residents')}
         >
           👨‍👩‍👧‍👦 Residents List
-        </button>
+        </Button>
       </div>
 
       {/* Block Statistics View */}
@@ -386,9 +390,10 @@ export default function Dashboard() {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-sm btn-info"
+                            variant="secondary"
+                            className="btn-sm btn-info"
                             title="Room & occupancy"
                             onClick={() => {
                               const b = resident.block_number;
@@ -403,10 +408,11 @@ export default function Dashboard() {
                             }}
                           >
                             👁️
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="btn btn-sm btn-secondary"
+                            variant="secondary"
+                            className="btn-sm btn-secondary"
                             title="Edit resident"
                             onClick={() =>
                               navigate(`/edit-resident/${resident.id}`, {
@@ -415,15 +421,16 @@ export default function Dashboard() {
                             }
                           >
                             ✏️
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="btn btn-sm btn-danger"
+                            variant="secondary"
+                            className="btn-sm btn-danger"
                             onClick={() => handleVacate(resident.id)}
                             title="Vacate Resident"
                           >
                             🔒
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

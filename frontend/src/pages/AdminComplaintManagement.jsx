@@ -4,6 +4,7 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/AdminComplaintManagement.css";
+import { Button, Alert } from "../components/ui";
 
 export default function AdminComplaintManagement() {
   const navigate = useNavigate();
@@ -100,11 +101,11 @@ export default function AdminComplaintManagement() {
     return (
       <Layout>
         <div className="complaint-detail-view">
-          <div className="detail-header">
-            <button className="back-btn" onClick={() => setSelectedComplaint(null)}>
-              ← Back to List
-            </button>
-          </div>
+              <div className="detail-header">
+                <Button className="back-btn" variant="secondary" onClick={() => setSelectedComplaint(null)}>
+                  ← Back to List
+                </Button>
+              </div>
 
           <div className="complaint-detail-card">
             <div className="detail-header-section">
@@ -164,27 +165,30 @@ export default function AdminComplaintManagement() {
             <div className="status-update-section">
               <h3>🔄 Update Status</h3>
               <div className="status-options">
-                <button
+                <Button
                   className={`status-option ${selectedComplaint.status === "OPEN" ? "active" : ""}`}
+                  variant="secondary"
                   onClick={() => handleStatusUpdate(selectedComplaint.id, "OPEN")}
                   disabled={updating}
                 >
                   Open
-                </button>
-                <button
+                </Button>
+                <Button
                   className={`status-option ${selectedComplaint.status === "IN_PROGRESS" ? "active" : ""}`}
+                  variant="secondary"
                   onClick={() => handleStatusUpdate(selectedComplaint.id, "IN_PROGRESS")}
                   disabled={updating}
                 >
                   In Progress
-                </button>
-                <button
+                </Button>
+                <Button
                   className={`status-option ${selectedComplaint.status === "RESOLVED" ? "active" : ""}`}
+                  variant="secondary"
                   onClick={() => handleStatusUpdate(selectedComplaint.id, "RESOLVED")}
                   disabled={updating}
                 >
                   Resolved
-                </button>
+                </Button>
               </div>
               {updating && <p className="updating-message">Updating...</p>}
             </div>
@@ -210,7 +214,7 @@ export default function AdminComplaintManagement() {
             </div>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          <Alert>{error}</Alert>
 
           {/* Statistics */}
           <div className="stats-grid">
@@ -236,30 +240,10 @@ export default function AdminComplaintManagement() {
 
           {/* Filter Buttons */}
           <div className="filter-buttons">
-            <button
-              className={`filter-btn ${filter === "all" ? "active" : ""}`}
-              onClick={() => setFilter("all")}
-            >
-              All ({complaints.length})
-            </button>
-            <button
-              className={`filter-btn ${filter === "open" ? "active" : ""}`}
-              onClick={() => setFilter("open")}
-            >
-              Open ({complaints.filter((c) => c.status === "OPEN").length})
-            </button>
-            <button
-              className={`filter-btn ${filter === "in_progress" ? "active" : ""}`}
-              onClick={() => setFilter("in_progress")}
-            >
-              In Progress ({complaints.filter((c) => c.status === "IN_PROGRESS").length})
-            </button>
-            <button
-              className={`filter-btn ${filter === "resolved" ? "active" : ""}`}
-              onClick={() => setFilter("resolved")}
-            >
-              Resolved ({complaints.filter((c) => c.status === "RESOLVED").length})
-            </button>
+            <Button className={`filter-btn ${filter === "all" ? "active" : ""}`} variant="secondary" onClick={() => setFilter("all")}>All ({complaints.length})</Button>
+            <Button className={`filter-btn ${filter === "open" ? "active" : ""}`} variant="secondary" onClick={() => setFilter("open")}>Open ({complaints.filter((c) => c.status === "OPEN").length})</Button>
+            <Button className={`filter-btn ${filter === "in_progress" ? "active" : ""}`} variant="secondary" onClick={() => setFilter("in_progress")}>In Progress ({complaints.filter((c) => c.status === "IN_PROGRESS").length})</Button>
+            <Button className={`filter-btn ${filter === "resolved" ? "active" : ""}`} variant="secondary" onClick={() => setFilter("resolved")}>Resolved ({complaints.filter((c) => c.status === "RESOLVED").length})</Button>
           </div>
 
           {/* Complaints Table */}
@@ -304,12 +288,7 @@ export default function AdminComplaintManagement() {
                         {new Date(complaint.createdAt).toLocaleDateString()}
                       </td>
                       <td>
-                        <button
-                          className="action-btn"
-                          onClick={() => setSelectedComplaint(complaint)}
-                        >
-                          View
-                        </button>
+                        <Button className="action-btn" variant="secondary" onClick={() => setSelectedComplaint(complaint)}>View</Button>
                       </td>
                     </tr>
                   ))}
