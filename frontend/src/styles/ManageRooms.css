@@ -31,24 +31,68 @@
 
 .manage-rooms-form {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 13px;
 }
 
 .manage-rooms-form input,
-.manage-rooms-form select,
-.manage-rooms-list-header select {
+.manage-rooms-form select {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
   border: 1px solid #d7dde6;
   border-radius: 8px;
-  padding: 10px 12px;
   font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.manage-rooms-form input:focus,
+.manage-rooms-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 5px rgba(102, 126, 234, 0.2);
 }
 
 .manage-rooms-actions {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  width: 100px;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  margin-left: 500px;
 }
+
+.manage-rooms-form .btn,
+.manage-rooms-form button {
+  min-width: 140px;
+  height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0 30px;
+}
+
+
 
 .manage-rooms-list-header {
   display: flex;

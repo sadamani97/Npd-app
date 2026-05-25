@@ -8,6 +8,7 @@ import {
   compareFloorKeys
 } from "../utils/floorLabels";
 import "../styles/BlocksHierarchy.css";
+import { Button, Alert } from "../components/ui";
 
 export default function BlockDetailsPage() {
   const { blockNumber } = useParams();
@@ -69,14 +70,14 @@ export default function BlockDetailsPage() {
     <Layout>
       <div className="blocks-hierarchy">
         <div className="hierarchy-header">
-          <button type="button" className="back-btn" onClick={() => navigate("/blocks")}>
+          <Button type="button" className="back-btn" variant="secondary" onClick={() => navigate("/blocks") }>
             ← Back to all blocks
-          </button>
+          </Button>
           <h2>Block {blockNumber}</h2>
           <p className="hierarchy-sub">Choose a floor to view room numbers</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         {floorEntries.length === 0 ? (
           <div className="empty-state hierarchy-empty">
@@ -85,10 +86,11 @@ export default function BlockDetailsPage() {
         ) : (
           <div className="floors-grid">
             {floorEntries.map(({ floorKey, label, roomCount }) => (
-              <button
+              <Button
                 key={floorKey}
                 type="button"
                 className="floor-card"
+                variant="secondary"
                 onClick={() =>
                   navigate(
                     `/block/${encodeURIComponent(blockNumber)}/floor/${encodeURIComponent(floorKey)}`
@@ -97,7 +99,7 @@ export default function BlockDetailsPage() {
               >
                 <h3 className="floor-card-title">{label}</h3>
                 <p className="floor-card-meta">{roomCount} room(s)</p>
-              </button>
+              </Button>
             ))}
           </div>
         )}

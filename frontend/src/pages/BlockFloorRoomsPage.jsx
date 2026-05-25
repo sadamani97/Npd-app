@@ -4,12 +4,16 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import { normalizeFloorKey, labelFloors, compareFloorKeys } from "../utils/floorLabels";
 import "../styles/BlocksHierarchy.css";
+import { Button, Alert } from "../components/ui";
 
 const compareRoomNumbers = (a, b) =>
   String(a.room_number || "").localeCompare(String(b.room_number || ""), undefined, {
     numeric: true,
     sensitivity: "base"
   });
+
+const formatRoomNumber = (roomNumber) =>
+  String(roomNumber || "").trim().toUpperCase();
 
 export default function BlockFloorRoomsPage() {
   const { blockNumber, floorNumber: floorParam } = useParams();
@@ -77,18 +81,19 @@ export default function BlockFloorRoomsPage() {
     <Layout>
       <div className="blocks-hierarchy">
         <div className="hierarchy-header">
-          <button
+          <Button
             type="button"
             className="back-btn"
+            variant="secondary"
             onClick={() => navigate(`/block/${encodeURIComponent(blockNumber)}`)}
           >
             ← Back to floors (Block {blockNumber})
-          </button>
+          </Button>
           <h2>{floorLabel}</h2>
           <p className="hierarchy-sub">Block {blockNumber} · {roomsOnFloor.length} room(s)</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         {roomsOnFloor.length === 0 ? (
           <div className="empty-state hierarchy-empty">
@@ -101,22 +106,24 @@ export default function BlockFloorRoomsPage() {
                 ? room.residents_in_room.length
                 : Number(room.current_occupancy ?? 0);
               const vacant = occ === 0;
+              const displayRoomNumber = formatRoomNumber(room.room_number);
               return (
-                <button
-                  key={`${blockNumber}-${room.room_number}`}
+                <Button
+                  key={`${blockNumber}-${displayRoomNumber}`}
                   type="button"
                   className={`room-number-tile ${vacant ? "vacant" : "occupied"}`}
+                  variant="secondary"
                   onClick={() =>
                     navigate(
                       `/room/${encodeURIComponent(blockNumber)}/${encodeURIComponent(room.room_number)}`
                     )
                   }
                 >
-                  <span className="tile-label">Room {room.room_number}</span>
+                  <span className="tile-label">{displayRoomNumber}</span>
                   <span className="tile-meta">
                     {vacant ? "Vacant" : `${occ} resident(s)`}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>

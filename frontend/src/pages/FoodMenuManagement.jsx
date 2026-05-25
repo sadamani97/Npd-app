@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
+import { Button, Input, Select, Textarea, Alert } from "../components/ui";
 import "../styles/FoodMenuManagement.css";
 
 export default function FoodMenuManagement() {
@@ -190,30 +191,31 @@ export default function FoodMenuManagement() {
       <div className="food-menu-management-container">
         <div className="page-header">
           <div>
-            <button className="back-btn" onClick={() => navigate("/dashboard")}>
+            <Button className="back-btn" variant="secondary" onClick={() => navigate("/dashboard") }>
               ← Back
-            </button>
+            </Button>
             <h2>🍽️ Food Menu Management</h2>
             <p className="subtitle">Create daily food menus for residents</p>
           </div>
-          <button
+          <Button
             className="add-btn"
+            variant="primary"
             onClick={() => {
               resetForm();
               setShowForm(!showForm);
             }}
           >
             {showForm ? "✕ Cancel" : "➕ Add Menu Item"}
-          </button>
+          </Button>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         {/* Date Navigation */}
         <div className="date-selector">
-          <button onClick={handlePreviousDay} className="btn-date-nav">
+          <Button onClick={handlePreviousDay} className="btn-date-nav" variant="secondary">
             ← Previous
-          </button>
+          </Button>
           <div className="date-display">
             <input
               type="date"
@@ -223,15 +225,16 @@ export default function FoodMenuManagement() {
             />
             <span className="date-text">{formatDateDisplay(selectedDate)}</span>
           </div>
-          <button onClick={handleNextDay} className="btn-date-nav">
+          <Button onClick={handleNextDay} className="btn-date-nav" variant="secondary">
             Next →
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setSelectedDate(new Date().toISOString().split("T")[0])}
             className="btn-today"
+            variant="secondary"
           >
             Today
-          </button>
+          </Button>
         </div>
 
         {/* Add/Edit Form */}
@@ -241,43 +244,37 @@ export default function FoodMenuManagement() {
               <h3>{editingId ? "Edit Menu Item" : "Add New Menu Item"}</h3>
               <form onSubmit={handleSubmit}>
                 <div className="form-row">
-                  <div className="form-group">
-                    <label>Meal Type</label>
-                    <select
-                      name="meal_type"
-                      value={formData.meal_type}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="BREAKFAST">🌅 Breakfast</option>
-                      <option value="LUNCH">☀️ Lunch</option>
-                      <option value="DINNER">🌙 Dinner</option>
-                    </select>
-                  </div>
+<Select
+                  label="Meal Type"
+                  name="meal_type"
+                  value={formData.meal_type}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="BREAKFAST">🌅 Breakfast</option>
+                  <option value="LUNCH">☀️ Lunch</option>
+                  <option value="DINNER">🌙 Dinner</option>
+                </Select>
 
-                  <div className="form-group">
-                    <label>Item Name</label>
-                    <input
-                      type="text"
-                      name="item_name"
-                      value={formData.item_name}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Paneer Butter Masala"
-                      required
-                    />
-                  </div>
-                </div>
+                <Input
+                  label="Item Name"
+                  type="text"
+                  name="item_name"
+                  value={formData.item_name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Paneer Butter Masala"
+                  required
+                />
+              </div>
 
-                <div className="form-group">
-                  <label>Description (Optional)</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Served with rice, Roti, Dal"
-                    rows="3"
-                  />
-                </div>
+              <Textarea
+                label="Description (Optional)"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="e.g., Served with rice, Roti, Dal"
+                rows={3}
+              />
 
                 <div className="form-row checkbox-row">
                   <div className="checkbox-group">
@@ -308,16 +305,17 @@ export default function FoodMenuManagement() {
                 </div>
 
                 <div className="form-buttons">
-                  <button type="submit" className="btn-submit">
+                  <Button type="submit" className="btn-submit" variant="primary">
                     {editingId ? "Update Item" : "Add Item"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     className="btn-cancel"
+                    variant="secondary"
                     onClick={handleCancel}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -390,18 +388,20 @@ export default function FoodMenuManagement() {
                               </p>
                             )}
                             <div className="menu-actions">
-                              <button
+                              <Button
                                 className="btn-edit"
+                                variant="secondary"
                                 onClick={() => handleEdit(menu)}
                               >
                                 ✎ Edit
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 className="btn-delete"
+                                variant="secondary"
                                 onClick={() => handleDelete(menu.id)}
                               >
                                 🗑️ Delete
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         ))

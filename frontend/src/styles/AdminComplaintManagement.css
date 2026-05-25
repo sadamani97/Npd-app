@@ -13,15 +13,15 @@
 
 .complaints-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 20px;
   margin-bottom: 30px;
 }
 
 .complaints-header > div {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .complaints-header h2 {
@@ -87,9 +87,12 @@
 /* Filter Buttons */
 .filter-buttons {
   display: flex;
+  flex-direction: row;
   gap: 10px;
   margin-bottom: 25px;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .filter-btn {

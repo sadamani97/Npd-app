@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../styles/Auth.css";
+import { Button, Input, Alert, Card } from "../components/ui";
 
 export default function Login({ setIsAuthenticated }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -84,57 +85,54 @@ export default function Login({ setIsAuthenticated }) {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <Card>
         <h1>hostel</h1>
         <h2>Hostel Login</h2>
-        
-        {error && <div className="error-message">{error}</div>}
-        
+
+        <Alert>{error}</Alert>
+
         <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Enter your email"
+            required
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+          />
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
-          </button>
+          </Button>
         </form>
 
         <div className="text-center mt-3" style={{ fontSize: "0.9rem", color: "#666" }}>
           <p style={{ margin: "5px 0" }}><strong>Admin:</strong> admin@hostel.com | admin123</p>
           <p style={{ margin: "5px 0" }}><strong>User:</strong> user@hostel.com | user1234</p>
-          
-          <button 
-            type="button" 
+
+          <Button
+            type="button"
+            variant="secondary"
             onClick={handleCreateTestUser}
-            style={{ marginTop: "10px", padding: "5px 10px", background: "#f0f0f0", border: "1px solid #ddd", borderRadius: "4px", cursor: "pointer", fontSize: "0.8rem", color: "#333" }}
+            style={{ marginTop: "10px", padding: "5px 10px", fontSize: "0.8rem" }}
           >
             🛠️ Click here to create Test User if login fails
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
