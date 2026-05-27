@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/UserComplaints.css";
+import { Button, Input, Select, Textarea, Alert } from "../components/ui";
 
 export default function UserComplaints() {
   const navigate = useNavigate();
@@ -117,17 +118,17 @@ export default function UserComplaints() {
           <div className="complaints-list-container">
             <div className="complaints-header">
               <div>
-                <button className="back-btn" onClick={() => navigate("/user-dashboard")}>
+                <Button className="back-btn" variant="secondary" onClick={() => navigate("/user-dashboard") }>
                   ← Back
-                </button>
+                </Button>
                 <h2>📝 My Complaints</h2>
               </div>
-              <button className="new-complaint-btn" onClick={() => setView("form")}>
+              <Button className="new-complaint-btn" variant="primary" onClick={() => setView("form") }>
                 + New Complaint
-              </button>
+              </Button>
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            <Alert>{error}</Alert>
 
             {complaints.length > 0 ? (
               <div className="complaints-grid">
@@ -169,79 +170,74 @@ export default function UserComplaints() {
             ) : (
               <div className="empty-state">
                 <p>No complaints yet</p>
-                <button className="primary-btn" onClick={() => setView("form")}>
+                <Button className="primary-btn" variant="primary" onClick={() => setView("form")}> 
                   Create Your First Complaint
-                </button>
+                </Button>
               </div>
             )}
           </div>
         ) : (
           <div className="complaint-form-container">
             <div className="form-header">
-              <button className="back-btn" onClick={() => setView("list")}>
+              <Button className="back-btn" variant="secondary" onClick={() => setView("list") }>
                 ← Back to List
-              </button>
+              </Button>
               <h2>📝 New Complaint</h2>
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            <Alert>{error}</Alert>
             {successMessage && <div className="success-message">{successMessage}</div>}
 
             <form onSubmit={handleSubmitComplaint} className="complaint-form">
-              <div className="form-group">
-                <label htmlFor="title">Complaint Title</label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleFormChange}
-                  placeholder="Brief title of your complaint..."
-                  required
-                  maxLength={100}
-                />
-                <small>{formData.title.length}/100</small>
-              </div>
+              <Input
+                label="Complaint Title"
+                id="title"
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleFormChange}
+                placeholder="Brief title of your complaint..."
+                required
+                maxLength={100}
+              />
+              <small>{formData.title.length}/100</small>
 
-              <div className="form-group">
-                <label htmlFor="category">Category</label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleFormChange}
-                  required
-                >
-                  <option value="MAINTENANCE">🔧 Maintenance</option>
-                  <option value="CLEANLINESS">🧹 Cleanliness</option>
-                  <option value="FOOD">🍽️ Food</option>
-                  <option value="NOISE">🔊 Noise</option>
-                  <option value="OTHER">📝 Other</option>
-                </select>
-              </div>
+              <Select
+                label="Category"
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleFormChange}
+                required
+              >
+                <option value="MAINTENANCE">🔧 Maintenance</option>
+                <option value="CLEANLINESS">🧹 Cleanliness</option>
+                <option value="FOOD">🍽️ Food</option>
+                <option value="NOISE">🔊 Noise</option>
+                <option value="OTHER">📝 Other</option>
+              </Select>
 
-              <div className="form-group">
-                <label htmlFor="description">Description</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleFormChange}
-                  placeholder="Describe your complaint in detail..."
-                  required
-                  rows="6"
-                  maxLength={500}
-                />
-                <small>{formData.description.length}/500</small>
-              </div>
+              <Textarea
+                label="Description"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleFormChange}
+                placeholder="Describe your complaint in detail..."
+                required
+                rows={6}
+                maxLength={500}
+              />
+              <small>{formData.description.length}/500</small>
 
-              <button
+              <Button
                 type="submit"
                 disabled={submitting || !formData.title || !formData.description}
                 className="submit-btn"
+                variant="primary"
               >
                 {submitting ? "Submitting..." : "Submit Complaint"}
-              </button>
+              </Button>
             </form>
 
             <div className="form-info">

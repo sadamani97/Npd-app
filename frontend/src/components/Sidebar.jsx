@@ -11,6 +11,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = user.role === "ADMIN";
+  const isSuperAdmin = user.role === "SUPER_ADMIN";
 
   const handleLogout = async () => {
     try {
@@ -45,6 +46,17 @@ export default function Sidebar() {
     { path: "/vacated", label: "Vacated List", icon: "👥" },
   ];
 
+  const superAdminNavLinks = [
+    { path: "/superadmin/dashboard", label: "SuperAdmin Home", icon: "🛡️" },
+    { path: "/dashboard", label: "Admin Dashboard", icon: "📊" },
+    { path: "/complaints", label: "Complaint Management", icon: "📝" },
+    { path: "/circulars", label: "Circular Management", icon: "📢" },
+    { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
+    { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },
+    { path: "/admin-food-confirmations", label: "Food Confirmations", icon: "🍽️" },
+    { path: "/vacated", label: "Vacated List", icon: "👥" },
+  ];
+
   const userNavLinks = [
     { path: "/user-dashboard", label: "Home", icon: "🏠" },
     { path: "/food-menu", label: "Today Food Menu", icon: "🍽️" },
@@ -54,7 +66,7 @@ export default function Sidebar() {
     { path: "/user-profile", label: "Profile", icon: "👤" },
   ];
 
-  const navLinks = isAdmin ? adminNavLinks : userNavLinks;
+  const navLinks = isSuperAdmin ? superAdminNavLinks : isAdmin ? adminNavLinks : userNavLinks;
 
   return (
     <>
@@ -76,7 +88,7 @@ export default function Sidebar() {
         </div>
         
         <div className="user-role-badge">
-          {isAdmin ? "👨‍💼 Admin" : "👤 User"}
+          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : "👤 User"}
         </div>
 
         <nav className="sidebar-nav">

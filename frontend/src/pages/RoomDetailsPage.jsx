@@ -49,6 +49,8 @@ export default function RoomDetailsPage() {
     );
   }
 
+  const displayRoomNumber = String(roomData.room_number || "").trim().toUpperCase();
+
   return (
     <Layout>
       <div className="room-details-container">
@@ -63,7 +65,7 @@ export default function RoomDetailsPage() {
           >
             ← Back to floors / rooms (Block {blockNumber})
           </button>
-          <h2>Room {roomData.room_number} - Block {blockNumber}</h2>
+          <h2>Room {displayRoomNumber} - Block {blockNumber}</h2>
         </div>
 
         {error && <div className="error-message">{error}</div>}

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/Form.css";
+import { Button, Input, Select, Alert } from "../components/ui";
 
 export default function EditResident() {
   const { id } = useParams();
@@ -189,117 +190,97 @@ export default function EditResident() {
             <legend>Basic Information</legend>
             
             <div className="form-row">
-              <div className="form-group">
-                <label>Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Full name"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Phone *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  placeholder="Phone number"
-                />
-              </div>
+              <Input
+                label="Name *"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Full name"
+              />
+              <Input
+                label="Phone *"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                placeholder="Phone number"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="Email address"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Block Number *</label>
-                <input
-                  type="text"
-                  name="block_number"
-                  value={formData.block_number}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., A, B, C"
-                />
-              </div>
+              <Input
+                label="Email *"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Email address"
+              />
+              <Input
+                label="Block Number *"
+                type="text"
+                name="block_number"
+                value={formData.block_number}
+                onChange={handleChange}
+                required
+                placeholder="e.g., A, B, C"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Room Number *</label>
-                <input
-                  type="text"
-                  name="room_number"
-                  value={formData.room_number}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., 101, 202"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Room Type *</label>
-                <select 
-                  name="room_type" 
-                  value={formData.room_type} 
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="SINGLE_SHARE">Single Share</option>
-                  <option value="DOUBLE_SHARE">Double Share</option>
-                  <option value="TRIPLE_SHARE">Triple Share</option>
-                  <option value="FOUR_SHARE">Four Share</option>
-                  <option value="FIVE_SHARE">Five Share</option>
-                  <option value="SIX_SHARE">Six Share</option>
-                </select>
-              </div>
+              <Input
+                label="Room Number *"
+                type="text"
+                name="room_number"
+                value={formData.room_number}
+                onChange={handleChange}
+                required
+                placeholder="e.g., 101, 202"
+              />
+              <Select
+                label="Room Type *"
+                name="room_type"
+                value={formData.room_type}
+                onChange={handleChange}
+                required
+              >
+                <option value="SINGLE_SHARE">Single Share</option>
+                <option value="DOUBLE_SHARE">Double Share</option>
+                <option value="TRIPLE_SHARE">Triple Share</option>
+                <option value="FOUR_SHARE">Four Share</option>
+                <option value="FIVE_SHARE">Five Share</option>
+                <option value="SIX_SHARE">Six Share</option>
+              </Select>
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>AC Status *</label>
-                <select 
-                  name="ac_status" 
-                  value={formData.ac_status} 
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="AC">AC</option>
-                  <option value="NON_AC">Non-AC</option>
-                </select>
-              </div>
+              <Select
+                label="AC Status *"
+                name="ac_status"
+                value={formData.ac_status}
+                onChange={handleChange}
+                required
+              >
+                <option value="AC">AC</option>
+                <option value="NON_AC">Non-AC</option>
+              </Select>
 
-              <div className="form-group">
-                <label>Photo</label>
-                <input
-                  type="file"
-                  name="photo"
-                  onChange={handleChange}
-                  accept="image/*"
-                  placeholder="Upload resident photo"
-                />
-                {photoPreview && (
-                  <div className="photo-preview">
-                    <img src={photoPreview} alt="Preview" style={{ maxWidth: "100px", marginTop: "10px", borderRadius: "5px" }} />
-                  </div>
-                )}
-              </div>
+              <Input
+                label="Photo"
+                type="file"
+                name="photo"
+                onChange={handleChange}
+                accept="image/*"
+              />
+              {photoPreview && (
+                <div className="photo-preview">
+                  <img src={photoPreview} alt="Preview" style={{ maxWidth: "100px", marginTop: "10px", borderRadius: "5px" }} />
+                </div>
+              )}
             </div>
           </fieldset>
 
@@ -308,38 +289,36 @@ export default function EditResident() {
             <legend>Occupation</legend>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Occupation *</label>
-                <select name="occupation" value={formData.occupation} onChange={handleChange}>
-                  <option value="STUDYING">Studying</option>
-                  <option value="WORKING">Working</option>
-                </select>
-              </div>
+              <Select
+                label="Occupation *"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+              >
+                <option value="STUDYING">Studying</option>
+                <option value="WORKING">Working</option>
+              </Select>
 
               {formData.occupation === "WORKING" && (
-                <div className="form-group">
-                  <label>Company Name</label>
-                  <input
-                    type="text"
-                    name="company_name"
-                    value={formData.company_name}
-                    onChange={handleChange}
-                    placeholder="Company name"
-                  />
-                </div>
+                <Input
+                  label="Company Name"
+                  type="text"
+                  name="company_name"
+                  value={formData.company_name}
+                  onChange={handleChange}
+                  placeholder="Company name"
+                />
               )}
 
               {formData.occupation === "STUDYING" && (
-                <div className="form-group">
-                  <label>College/University Name</label>
-                  <input
-                    type="text"
-                    name="college_name"
-                    value={formData.college_name}
-                    onChange={handleChange}
-                    placeholder="College name"
-                  />
-                </div>
+                <Input
+                  label="College/University Name"
+                  type="text"
+                  name="college_name"
+                  value={formData.college_name}
+                  onChange={handleChange}
+                  placeholder="College name"
+                />
               )}
             </div>
           </fieldset>
@@ -349,102 +328,86 @@ export default function EditResident() {
             <legend>Family Information</legend>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Father's Name</label>
-                <input
-                  type="text"
-                  name="father_name"
-                  value={formData.father_name}
-                  onChange={handleChange}
-                  placeholder="Father's name"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Father's Phone</label>
-                <input
-                  type="tel"
-                  name="father_phone"
-                  value={formData.father_phone}
-                  onChange={handleChange}
-                  placeholder="Father's phone"
-                />
-              </div>
+              <Input
+                label="Father's Name"
+                type="text"
+                name="father_name"
+                value={formData.father_name}
+                onChange={handleChange}
+                placeholder="Father's name"
+              />
+              <Input
+                label="Father's Phone"
+                type="tel"
+                name="father_phone"
+                value={formData.father_phone}
+                onChange={handleChange}
+                placeholder="Father's phone"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Mother's Name</label>
-                <input
-                  type="text"
-                  name="mother_name"
-                  value={formData.mother_name}
-                  onChange={handleChange}
-                  placeholder="Mother's name"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Guardian Name</label>
-                <input
-                  type="text"
-                  name="guardian_name"
-                  value={formData.guardian_name}
-                  onChange={handleChange}
-                  placeholder="Guardian's name"
-                />
-              </div>
+              <Input
+                label="Mother's Name"
+                type="text"
+                name="mother_name"
+                value={formData.mother_name}
+                onChange={handleChange}
+                placeholder="Mother's name"
+              />
+              <Input
+                label="Guardian Name"
+                type="text"
+                name="guardian_name"
+                value={formData.guardian_name}
+                onChange={handleChange}
+                placeholder="Guardian's name"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Guardian Phone</label>
-                <input
-                  type="tel"
-                  name="guardian_phone"
-                  value={formData.guardian_phone}
-                  onChange={handleChange}
-                  placeholder="Guardian's phone"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Emergency Contact Name</label>
-                <input
-                  type="text"
-                  name="emergency_name"
-                  value={formData.emergency_name}
-                  onChange={handleChange}
-                  placeholder="Emergency contact name"
-                />
-              </div>
+              <Input
+                label="Guardian Phone"
+                type="tel"
+                name="guardian_phone"
+                value={formData.guardian_phone}
+                onChange={handleChange}
+                placeholder="Guardian's phone"
+              />
+              <Input
+                label="Emergency Contact Name"
+                type="text"
+                name="emergency_name"
+                value={formData.emergency_name}
+                onChange={handleChange}
+                placeholder="Emergency contact name"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Emergency Contact Phone</label>
-                <input
-                  type="tel"
-                  name="emergency_phone"
-                  value={formData.emergency_phone}
-                  onChange={handleChange}
-                  placeholder="Emergency phone"
-                />
-              </div>
+              <Input
+                label="Emergency Contact Phone"
+                type="tel"
+                name="emergency_phone"
+                value={formData.emergency_phone}
+                onChange={handleChange}
+                placeholder="Emergency phone"
+              />
             </div>
           </fieldset>
 
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
+            <Button type="submit" className="btn btn-primary" variant="primary" disabled={submitting}>
               {submitting ? "Updating..." : "Update Resident"}
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="button" 
               className="btn btn-secondary" 
+              variant="secondary"
               onClick={() => navigate(-1)}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       </div>

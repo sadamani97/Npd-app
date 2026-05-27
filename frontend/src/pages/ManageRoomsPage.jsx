@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/ManageRooms.css";
+import { Button, Input, Select, Alert } from "../components/ui";
 
 const ROOM_TYPE_OPTIONS = [
   { value: "SINGLE_SHARE", label: "Single Sharing", capacity: 1 },
@@ -166,85 +167,132 @@ export default function ManageRoomsPage() {
     <Layout>
       <div className="manage-rooms-page">
         <div className="manage-rooms-header">
-          <button type="button" className="back-btn" onClick={() => navigate("/blocks")}>
+          <Button type="button" className="back-btn" variant="secondary" onClick={() => navigate("/blocks") }>
             ← Back to blocks
-          </button>
+          </Button>
           <h2>Manage Rooms</h2>
           <p>Add, edit, and delete room details for all blocks.</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         <div className="manage-rooms-card">
           <h3>{editRoomId ? "Edit Room" : "Add Room"}</h3>
           <form className="manage-rooms-form" onSubmit={handleSubmit}>
-            <select name="block_number" value={formData.block_number} onChange={handleChange} required>
-              {blocks.map((block) => (
-                <option key={block} value={block}>
-                  Block {block}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="floor_number"
-              value={formData.floor_number}
-              onChange={handleChange}
-              placeholder="Floor number"
-              required
-            />
-            <input
-              type="text"
-              name="room_number"
-              value={formData.room_number}
-              onChange={handleChange}
-              placeholder="Room number"
-              required
-            />
-            <select name="room_type" value={formData.room_type} onChange={handleChange} required>
-              {ROOM_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <select name="ac_status" value={formData.ac_status} onChange={handleChange} required>
-              <option value="NON_AC">Non-AC</option>
-              <option value="AC">AC</option>
-            </select>
-            <input
-              type="number"
-              min="1"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-              placeholder="Capacity"
-              required
-            />
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              name="base_rent"
-              value={formData.base_rent}
-              onChange={handleChange}
-              placeholder="Rent amount"
-            />
-            <input
-              type="text"
-              name="electricity_meter_number"
-              value={formData.electricity_meter_number}
-              onChange={handleChange}
-              placeholder="Electricity meter number (optional)"
-            />
+            <div className="form-group">
+              <label>Block</label>
+              <Select
+                name="block_number"
+                value={formData.block_number}
+                onChange={handleChange}
+                required
+              >
+                {blocks.map((block) => (
+                  <option key={block} value={block}>
+                    Block {block}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="form-group">
+              <label>Floor</label>
+              <Input
+                type="text"
+                name="floor_number"
+                value={formData.floor_number}
+                onChange={handleChange}
+                placeholder="Floor number"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Room Number</label>
+              <Input
+                type="text"
+                name="room_number"
+                value={formData.room_number}
+                onChange={handleChange}
+                placeholder="Room number"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Room Type</label>
+              <Select
+                name="room_type"
+                value={formData.room_type}
+                onChange={handleChange}
+                required
+              >
+                {ROOM_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="form-group">
+              <label>AC Status</label>
+              <Select
+                name="ac_status"
+                value={formData.ac_status}
+                onChange={handleChange}
+                required
+              >
+                <option value="NON_AC">Non-AC</option>
+                <option value="AC">AC</option>
+              </Select>
+            </div>
+
+            <div className="form-group">
+              <label>Capacity</label>
+              <Input
+                type="number"
+                min="1"
+                name="capacity"
+                value={formData.capacity}
+                onChange={handleChange}
+                placeholder="Capacity"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Rent Amount</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                name="base_rent"
+                value={formData.base_rent}
+                onChange={handleChange}
+                placeholder="Rent amount"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Electricity Meter Number</label>
+              <Input
+                type="text"
+                name="electricity_meter_number"
+                value={formData.electricity_meter_number}
+                onChange={handleChange}
+                placeholder="Optional"
+              />
+            </div>
+
             <div className="manage-rooms-actions">
-              <button type="submit" className="room-action-btn primary" disabled={saving}>
+              <Button type="submit" className="room-action-btn primary" variant="primary" disabled={saving}>
                 {saving ? "Saving..." : editRoomId ? "Update Room" : "Add Room"}
-              </button>
+              </Button>
               {editRoomId && (
-                <button type="button" className="room-action-btn secondary" onClick={resetForm} disabled={saving}>
+                <Button type="button" className="room-action-btn secondary" variant="secondary" onClick={resetForm} disabled={saving}>
                   Cancel
-                </button>
+                </Button>
               )}
             </div>
           </form>
@@ -253,14 +301,19 @@ export default function ManageRoomsPage() {
         <div className="manage-rooms-list">
           <div className="manage-rooms-list-header">
             <h3>Room list</h3>
-            <select value={filterBlock} onChange={(event) => setFilterBlock(event.target.value)}>
+            <Select
+              className="filter-select"
+              name="filterBlock"
+              value={filterBlock}
+              onChange={(event) => setFilterBlock(event.target.value)}
+            >
               <option value="all">All blocks</option>
               {blocks.map((block) => (
                 <option key={block} value={block}>
                   Block {block}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {loading ? (
@@ -293,12 +346,12 @@ export default function ManageRoomsPage() {
                       <td>{room.capacity}</td>
                       <td>₹{room.base_rent || 0}</td>
                       <td className="rooms-actions-cell">
-                        <button type="button" className="room-action-btn secondary" onClick={() => startEdit(room)}>
+                        <Button type="button" className="room-action-btn secondary" variant="secondary" onClick={() => startEdit(room)}>
                           Edit
-                        </button>
-                        <button type="button" className="room-action-btn danger" onClick={() => handleDelete(room)}>
+                        </Button>
+                        <Button type="button" className="room-action-btn danger" variant="secondary" onClick={() => handleDelete(room)}>
                           Delete
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}

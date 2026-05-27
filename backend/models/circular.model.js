@@ -32,5 +32,10 @@ export const Circular = sequelize.define("Circular", {
     type: DataTypes.JSON,
     defaultValue: {},
     comment: "Stores sending statistics and failed phone numbers"
+  },
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this circular belongs to"
   }
 });

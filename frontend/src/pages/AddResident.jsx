@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/Form.css";
+import { Button, Input, Alert } from "../components/ui";
 
 export default function AddResident() {
   const [formData, setFormData] = useState({
@@ -90,7 +91,7 @@ export default function AddResident() {
       <div className="form-card">
         <h2>Add New Resident</h2>
 
-        {error && <div className="error-message">{error}</div>}
+        <Alert>{error}</Alert>
 
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
@@ -98,69 +99,59 @@ export default function AddResident() {
             <legend>Basic Information</legend>
             
             <div className="form-row">
-              <div className="form-group">
-                <label>Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Full name"
-                />
-              </div>
+              <Input
+                label="Name *"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Full name"
+              />
 
-              <div className="form-group">
-                <label>Phone *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  placeholder="Phone number"
-                />
-              </div>
+              <Input
+                label="Phone *"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                placeholder="Phone number"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Email *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="Email address"
-                />
-              </div>
+              <Input
+                label="Email *"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Email address"
+              />
 
-              <div className="form-group">
-                <label>Block Number *</label>
-                <input
-                  type="text"
-                  name="block_number"
-                  value={formData.block_number}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., A, B, C"
-                />
-              </div>
+              <Input
+                label="Block Number *"
+                type="text"
+                name="block_number"
+                value={formData.block_number}
+                onChange={handleChange}
+                required
+                placeholder="e.g., A, B, C"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Room Number *</label>
-                <input
-                  type="text"
-                  name="room_number"
-                  value={formData.room_number}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., 101, 202"
-                />
-              </div>
+              <Input
+                label="Room Number *"
+                type="text"
+                name="room_number"
+                value={formData.room_number}
+                onChange={handleChange}
+                required
+                placeholder="e.g., 101, 202"
+              />
 
               <div className="form-group">
                 <label>Room Type *</label>
@@ -196,7 +187,7 @@ export default function AddResident() {
 
               <div className="form-group">
                 <label>Photo</label>
-                <input
+                <Input
                   type="file"
                   name="photo"
                   onChange={handleChange}
@@ -227,8 +218,8 @@ export default function AddResident() {
 
               {formData.occupation === "WORKING" && (
                 <div className="form-group">
-                  <label>Company Name</label>
-                  <input
+                  <Input
+                    label="Company Name"
                     type="text"
                     name="company_name"
                     value={formData.company_name}
@@ -240,8 +231,8 @@ export default function AddResident() {
 
               {formData.occupation === "STUDYING" && (
                 <div className="form-group">
-                  <label>College/University Name</label>
-                  <input
+                  <Input
+                    label="College/University Name"
                     type="text"
                     name="college_name"
                     value={formData.college_name}
@@ -258,102 +249,82 @@ export default function AddResident() {
             <legend>Family Information</legend>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Father's Name</label>
-                <input
-                  type="text"
-                  name="father_name"
-                  value={formData.father_name}
-                  onChange={handleChange}
-                  placeholder="Father's name"
-                />
-              </div>
+              <Input
+                label="Father's Name"
+                type="text"
+                name="father_name"
+                value={formData.father_name}
+                onChange={handleChange}
+                placeholder="Father's name"
+              />
 
-              <div className="form-group">
-                <label>Father's Phone</label>
-                <input
-                  type="tel"
-                  name="father_phone"
-                  value={formData.father_phone}
-                  onChange={handleChange}
-                  placeholder="Father's phone"
-                />
-              </div>
+              <Input
+                label="Father's Phone"
+                type="tel"
+                name="father_phone"
+                value={formData.father_phone}
+                onChange={handleChange}
+                placeholder="Father's phone"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Mother's Name</label>
-                <input
-                  type="text"
-                  name="mother_name"
-                  value={formData.mother_name}
-                  onChange={handleChange}
-                  placeholder="Mother's name"
-                />
-              </div>
+              <Input
+                label="Mother's Name"
+                type="text"
+                name="mother_name"
+                value={formData.mother_name}
+                onChange={handleChange}
+                placeholder="Mother's name"
+              />
 
-              <div className="form-group">
-                <label>Guardian Name</label>
-                <input
-                  type="text"
-                  name="guardian_name"
-                  value={formData.guardian_name}
-                  onChange={handleChange}
-                  placeholder="Guardian's name"
-                />
-              </div>
+              <Input
+                label="Guardian Name"
+                type="text"
+                name="guardian_name"
+                value={formData.guardian_name}
+                onChange={handleChange}
+                placeholder="Guardian's name"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Guardian Phone</label>
-                <input
-                  type="tel"
-                  name="guardian_phone"
-                  value={formData.guardian_phone}
-                  onChange={handleChange}
-                  placeholder="Guardian's phone"
-                />
-              </div>
+              <Input
+                label="Guardian Phone"
+                type="tel"
+                name="guardian_phone"
+                value={formData.guardian_phone}
+                onChange={handleChange}
+                placeholder="Guardian's phone"
+              />
 
-              <div className="form-group">
-                <label>Emergency Contact Name</label>
-                <input
-                  type="text"
-                  name="emergency_name"
-                  value={formData.emergency_name}
-                  onChange={handleChange}
-                  placeholder="Emergency contact name"
-                />
-              </div>
+              <Input
+                label="Emergency Contact Name"
+                type="text"
+                name="emergency_name"
+                value={formData.emergency_name}
+                onChange={handleChange}
+                placeholder="Emergency contact name"
+              />
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label>Emergency Contact Phone</label>
-                <input
-                  type="tel"
-                  name="emergency_phone"
-                  value={formData.emergency_phone}
-                  onChange={handleChange}
-                  placeholder="Emergency phone"
-                />
-              </div>
+              <Input
+                label="Emergency Contact Phone"
+                type="tel"
+                name="emergency_phone"
+                value={formData.emergency_phone}
+                onChange={handleChange}
+                placeholder="Emergency phone"
+              />
             </div>
           </fieldset>
 
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <Button type="submit" variant="primary" disabled={loading}>
               {loading ? "Adding..." : "Add Resident"}
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={() => navigate("/dashboard")}
-            >
-              Cancel
-            </button>
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => navigate("/dashboard")}>Cancel</Button>
           </div>
         </form>
       </div>

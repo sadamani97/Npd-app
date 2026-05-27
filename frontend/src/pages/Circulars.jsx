@@ -3,6 +3,7 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Circulars.css";
+import { Button, Alert } from "../components/ui";
 
 export default function Circulars() {
   const [circulars, setCirculars] = useState([]);
@@ -94,16 +95,17 @@ export default function Circulars() {
       <div className="circulars-header">
         <h2>Important Circulars</h2>
         {user.role === "ADMIN" && (
-          <button 
+          <Button
             className="btn btn-primary"
+            variant="primary"
             onClick={() => setShowForm(!showForm)}
           >
             {showForm ? "Cancel" : "📢 Send Circular"}
-          </button>
+          </Button>
         )}
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      <Alert>{error}</Alert>
 
       {/* Send Circular Form */}
       {showForm && user.role === "ADMIN" && (
@@ -147,9 +149,9 @@ export default function Circulars() {
               </small>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <Button type="submit" className="btn btn-primary" variant="primary" disabled={loading}>
               {loading ? "Sending..." : "Send to All Residents"}
-            </button>
+            </Button>
           </form>
         </div>
       )}
@@ -180,12 +182,13 @@ export default function Circulars() {
               </div>
 
               {user.role === "ADMIN" && (
-                <button 
+                <Button 
                   className="btn btn-sm btn-danger"
+                  variant="secondary"
                   onClick={() => deleteCircular(circular.id)}
                 >
                   Delete
-                </button>
+                </Button>
               )}
             </div>
           ))}

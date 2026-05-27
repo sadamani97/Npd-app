@@ -1,6 +1,7 @@
 // controllers/foodMenu.controller.js
 import { FoodMenu } from "../models/foodMenu.model.js";
 import { User } from "../models/user.model.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const addFoodMenu = async (req, res) => {
   try {
@@ -8,7 +9,7 @@ export const addFoodMenu = async (req, res) => {
     const userId = req.user.id;
 
     // Validate that user is admin
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ success: false, message: "Only admin can add food menu" });
     }
 
@@ -24,6 +25,7 @@ export const addFoodMenu = async (req, res) => {
       is_veg: is_veg !== undefined ? is_veg : true,
       is_available: is_available !== undefined ? is_available : true,
       created_by: userId
+      ,hostel_id: req.body.hostel_id || req.user.hostel_id || null
     });
 
     res.status(201).json({
@@ -44,8 +46,13 @@ export const getFoodMenuByDate = async (req, res) => {
       return res.status(400).json({ success: false, message: "Date is required" });
     }
 
+    const where = { menu_date: date, is_available: true };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
+
     const foodMenus = await FoodMenu.findAll({
-      where: { menu_date: date, is_available: true },
+      where,
       attributes: ["id", "menu_date", "meal_type", "item_name", "description", "is_veg", "is_available"],
       order: [["meal_type", "ASC"]]
     });
@@ -65,6 +72,10 @@ export const getAllFoodMenus = async (req, res) => {
       where.menu_date = date;
     }
 
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
+
     const foodMenus = await FoodMenu.findAll({
       where,
       attributes: ["id", "menu_date", "meal_type", "item_name", "description", "is_veg", "is_available", "created_by", "createdAt"],
@@ -82,13 +93,17 @@ export const updateFoodMenu = async (req, res) => {
     const { id } = req.params;
     const { menu_date, meal_type, item_name, description, is_veg, is_available } = req.body;
 
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ success: false, message: "Only admin can update food menu" });
     }
 
     const foodMenu = await FoodMenu.findByPk(id);
     if (!foodMenu) {
       return res.status(404).json({ success: false, message: "Food menu not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && foodMenu.hostel_id && req.user.hostel_id !== foodMenu.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     await foodMenu.update({
@@ -110,11 +125,14 @@ export const deleteFoodMenu = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ success: false, message: "Only admin can delete food menu" });
     }
 
     const foodMenu = await FoodMenu.findByPk(id);
+        if (req.user.role !== "SUPER_ADMIN" && foodMenu.hostel_id && req.user.hostel_id !== foodMenu.hostel_id) {
+          return res.status(403).json({ success: false, message: "Access denied" });
+        }
     if (!foodMenu) {
       return res.status(404).json({ success: false, message: "Food menu not found" });
     }
