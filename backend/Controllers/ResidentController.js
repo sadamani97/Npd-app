@@ -9,6 +9,7 @@ import {
   countActiveResidentsInRoom,
   inferFloorNumber
 } from "../utils/roomSync.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 import bcrypt from "bcryptjs";
 
 const validateRoomDetailsMatch = async (blockNumber, roomNumber, roomType, acStatus) => {
@@ -115,6 +116,7 @@ export const addUser = async (req, res) => {
       ac_status: normalizedAcStatus,
       photo: photoData,
       ...otherData,
+      hostel_id: req.user.hostel_id || otherData.hostel_id || null,
       status: "ACTIVE"
     });
 
@@ -132,8 +134,12 @@ export const addUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
+    const where = { status: "ACTIVE" };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
     const users = await User.findAll({
-      where: { status: "ACTIVE" },
+      where,
       attributes: { exclude: ["password"] },
       order: [["createdAt", "DESC"]]
     });
@@ -153,6 +159,10 @@ export const getUserById = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     res.json({ success: true, data: user });
@@ -241,7 +251,7 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     
     // Check authorization: allow user to update own profile or admin to update any
-    if (req.user.role !== "ADMIN" && req.user.id !== parseInt(id)) {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.id !== parseInt(id)) {
       return res.status(403).json({ 
         success: false, 
         message: "You can only update your own profile" 
@@ -252,6 +262,10 @@ export const updateUser = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     const body = req.body || {};
@@ -353,6 +367,10 @@ export const deleteUser = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     const previousBlock = user.block_number;

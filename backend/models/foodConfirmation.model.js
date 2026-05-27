@@ -47,6 +47,11 @@ export const FoodConfirmation = sequelize.define("FoodConfirmation", {
     type: DataTypes.TEXT,
     allowNull: true,
     comment: "Any additional notes from user"
+  },
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this confirmation belongs to"
   }
 }, {
   timestamps: true,

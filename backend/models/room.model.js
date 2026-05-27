@@ -36,5 +36,10 @@ export const Room = sequelize.define("Room", {
     defaultValue: "AVAILABLE"
   },
   electricity_meter_number: DataTypes.STRING,
-  description: DataTypes.TEXT
+  description: DataTypes.TEXT,
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this room belongs to"
+  }
 });

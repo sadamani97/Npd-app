@@ -1,6 +1,7 @@
 // controllers/foodConfirmation.controller.js
 import { FoodConfirmation } from "../models/foodConfirmation.model.js";
 import { User } from "../models/user.model.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const submitFoodConfirmation = async (req, res) => {
   try {
@@ -43,6 +44,7 @@ export const submitFoodConfirmation = async (req, res) => {
         is_confirmed: true,
         notes: notes || null,
         confirmed_at: new Date()
+        ,hostel_id: req.user.hostel_id || null
       });
     }
 
@@ -115,7 +117,7 @@ export const getFoodConfirmationsByDate = async (req, res) => {
   try {
     const { confirmation_date, block_number, meal_type } = req.query;
 
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ success: false, message: "Only admin can view all confirmations" });
     }
 
@@ -124,6 +126,9 @@ export const getFoodConfirmationsByDate = async (req, res) => {
     }
 
     let where = { confirmation_date, is_confirmed: true };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
 
     // Build query to find users with selected meals
     if (meal_type) {
@@ -171,13 +176,16 @@ export const getFoodConfirmationList = async (req, res) => {
   try {
     const { confirmation_date, is_confirmed } = req.query;
 
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ success: false, message: "Only admin can view confirmations" });
     }
 
     const whereClause = {};
     if (confirmation_date) whereClause.confirmation_date = confirmation_date;
     if (is_confirmed !== undefined) whereClause.is_confirmed = is_confirmed === "true";
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(whereClause, getHostelFilter(req.user));
+    }
 
     const confirmations = await FoodConfirmation.findAll({
       where: whereClause,

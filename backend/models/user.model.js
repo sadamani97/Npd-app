@@ -38,8 +38,18 @@ export const User = sequelize.define("User", {
     comment: "Whether phone number has been verified via OTP"
   },
   role: {
-    type: DataTypes.ENUM("ADMIN", "USER"),
+    type: DataTypes.ENUM("SUPER_ADMIN", "HOSTEL_ADMIN", "ADMIN", "USER"),
     defaultValue: "USER"
+  },
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this user belongs to (null for SUPER_ADMIN)"
+  },
+  is_hostel_admin: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: "Quick flag to identify hostel admins"
   },
   status: {
     type: DataTypes.ENUM("ACTIVE", "VACATED"),

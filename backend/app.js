@@ -12,23 +12,24 @@ import paymentRoutes from "./routes/payment.routes.js";
 import electricityMeterRoutes from "./routes/electricityMeter.routes.js";
 import foodMenuRoutes from "./routes/foodMenu.routes.js";
 import foodConfirmationRoutes from "./routes/foodConfirmation.routes.js";
+import superAdminRoutes from "./routes/superAdmin.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
-// Import models to ensure they are loaded for associations
-import { User } from "./models/user.model.js";
-import { Complaint } from "./models/complaint.model.js";
-import { VacatedUser } from "./models/vacateduser.model.js";
-import { Circular } from "./models/circular.model.js";
-import { Room } from "./models/room.model.js";
-import { Payment } from "./models/payment.model.js";
-import { ElectricityMeter } from "./models/electricityMeter.model.js";
-import { FoodMenu } from "./models/foodMenu.model.js";
-import { FoodConfirmation } from "./models/foodConfirmation.model.js";
-import { OtpVerification } from "./models/otpVerification.model.js";
-
-// Define associations after all models are imported
-FoodConfirmation.belongsTo(User, { foreignKey: "user_id", as: "user" });
-User.hasMany(FoodConfirmation, { foreignKey: "user_id", as: "foodConfirmations" });
+// Import centralized models and associations
+import {
+  User,
+  Complaint,
+  VacatedUser,
+  Circular,
+  Room,
+  Payment,
+  ElectricityMeter,
+  FoodMenu,
+  FoodConfirmation,
+  OtpVerification,
+  Hostel,
+  SuperAdmin
+} from "./models/index.js";
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/electricity-meters", electricityMeterRoutes);
 app.use("/api/food-menus", foodMenuRoutes);
 app.use("/api/food-confirmations", foodConfirmationRoutes);
+app.use("/api/super-admin", superAdminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

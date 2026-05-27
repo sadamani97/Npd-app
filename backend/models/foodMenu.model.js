@@ -32,6 +32,11 @@ export const FoodMenu = sequelize.define("FoodMenu", {
     type: DataTypes.INTEGER,
     allowNull: true,
     comment: "Admin user ID who created the menu"
+  },
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this menu belongs to"
   }
 }, {
   timestamps: true,

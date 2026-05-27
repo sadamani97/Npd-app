@@ -24,10 +24,40 @@ export const protect = (req, res, next) => {
 export const authMiddleware = protect;
 
 export const isAdmin = (req, res, next) => {
-  if (req.user.role !== "ADMIN") {
-    return res.status(403).json({ 
-      success: false, 
-      msg: "Access denied. Admin rights required" 
+  if (req.user.role === "ADMIN" || req.user.role === "HOSTEL_ADMIN" || req.user.role === "SUPER_ADMIN") {
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    msg: "Access denied. Admin rights required"
+  });
+};
+
+export const isHostelAdmin = (req, res, next) => {
+  if (req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "ADMIN") {
+    return res.status(403).json({
+      success: false,
+      msg: "Access denied. Hostel Admin rights required"
+    });
+  }
+  next();
+};
+
+export const isSuperAdmin = (req, res, next) => {
+  if (req.user.role !== "SUPER_ADMIN") {
+    return res.status(403).json({
+      success: false,
+      msg: "Access denied. Super Admin rights required"
+    });
+  }
+  next();
+};
+
+export const isUser = (req, res, next) => {
+  if (req.user.role !== "USER") {
+    return res.status(403).json({
+      success: false,
+      msg: "Access denied. User rights required"
     });
   }
   next();

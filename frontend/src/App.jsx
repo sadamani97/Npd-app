@@ -29,20 +29,22 @@ import UserComplaints from "./pages/UserComplaints.jsx";
 import UserCirculars from "./pages/UserCirculars.jsx";
 import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
+import { getCurrentUser } from "./utils/authUtils";
 
 import "./App.css";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    // Check if user is authenticated (either admin or user)
     const userToken = localStorage.getItem("userToken");
     const adminToken = localStorage.getItem("adminToken");
     const userInfo = localStorage.getItem("user");
     const adminInfo = localStorage.getItem("admin");
-    
+
     if ((userToken && userInfo) || (adminToken && adminInfo)) {
       setIsAuthenticated(true);
     } else {
@@ -50,6 +52,13 @@ function App() {
     }
     setLoading(false);
   }, []);
+
+  const getRedirectPath = () => {
+    if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
+    if (currentUser.role === "ADMIN") return "/dashboard";
+    if (currentUser.role === "USER") return "/user-dashboard";
+    return "/login";
+  };
 
   if (loading) {
     return (
@@ -64,15 +73,24 @@ function App() {
     <Router>
       <Routes>
         {/* Auth Routes */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
-            localStorage.getItem("adminToken") 
-              ? <Navigate to="/dashboard" replace /> 
+            currentUser.role
+              ? <Navigate to={getRedirectPath()} replace />
               : <Login setIsAuthenticated={setIsAuthenticated} />
-          } 
+          }
         />
 
+        {/* SuperAdmin Routes */}
+        <Route
+          path="/superadmin/dashboard"
+          element={
+            isAuthenticated && currentUser.role === "SUPER_ADMIN"
+              ? <SuperAdminDashboard />
+              : <Navigate to="/login" replace />
+          }
+        />
 
         {/* Admin Routes */}
         <Route 
@@ -169,9 +187,9 @@ function App() {
         />
 
         {/* Default Route - Always go to login if not authenticated */}
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to={getRedirectPath()} replace /> : <Navigate to="/login" replace />}
         />
 
         {/* 404 - Not Found */}

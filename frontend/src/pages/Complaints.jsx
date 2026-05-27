@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Button, Select } from "../components/ui";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Complaints.css";
 
@@ -67,31 +68,31 @@ export default function Complaints() {
       <div className="complaints-header">
         <h2>Resident Complaints</h2>
         
-        <div className="filter-buttons">
-          <button 
-            className={`filter-btn ${filtering === "ALL" ? "active" : ""}`}
+        <div className="filter-buttons" style={{ display: 'flex', gap: '8px' }}>
+          <Button 
+            variant={filtering === "ALL" ? "primary" : "outline"}
             onClick={() => setFiltering("ALL")}
           >
             All
-          </button>
-          <button 
-            className={`filter-btn ${filtering === "OPEN" ? "active" : ""}`}
+          </Button>
+          <Button 
+            variant={filtering === "OPEN" ? "primary" : "outline"}
             onClick={() => setFiltering("OPEN")}
           >
             Open
-          </button>
-          <button 
-            className={`filter-btn ${filtering === "IN_PROGRESS" ? "active" : ""}`}
+          </Button>
+          <Button 
+            variant={filtering === "IN_PROGRESS" ? "primary" : "outline"}
             onClick={() => setFiltering("IN_PROGRESS")}
           >
             In Progress
-          </button>
-          <button 
-            className={`filter-btn ${filtering === "RESOLVED" ? "active" : ""}`}
+          </Button>
+          <Button 
+            variant={filtering === "RESOLVED" ? "primary" : "outline"}
             onClick={() => setFiltering("RESOLVED")}
           >
             Resolved
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -132,24 +133,25 @@ export default function Complaints() {
               </div>
 
               {user.role === "ADMIN" && (
-                <div className="complaint-actions">
+                <div className="complaint-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
                   {complaint.status !== "RESOLVED" && (
-                    <select 
+                    <Select 
                       value={complaint.status}
                       onChange={(e) => updateStatus(complaint.id, e.target.value)}
-                      className="status-select"
-                    >
-                      <option value="OPEN">Open</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="RESOLVED">Resolved</option>
-                    </select>
+                      options={[
+                        { value: 'OPEN', label: 'Open' },
+                        { value: 'IN_PROGRESS', label: 'In Progress' },
+                        { value: 'RESOLVED', label: 'Resolved' }
+                      ]}
+                    />
                   )}
-                  <button 
-                    className="btn btn-sm btn-danger"
+                  <Button 
+                    variant="danger"
+                    size="sm"
                     onClick={() => deleteComplaint(complaint.id)}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
