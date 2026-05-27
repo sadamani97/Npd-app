@@ -65,7 +65,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role, email: user.email },
+      { id: user.id, role: user.role, email: user.email, hostel_id: user.hostel_id },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
@@ -74,7 +74,16 @@ export const login = async (req, res) => {
       success: true, 
       msg: "Login successful", 
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        hostel_id: user.hostel_id,
+        block_number: user.block_number,
+        floor_number: user.floor_number,
+        room_number: user.room_number
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, msg: err.message });
@@ -225,7 +234,7 @@ export const verifyOTP = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, role: user.role, phone: user.phone },
+      { id: user.id, role: user.role, phone: user.phone, hostel_id: user.hostel_id },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
@@ -242,7 +251,8 @@ export const verifyOTP = async (req, res) => {
         floor_number: user.floor_number,
         room_number: user.room_number,
         room_type: user.room_type,
-        role: user.role
+        role: user.role,
+        hostel_id: user.hostel_id
       }
     });
   } catch (err) {

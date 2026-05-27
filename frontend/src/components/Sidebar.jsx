@@ -47,14 +47,11 @@ export default function Sidebar() {
   ];
 
   const superAdminNavLinks = [
-    { path: "/superadmin/dashboard", label: "SuperAdmin Home", icon: "🛡️" },
-    { path: "/dashboard", label: "Admin Dashboard", icon: "📊" },
-    { path: "/complaints", label: "Complaint Management", icon: "📝" },
-    { path: "/circulars", label: "Circular Management", icon: "📢" },
-    { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
-    { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },
-    { path: "/admin-food-confirmations", label: "Food Confirmations", icon: "🍽️" },
-    { path: "/vacated", label: "Vacated List", icon: "👥" },
+    { path: "/superadmin/dashboard", label: "SuperAdmin Control", icon: "🛡️" },
+    { path: "/superadmin/hostels", label: "Hostel Management", icon: "🏢" },
+    { path: "/superadmin/users", label: "User Management", icon: "👥" },
+    { path: "/superadmin/reports", label: "Financial Reports", icon: "💰" },
+    { path: "/superadmin/activities", label: "Activity Logs", icon: "📋" },
   ];
 
   const userNavLinks = [

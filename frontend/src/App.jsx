@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 
 // Admin Pages
@@ -18,7 +17,6 @@ import PaymentTrackingPage from "./pages/PaymentTrackingPage.jsx";
 import RoomOccupancyPage from "./pages/RoomOccupancyPage.jsx";
 import ResidentsListPage from "./pages/ResidentsListPage.jsx";
 import ManageRoomsPage from "./pages/ManageRoomsPage.jsx";
-import AdminComplaintManagement from "./pages/AdminComplaintManagement.jsx";
 import AdminFoodConfirmationList from "./pages/AdminFoodConfirmationList.jsx";
 import FoodMenuManagement from "./pages/FoodMenuManagement.jsx";
 
@@ -37,21 +35,29 @@ import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const currentUser = getCurrentUser();
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
 
   useEffect(() => {
-    const userToken = localStorage.getItem("userToken");
-    const adminToken = localStorage.getItem("adminToken");
-    const userInfo = localStorage.getItem("user");
-    const adminInfo = localStorage.getItem("admin");
+    const syncAuthState = () => {
+      const userToken = localStorage.getItem("userToken");
+      const adminToken = localStorage.getItem("adminToken");
+      const userInfo = localStorage.getItem("user");
+      const adminInfo = localStorage.getItem("admin");
 
-    if ((userToken && userInfo) || (adminToken && adminInfo)) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
+      setCurrentUser(getCurrentUser());
+      setIsAuthenticated(!!((userToken && userInfo) || (adminToken && adminInfo)));
+      setLoading(false);
+    };
+
+    syncAuthState();
+
+    window.addEventListener("authChanged", syncAuthState);
+    return () => window.removeEventListener("authChanged", syncAuthState);
   }, []);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, [isAuthenticated]);
 
   const getRedirectPath = () => {
     if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
@@ -92,10 +98,14 @@ function App() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Admin Routes - Only accessible to ADMIN and HOSTEL_ADMIN */}
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN")
+              ? <Dashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/add-resident" 
@@ -160,10 +170,14 @@ function App() {
           path="/food-menu-management"
           element={isAuthenticated ? <FoodMenuManagement /> : <Navigate to="/login" replace />}
         />
-        {/* User Routes */}
+        {/* User Routes - Only accessible to USER role */}
         <Route 
           path="/user-dashboard" 
-          element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && currentUser.role === "USER"
+              ? <UserDashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" ? "/dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/food-menu" 
