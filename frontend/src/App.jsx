@@ -28,6 +28,7 @@ import UserCirculars from "./pages/UserCirculars.jsx";
 import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
+import ElectricityBillingPage from "./pages/ElectricityBillingPage.jsx";
 import { getCurrentUser } from "./utils/authUtils";
 
 import "./App.css";
@@ -162,6 +163,12 @@ function App() {
         <Route
           path="/manage-rooms"
           element={isAuthenticated ? <ManageRoomsPage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/electricity-billing"
+          element={isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" || currentUser.role === "SUPER_ADMIN")
+            ? <ElectricityBillingPage />
+            : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />}
         />
         <Route
           path="/admin-food-confirmations"

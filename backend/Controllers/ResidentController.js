@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Room } from "../models/room.model.js";
+import { ElectricityMeter } from "../models/electricityMeter.model.js";
 import {
   refreshRoomStatus,
   normalizeRoomType,
@@ -120,6 +121,17 @@ export const addUser = async (req, res) => {
       status: "ACTIVE"
     });
 
+    if (normalizedBlock && normalizedRoom) {
+      const room = await Room.findOne({
+        where: { block_number: normalizedBlock, room_number: normalizedRoom }
+      });
+      if (room) {
+        user.rent_amount = room.base_rent || user.rent_amount;
+        user.total_charges = parseFloat((parseFloat(user.rent_amount || 0) + parseFloat(user.electricity_charges || 0)).toFixed(2));
+        await user.save();
+      }
+    }
+
     await refreshRoomStatus(normalizedBlock, normalizedRoom);
 
     res.status(201).json({ 
@@ -212,6 +224,15 @@ export const vacateUser = async (req, res) => {
       college_name: user.college_name,
       role: user.role
     };
+
+    // include room and date information to allow precise billing calculations
+    vacatedData.block_number = user.block_number;
+    vacatedData.floor_number = user.floor_number;
+    vacatedData.room_number = user.room_number;
+    vacatedData.join_date = user.join_date;
+    vacatedData.rent_amount = user.rent_amount;
+    vacatedData.electricity_charges = user.electricity_charges;
+    vacatedData.total_charges = user.total_charges;
 
     await VacatedUser.create(vacatedData);
     await user.destroy();
@@ -342,8 +363,41 @@ export const updateUser = async (req, res) => {
     await user.update(updates);
     await user.reload({ attributes: { exclude: ["password"] } });
 
+    if (nextBlock && nextRoom) {
+      const room = await Room.findOne({
+        where: { block_number: nextBlock, room_number: nextRoom }
+      });
+      if (room) {
+        user.rent_amount = room.base_rent || user.rent_amount;
+        user.total_charges = parseFloat((parseFloat(user.rent_amount || 0) + parseFloat(user.electricity_charges || 0)).toFixed(2));
+        await user.save();
+      }
+    }
+
     const afterBlock = String(user.block_number ?? "").trim();
     const afterRoom = String(user.room_number ?? "").trim();
+
+    // Reset meter for old room if resident changed rooms
+    if ((previousBlock && previousRoom) && (previousBlock !== afterBlock || previousRoom !== afterRoom)) {
+      try {
+        const oldMeter = await ElectricityMeter.findOne({
+          where: {
+            block_number: previousBlock,
+            room_number: previousRoom
+          }
+        });
+        if (oldMeter) {
+          oldMeter.previous_reading = 0;
+          oldMeter.current_reading = 0;
+          oldMeter.units_consumed = 0;
+          oldMeter.monthly_charge = 0;
+          oldMeter.last_reading_date = null;
+          await oldMeter.save();
+        }
+      } catch (e) {
+        console.log("Note: Could not reset meter for old room:", e.message);
+      }
+    }
 
     await refreshRoomStatus(previousBlock, previousRoom);
     if (afterBlock && afterRoom) {

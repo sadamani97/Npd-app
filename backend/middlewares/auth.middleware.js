@@ -1,7 +1,8 @@
 // middleware/auth.middleware.js
 import jwt from "jsonwebtoken";
+import { User } from "../models/user.model.js";
 
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -13,8 +14,20 @@ export const protect = (req, res, next) => {
     if (scheme !== "Bearer" || !token) {
       return res.status(401).json({ success: false, msg: "Invalid authorization format" });
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
     req.user = decoded;
+
+    // Recover missing hostel assignment for authenticated users if token was issued without it.
+    if (req.user.role !== "SUPER_ADMIN" && !req.user.hostel_id && req.user.id) {
+      const dbUser = await User.findByPk(req.user.id, {
+        attributes: ["hostel_id"]
+      });
+      if (dbUser) {
+        req.user.hostel_id = dbUser.hostel_id;
+      }
+    }
+
     next();
   } catch (err) {
     res.status(401).json({ success: false, msg: "Invalid token" });

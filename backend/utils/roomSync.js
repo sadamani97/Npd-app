@@ -13,10 +13,35 @@ const ROOM_TYPE_CAPACITY = {
 
 const VALID_AC_STATUS = new Set(["AC", "NON_AC"]);
 
+const ROOM_RENT_SCHEDULE = {
+  SINGLE_SHARE: { AC: 10500, NON_AC: 9500, PREMIUM: 20000 },
+  DOUBLE_SHARE: { AC: 7750, NON_AC: 7000, PREMIUM: 15000 },
+  TRIPLE_SHARE: { AC: 7500, NON_AC: 6750, PREMIUM: 10000 },
+  FOUR_SHARE: { AC: 7250, NON_AC: 6500 },
+  FIVE_SHARE: { NON_AC: 6250 },
+  SIX_SHARE: { NON_AC: 6000 }
+};
+
 const cleanValue = (value) => String(value ?? "").trim();
 const cleanMoney = (value) => {
   const amount = Number.parseFloat(value);
   return Number.isFinite(amount) ? amount : 0;
+};
+
+export const calculateRoomRent = (roomType, acStatus, isPremium = false) => {
+  const type = normalizeRoomType(roomType);
+  const status = normalizeAcStatus(acStatus);
+  const schedule = ROOM_RENT_SCHEDULE[type] || {};
+
+  if (isPremium) {
+    return schedule.PREMIUM || schedule.AC || schedule.NON_AC || 0;
+  }
+
+  if (status === "AC") {
+    return schedule.AC || schedule.NON_AC || 0;
+  }
+
+  return schedule.NON_AC || 0;
 };
 
 export const normalizeRoomType = (roomType) => {

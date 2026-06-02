@@ -38,6 +38,14 @@ const defaultAllowedOrigins = [
   "http://127.0.0.1:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3001",
+  "http://localhost:3002",
+  "http://127.0.0.1:3002",
+  "http://localhost:3003",
+  "http://127.0.0.1:3003",
+  "http://localhost:3004",
+  "http://127.0.0.1:3004",
+  "http://localhost:3005",
+  "http://127.0.0.1:3005",
   "http://localhost:5173",
   "http://127.0.0.1:5173"
 ];
@@ -67,6 +75,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug logging middleware
+app.use((req, res, next) => {
+  if (req.path.includes("electricity-meters")) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -2,7 +2,7 @@
 import { Room } from "../models/room.model.js";
 import { User } from "../models/user.model.js";
 import { Sequelize } from "sequelize";
-import { normalizeAcStatus, normalizeRoomType, syncRoomsFromActiveResidents } from "../utils/roomSync.js";
+import { normalizeAcStatus, normalizeRoomType, syncRoomsFromActiveResidents, calculateRoomRent } from "../utils/roomSync.js";
 import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 const ROOM_TYPE_CAPACITY = {
@@ -23,6 +23,22 @@ const deriveCapacity = (roomType, providedCapacity) => {
   const parsed = Number.parseInt(providedCapacity, 10);
   if (Number.isFinite(parsed) && parsed > 0) return parsed;
   return ROOM_TYPE_CAPACITY[roomType] || 2;
+};
+
+const updateActiveRoomOccupantRent = async (blockNumber, roomNumber, rentAmount) => {
+  if (rentAmount == null) return;
+  const activeResidents = await User.findAll({
+    where: {
+      block_number: blockNumber,
+      room_number: roomNumber,
+      status: "ACTIVE"
+    }
+  });
+  await Promise.all(activeResidents.map(async (resident) => {
+    resident.rent_amount = rentAmount;
+    resident.total_charges = parseFloat((parseFloat(rentAmount || 0) + parseFloat(resident.electricity_charges || 0)).toFixed(2));
+    await resident.save();
+  }));
 };
 
 // Get all blocks with their details
@@ -204,18 +220,25 @@ export const createRoom = async (req, res) => {
       });
     }
 
+    const isPremium = Boolean(req.body.is_premium);
+    const suggestedRent = calculateRoomRent(roomType, acStatus, isPremium);
+    const roomBaseRent = suggestedRent || sanitizeMoney(req.body.base_rent);
+
     const room = await Room.create({
       block_number,
       floor_number,
       room_number,
       room_type: roomType,
+      is_premium: isPremium,
       ac_status: acStatus,
       capacity: deriveCapacity(roomType, req.body.capacity),
-      base_rent: sanitizeMoney(req.body.base_rent),
+      base_rent: roomBaseRent,
       electricity_meter_number: sanitizeText(req.body.electricity_meter_number),
-      status: "AVAILABLE"
-      ,hostel_id: req.user.hostel_id || null
+      status: "AVAILABLE",
+      hostel_id: req.user.hostel_id || null
     });
+
+    await updateActiveRoomOccupantRent(block_number, room_number, roomBaseRent);
 
     res.status(201).json({
       success: true,
@@ -270,19 +293,26 @@ export const updateRoom = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
+    const isPremium = Boolean(req.body.is_premium ?? room.is_premium);
+    const suggestedRent = calculateRoomRent(roomType, acStatus, isPremium);
+    const roomBaseRent = suggestedRent || sanitizeMoney(req.body.base_rent ?? room.base_rent);
+
     await room.update({
       block_number,
       floor_number,
       room_number,
       room_type: roomType,
+      is_premium: isPremium,
       ac_status: acStatus,
       capacity: deriveCapacity(roomType, req.body.capacity ?? room.capacity),
-      base_rent: sanitizeMoney(req.body.base_rent ?? room.base_rent),
+      base_rent: roomBaseRent,
       electricity_meter_number: sanitizeText(
         req.body.electricity_meter_number ?? room.electricity_meter_number
-      )
-      ,hostel_id: req.user.hostel_id || room.hostel_id || null
+      ),
+      hostel_id: req.user.hostel_id || room.hostel_id || null
     });
+
+    await updateActiveRoomOccupantRent(block_number, room_number, roomBaseRent);
 
     res.status(200).json({
       success: true,
