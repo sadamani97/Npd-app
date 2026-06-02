@@ -20,10 +20,10 @@ export const getCurrentToken = () => {
   return adminToken || userToken || null;
 };
 
-// Check if current user is admin
+// Check if current user is admin or super admin
 export const isAdminUser = () => {
   const user = getCurrentUser();
-  return user.role === "ADMIN";
+  return user.role === "ADMIN" || user.role === "SUPER_ADMIN";
 };
 
 // Logout function - clears all auth data
@@ -32,4 +32,5 @@ export const logout = () => {
   localStorage.removeItem("adminToken");
   localStorage.removeItem("user");
   localStorage.removeItem("admin");
+  window.dispatchEvent(new Event("authChanged"));
 };

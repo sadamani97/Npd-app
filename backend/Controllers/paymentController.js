@@ -2,6 +2,7 @@
 import { Payment } from "../models/payment.model.js";
 import { User } from "../models/user.model.js";
 import { Sequelize } from "sequelize";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 // Get payment history for a resident
 export const getResidentPaymentHistory = async (req, res) => {
@@ -16,8 +17,16 @@ export const getResidentPaymentHistory = async (req, res) => {
       });
     }
 
+    if (req.user.role !== "SUPER_ADMIN" && req.user.hostel_id && user.hostel_id !== req.user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    const paymentWhere = { user_id: userId };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(paymentWhere, getHostelFilter(req.user));
+    }
     const payments = await Payment.findAll({
-      where: { user_id: userId },
+      where: paymentWhere,
       order: [['month', 'DESC']]
     });
 
@@ -49,8 +58,12 @@ export const getCurrentMonthPaymentStatus = async (req, res) => {
     const currentDate = new Date();
     const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
+    const userWhere = { status: "ACTIVE" };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(userWhere, getHostelFilter(req.user));
+    }
     const residents = await User.findAll({
-      where: { status: "ACTIVE" },
+      where: userWhere,
       attributes: ['id', 'name', 'block_number', 'room_number', 'phone', 'rent_amount', 'electricity_charges', 'total_charges'],
       raw: true
     });
@@ -115,6 +128,7 @@ export const recordPayment = async (req, res) => {
       receipt_number,
       notes,
       paid_date: new Date()
+      ,hostel_id: user.hostel_id || null
     });
 
     res.status(201).json({
@@ -136,10 +150,16 @@ export const getOverduePayments = async (req, res) => {
     const currentDate = new Date();
     const dueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 10);
 
+    const payWhere = {
+      payment_status: "PENDING",
+      paid_date: null
+    };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(payWhere, getHostelFilter(req.user));
+    }
     const payments = await Payment.findAll({
       where: {
-        payment_status: "PENDING",
-        paid_date: null
+        ...payWhere
       },
       include: [{
         model: User,
@@ -165,6 +185,10 @@ export const getOverduePayments = async (req, res) => {
 // Get payment summary by month
 export const getMonthlyPaymentSummary = async (req, res) => {
   try {
+    const paymentWhere = {};
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(paymentWhere, getHostelFilter(req.user));
+    }
     const summary = await Payment.findAll({
       attributes: [
         'month',
@@ -173,6 +197,7 @@ export const getMonthlyPaymentSummary = async (req, res) => {
         [Sequelize.fn('COUNT', Sequelize.literal(`CASE WHEN payment_status = 'PAID' THEN 1 END`)), 'paid_count'],
         [Sequelize.fn('COUNT', Sequelize.literal(`CASE WHEN payment_status = 'PENDING' THEN 1 END`)), 'pending_count']
       ],
+      where: paymentWhere,
       group: ['month'],
       order: [['month', 'DESC']],
       raw: true
@@ -202,6 +227,10 @@ export const updatePaymentStatus = async (req, res) => {
         success: false,
         message: "Payment not found"
       });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && payment.hostel_id && req.user.hostel_id !== payment.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     payment.payment_status = payment_status;

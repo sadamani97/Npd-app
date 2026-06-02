@@ -30,6 +30,25 @@ export default function PaymentTrackingPage() {
     }
   }, [residentId]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const d = e.detail || {};
+        if (residentId) {
+          // if individual resident page, refresh if their room/block matches
+          fetchPaymentHistory();
+        } else {
+          // on global payments view, refresh list
+          fetchCurrentMonthPayments();
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    window.addEventListener("electricityUpdated", handler);
+    return () => window.removeEventListener("electricityUpdated", handler);
+  }, [residentId]);
+
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);

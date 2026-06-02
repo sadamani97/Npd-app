@@ -29,5 +29,10 @@ export const Payment = sequelize.define("Payment", {
   description: DataTypes.TEXT,
   receipt_number: DataTypes.STRING,
   paid_date: DataTypes.DATE,
-  notes: DataTypes.TEXT
+  notes: DataTypes.TEXT,
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this payment belongs to"
+  }
 });

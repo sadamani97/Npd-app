@@ -6,6 +6,7 @@ import { User } from "./models/user.model.js";
 import { Complaint } from "./models/complaint.model.js";
 import { VacatedUser } from "./models/vacateduser.model.js";
 import { Circular } from "./models/circular.model.js";
+import { SuperAdmin } from "./models/superAdmin.model.js";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
@@ -44,6 +45,25 @@ const seedDatabase = async () => {
       console.log("🔑 Password: admin123");
       console.log("\n⚠️ Please change the password after first login!");
     }
+
+      // Check if a SuperAdmin exists and create one if missing
+      const superAdminExists = await SuperAdmin.findOne({ where: { email: "superadmin@hostel.com" } });
+      if (superAdminExists) {
+        console.log("ℹ️ SuperAdmin already exists");
+      } else {
+        const superAdminPassword = await bcrypt.hash("superadmin123", 10);
+        await SuperAdmin.create({
+          name: "Super Admin",
+          email: "superadmin@hostel.com",
+          password: superAdminPassword,
+          phone: "0000000000",
+          role: "SUPER_ADMIN",
+          is_active: true
+        });
+        console.log("\n✅ SuperAdmin account created successfully!");
+        console.log("📝 Email: superadmin@hostel.com");
+        console.log("🔑 Password: superadmin123");
+      }
 
     // Check if test user exists
     const userExists = await User.findOne({ where: { email: "user@hostel.com" } });

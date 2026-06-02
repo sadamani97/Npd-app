@@ -21,6 +21,7 @@ export default function Home() {
             <p>Login with your email and password</p>
             <p className="credentials">
               <strong>Admin Email:</strong> admin@hostel.com | admin123<br />
+              <strong>SuperAdmin Email:</strong> superadmin@hostel.com | superadmin123<br />
               <strong>User Email:</strong> user@hostel.com | user1234
             </p>
             <button

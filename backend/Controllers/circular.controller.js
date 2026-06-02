@@ -3,6 +3,7 @@ import { Circular } from "../models/circular.model.js";
 import { User } from "../models/user.model.js";
 import { sendWhatsApp } from "../utils/whatsappapi.js";
 import { sendEmail } from "../utils/emailapi.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const sendCircular = async (req, res) => {
   try {
@@ -16,14 +17,17 @@ export const sendCircular = async (req, res) => {
       message,
       sentVia,
       status: "PENDING"
+      ,hostel_id: req.body.hostel_id || req.user.hostel_id || null
     });
 
     console.log(`📝 Circular created with ID: ${circular.id}`);
 
     // Get all active users
-    const users = await User.findAll({
-      where: { status: "ACTIVE" }
-    });
+    const where = { status: "ACTIVE" };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
+    const users = await User.findAll({ where });
 
     console.log(`👥 Found ${users.length} active users to send to:`);
     users.forEach(u => console.log(`   - ${u.name} (Phone: ${u.phone}, Email: ${u.email})`));
@@ -147,7 +151,12 @@ export const sendCircular = async (req, res) => {
 
 export const getCirculars = async (req, res) => {
   try {
+    const where = {};
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
     const circulars = await Circular.findAll({
+      where,
       order: [["sentAt", "DESC"]]
     });
 
@@ -164,6 +173,10 @@ export const deleteCircular = async (req, res) => {
 
     if (!circular) {
       return res.status(404).json({ success: false, message: "Circular not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && circular.hostel_id && req.user.hostel_id !== circular.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     await circular.destroy();

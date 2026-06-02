@@ -29,6 +29,11 @@ export const Complaint = sequelize.define("Complaint", {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  hostel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Hostel this complaint belongs to"
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -38,6 +43,3 @@ export const Complaint = sequelize.define("Complaint", {
     defaultValue: DataTypes.NOW
   }
 });
-
-Complaint.belongsTo(User, { foreignKey: "userId" });
-User.hasMany(Complaint, { foreignKey: "userId" });

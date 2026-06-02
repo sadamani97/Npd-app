@@ -26,7 +26,7 @@ export const ElectricityMeter = sequelize.define("ElectricityMeter", {
   },
   rate_per_unit: {
     type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0.00
+    defaultValue: 14.00
   },
   monthly_charge: {
     type: DataTypes.DECIMAL(10, 2),

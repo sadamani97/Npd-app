@@ -12,23 +12,24 @@ import paymentRoutes from "./routes/payment.routes.js";
 import electricityMeterRoutes from "./routes/electricityMeter.routes.js";
 import foodMenuRoutes from "./routes/foodMenu.routes.js";
 import foodConfirmationRoutes from "./routes/foodConfirmation.routes.js";
+import superAdminRoutes from "./routes/superAdmin.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
-// Import models to ensure they are loaded for associations
-import { User } from "./models/user.model.js";
-import { Complaint } from "./models/complaint.model.js";
-import { VacatedUser } from "./models/vacateduser.model.js";
-import { Circular } from "./models/circular.model.js";
-import { Room } from "./models/room.model.js";
-import { Payment } from "./models/payment.model.js";
-import { ElectricityMeter } from "./models/electricityMeter.model.js";
-import { FoodMenu } from "./models/foodMenu.model.js";
-import { FoodConfirmation } from "./models/foodConfirmation.model.js";
-import { OtpVerification } from "./models/otpVerification.model.js";
-
-// Define associations after all models are imported
-FoodConfirmation.belongsTo(User, { foreignKey: "user_id", as: "user" });
-User.hasMany(FoodConfirmation, { foreignKey: "user_id", as: "foodConfirmations" });
+// Import centralized models and associations
+import {
+  User,
+  Complaint,
+  VacatedUser,
+  Circular,
+  Room,
+  Payment,
+  ElectricityMeter,
+  FoodMenu,
+  FoodConfirmation,
+  OtpVerification,
+  Hostel,
+  SuperAdmin
+} from "./models/index.js";
 
 const app = express();
 
@@ -37,6 +38,14 @@ const defaultAllowedOrigins = [
   "http://127.0.0.1:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3001",
+  "http://localhost:3002",
+  "http://127.0.0.1:3002",
+  "http://localhost:3003",
+  "http://127.0.0.1:3003",
+  "http://localhost:3004",
+  "http://127.0.0.1:3004",
+  "http://localhost:3005",
+  "http://127.0.0.1:3005",
   "http://localhost:5173",
   "http://127.0.0.1:5173"
 ];
@@ -67,6 +76,14 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Debug logging middleware
+app.use((req, res, next) => {
+  if (req.path.includes("electricity-meters")) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  }
+  next();
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });
@@ -83,6 +100,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/electricity-meters", electricityMeterRoutes);
 app.use("/api/food-menus", foodMenuRoutes);
 app.use("/api/food-confirmations", foodConfirmationRoutes);
+app.use("/api/super-admin", superAdminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

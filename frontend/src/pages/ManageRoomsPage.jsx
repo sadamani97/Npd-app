@@ -20,6 +20,7 @@ const DEFAULT_ROOM_FORM = {
   room_number: "",
   room_type: "DOUBLE_SHARE",
   ac_status: "NON_AC",
+  is_premium: false,
   capacity: 2,
   base_rent: "",
   electricity_meter_number: ""
@@ -27,6 +28,22 @@ const DEFAULT_ROOM_FORM = {
 
 const compareNumbers = (a, b) =>
   String(a || "").localeCompare(String(b || ""), undefined, { numeric: true, sensitivity: "base" });
+
+const calculateSuggestedRent = (roomType, acStatus, isPremium) => {
+  const rentMap = {
+    SINGLE_SHARE: { AC: 10500, NON_AC: 9500, PREMIUM: 20000 },
+    DOUBLE_SHARE: { AC: 7750, NON_AC: 7000, PREMIUM: 15000 },
+    TRIPLE_SHARE: { AC: 7500, NON_AC: 6750, PREMIUM: 10000 },
+    FOUR_SHARE: { AC: 7250, NON_AC: 6500 },
+    FIVE_SHARE: { NON_AC: 6250 },
+    SIX_SHARE: { NON_AC: 6000 }
+  };
+
+  const selected = rentMap[roomType] || {};
+  if (isPremium) return selected.PREMIUM || selected.AC || selected.NON_AC || 0;
+  if (acStatus === "AC") return selected.AC || selected.NON_AC || 0;
+  return selected.NON_AC || 0;
+};
 
 export default function ManageRoomsPage() {
   const [rooms, setRooms] = useState([]);
@@ -91,16 +108,40 @@ export default function ManageRoomsPage() {
   };
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
     if (name === "room_type") {
       const selectedType = ROOM_TYPE_OPTIONS.find((option) => option.value === value);
+      const suggestedRent = calculateSuggestedRent(value, formData.ac_status, formData.is_premium);
       setFormData((prev) => ({
         ...prev,
         room_type: value,
-        capacity: selectedType?.capacity || prev.capacity
+        capacity: selectedType?.capacity || prev.capacity,
+        base_rent: prev.base_rent ? prev.base_rent : String(suggestedRent)
       }));
       return;
     }
+
+    if (name === "ac_status") {
+      const suggestedRent = calculateSuggestedRent(formData.room_type, value, formData.is_premium);
+      setFormData((prev) => ({
+        ...prev,
+        ac_status: value,
+        base_rent: prev.base_rent ? prev.base_rent : String(suggestedRent)
+      }));
+      return;
+    }
+
+    if (name === "is_premium") {
+      const nextPremium = type === "checkbox" ? checked : value === "true";
+      const suggestedRent = calculateSuggestedRent(formData.room_type, formData.ac_status, nextPremium);
+      setFormData((prev) => ({
+        ...prev,
+        is_premium: nextPremium,
+        base_rent: prev.base_rent ? prev.base_rent : String(suggestedRent)
+      }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -116,6 +157,7 @@ export default function ManageRoomsPage() {
         room_number: formData.room_number,
         room_type: formData.room_type,
         ac_status: formData.ac_status,
+        is_premium: formData.is_premium,
         capacity: Number(formData.capacity),
         base_rent: Number(formData.base_rent || 0),
         electricity_meter_number: formData.electricity_meter_number
@@ -144,6 +186,7 @@ export default function ManageRoomsPage() {
       room_number: String(room.room_number || ""),
       room_type: room.room_type || "DOUBLE_SHARE",
       ac_status: room.ac_status || "NON_AC",
+      is_premium: Boolean(room.is_premium),
       capacity: Number(room.capacity || 2),
       base_rent: String(room.base_rent || 0),
       electricity_meter_number: room.electricity_meter_number || ""
@@ -248,6 +291,18 @@ export default function ManageRoomsPage() {
               </Select>
             </div>
 
+            <div className="form-group premium-toggle-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="is_premium"
+                  checked={formData.is_premium}
+                  onChange={handleChange}
+                />
+                Premium Room
+              </label>
+            </div>
+
             <div className="form-group">
               <label>Capacity</label>
               <Input
@@ -330,6 +385,7 @@ export default function ManageRoomsPage() {
                     <th>Room</th>
                     <th>Sharing</th>
                     <th>AC</th>
+                    <th>Premium</th>
                     <th>Capacity</th>
                     <th>Rent</th>
                     <th>Actions</th>
@@ -343,6 +399,7 @@ export default function ManageRoomsPage() {
                       <td>{room.room_number}</td>
                       <td>{String(room.room_type || "").replace(/_/g, " ")}</td>
                       <td>{room.ac_status}</td>
+                      <td>{room.is_premium ? "Yes" : "No"}</td>
                       <td>{room.capacity}</td>
                       <td>₹{room.base_rent || 0}</td>
                       <td className="rooms-actions-cell">

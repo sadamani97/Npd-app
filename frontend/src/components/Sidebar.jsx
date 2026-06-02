@@ -10,7 +10,8 @@ export default function Sidebar() {
   const user = getCurrentUser();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = user.role === "ADMIN";
+  const isAdmin = user.role === "ADMIN" || user.role === "HOSTEL_ADMIN";
+  const isSuperAdmin = user.role === "SUPER_ADMIN";
 
   const handleLogout = async () => {
     try {
@@ -38,11 +39,20 @@ export default function Sidebar() {
     { path: "/dashboard", label: "Dashboard", icon: "📊" },
     { path: "/add-resident", label: "Add Resident", icon: "➕" },
     { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
+    { path: "/electricity-billing", label: "Electricity Billing", icon: "⚡" },
     { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },
     { path: "/complaints", label: "Complaint Management", icon: "📝" },
     { path: "/circulars", label: "Circular Management", icon: "📢" },
     { path: "/admin-food-confirmations", label: "Food Confirmations", icon: "🍽️" },
     { path: "/vacated", label: "Vacated List", icon: "👥" },
+  ];
+
+  const superAdminNavLinks = [
+    { path: "/superadmin/dashboard", label: "SuperAdmin Control", icon: "🛡️" },
+    { path: "/superadmin/hostels", label: "Hostel Management", icon: "🏢" },
+    { path: "/superadmin/users", label: "User Management", icon: "👥" },
+    { path: "/superadmin/reports", label: "Financial Reports", icon: "💰" },
+    { path: "/superadmin/activities", label: "Activity Logs", icon: "📋" },
   ];
 
   const userNavLinks = [
@@ -54,7 +64,7 @@ export default function Sidebar() {
     { path: "/user-profile", label: "Profile", icon: "👤" },
   ];
 
-  const navLinks = isAdmin ? adminNavLinks : userNavLinks;
+  const navLinks = isSuperAdmin ? superAdminNavLinks : isAdmin ? adminNavLinks : userNavLinks;
 
   return (
     <>
@@ -76,7 +86,7 @@ export default function Sidebar() {
         </div>
         
         <div className="user-role-badge">
-          {isAdmin ? "👨‍💼 Admin" : "👤 User"}
+          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : "👤 User"}
         </div>
 
         <nav className="sidebar-nav">

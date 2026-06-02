@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Room } from "../models/room.model.js";
+import { ElectricityMeter } from "../models/electricityMeter.model.js";
 import {
   refreshRoomStatus,
   normalizeRoomType,
@@ -9,6 +10,7 @@ import {
   countActiveResidentsInRoom,
   inferFloorNumber
 } from "../utils/roomSync.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 import bcrypt from "bcryptjs";
 
 const validateRoomDetailsMatch = async (blockNumber, roomNumber, roomType, acStatus) => {
@@ -115,8 +117,20 @@ export const addUser = async (req, res) => {
       ac_status: normalizedAcStatus,
       photo: photoData,
       ...otherData,
+      hostel_id: req.user.hostel_id || otherData.hostel_id || null,
       status: "ACTIVE"
     });
+
+    if (normalizedBlock && normalizedRoom) {
+      const room = await Room.findOne({
+        where: { block_number: normalizedBlock, room_number: normalizedRoom }
+      });
+      if (room) {
+        user.rent_amount = room.base_rent || user.rent_amount;
+        user.total_charges = parseFloat((parseFloat(user.rent_amount || 0) + parseFloat(user.electricity_charges || 0)).toFixed(2));
+        await user.save();
+      }
+    }
 
     await refreshRoomStatus(normalizedBlock, normalizedRoom);
 
@@ -132,8 +146,12 @@ export const addUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
+    const where = { status: "ACTIVE" };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
     const users = await User.findAll({
-      where: { status: "ACTIVE" },
+      where,
       attributes: { exclude: ["password"] },
       order: [["createdAt", "DESC"]]
     });
@@ -153,6 +171,10 @@ export const getUserById = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     res.json({ success: true, data: user });
@@ -203,6 +225,15 @@ export const vacateUser = async (req, res) => {
       role: user.role
     };
 
+    // include room and date information to allow precise billing calculations
+    vacatedData.block_number = user.block_number;
+    vacatedData.floor_number = user.floor_number;
+    vacatedData.room_number = user.room_number;
+    vacatedData.join_date = user.join_date;
+    vacatedData.rent_amount = user.rent_amount;
+    vacatedData.electricity_charges = user.electricity_charges;
+    vacatedData.total_charges = user.total_charges;
+
     await VacatedUser.create(vacatedData);
     await user.destroy();
     await refreshRoomStatus(previousBlock, previousRoom);
@@ -241,7 +272,7 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     
     // Check authorization: allow user to update own profile or admin to update any
-    if (req.user.role !== "ADMIN" && req.user.id !== parseInt(id)) {
+    if (req.user.role !== "ADMIN" && req.user.role !== "HOSTEL_ADMIN" && req.user.id !== parseInt(id)) {
       return res.status(403).json({ 
         success: false, 
         message: "You can only update your own profile" 
@@ -252,6 +283,10 @@ export const updateUser = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     const body = req.body || {};
@@ -328,8 +363,41 @@ export const updateUser = async (req, res) => {
     await user.update(updates);
     await user.reload({ attributes: { exclude: ["password"] } });
 
+    if (nextBlock && nextRoom) {
+      const room = await Room.findOne({
+        where: { block_number: nextBlock, room_number: nextRoom }
+      });
+      if (room) {
+        user.rent_amount = room.base_rent || user.rent_amount;
+        user.total_charges = parseFloat((parseFloat(user.rent_amount || 0) + parseFloat(user.electricity_charges || 0)).toFixed(2));
+        await user.save();
+      }
+    }
+
     const afterBlock = String(user.block_number ?? "").trim();
     const afterRoom = String(user.room_number ?? "").trim();
+
+    // Reset meter for old room if resident changed rooms
+    if ((previousBlock && previousRoom) && (previousBlock !== afterBlock || previousRoom !== afterRoom)) {
+      try {
+        const oldMeter = await ElectricityMeter.findOne({
+          where: {
+            block_number: previousBlock,
+            room_number: previousRoom
+          }
+        });
+        if (oldMeter) {
+          oldMeter.previous_reading = 0;
+          oldMeter.current_reading = 0;
+          oldMeter.units_consumed = 0;
+          oldMeter.monthly_charge = 0;
+          oldMeter.last_reading_date = null;
+          await oldMeter.save();
+        }
+      } catch (e) {
+        console.log("Note: Could not reset meter for old room:", e.message);
+      }
+    }
 
     await refreshRoomStatus(previousBlock, previousRoom);
     if (afterBlock && afterRoom) {
@@ -353,6 +421,10 @@ export const deleteUser = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (req.user.role !== "SUPER_ADMIN" && user.hostel_id && req.user.hostel_id !== user.hostel_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
     }
 
     const previousBlock = user.block_number;

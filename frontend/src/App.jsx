@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 
 // Admin Pages
@@ -18,7 +17,6 @@ import PaymentTrackingPage from "./pages/PaymentTrackingPage.jsx";
 import RoomOccupancyPage from "./pages/RoomOccupancyPage.jsx";
 import ResidentsListPage from "./pages/ResidentsListPage.jsx";
 import ManageRoomsPage from "./pages/ManageRoomsPage.jsx";
-import AdminComplaintManagement from "./pages/AdminComplaintManagement.jsx";
 import AdminFoodConfirmationList from "./pages/AdminFoodConfirmationList.jsx";
 import FoodMenuManagement from "./pages/FoodMenuManagement.jsx";
 
@@ -29,27 +27,45 @@ import UserComplaints from "./pages/UserComplaints.jsx";
 import UserCirculars from "./pages/UserCirculars.jsx";
 import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
+import ElectricityBillingPage from "./pages/ElectricityBillingPage.jsx";
+import { getCurrentUser } from "./utils/authUtils";
 
 import "./App.css";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
 
   useEffect(() => {
-    // Check if user is authenticated (either admin or user)
-    const userToken = localStorage.getItem("userToken");
-    const adminToken = localStorage.getItem("adminToken");
-    const userInfo = localStorage.getItem("user");
-    const adminInfo = localStorage.getItem("admin");
-    
-    if ((userToken && userInfo) || (adminToken && adminInfo)) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
+    const syncAuthState = () => {
+      const userToken = localStorage.getItem("userToken");
+      const adminToken = localStorage.getItem("adminToken");
+      const userInfo = localStorage.getItem("user");
+      const adminInfo = localStorage.getItem("admin");
+
+      setCurrentUser(getCurrentUser());
+      setIsAuthenticated(!!((userToken && userInfo) || (adminToken && adminInfo)));
+      setLoading(false);
+    };
+
+    syncAuthState();
+
+    window.addEventListener("authChanged", syncAuthState);
+    return () => window.removeEventListener("authChanged", syncAuthState);
   }, []);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, [isAuthenticated]);
+
+  const getRedirectPath = () => {
+    if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
+    if (currentUser.role === "ADMIN") return "/dashboard";
+    if (currentUser.role === "USER") return "/user-dashboard";
+    return "/login";
+  };
 
   if (loading) {
     return (
@@ -64,20 +80,33 @@ function App() {
     <Router>
       <Routes>
         {/* Auth Routes */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
-            localStorage.getItem("adminToken") 
-              ? <Navigate to="/dashboard" replace /> 
+            currentUser.role
+              ? <Navigate to={getRedirectPath()} replace />
               : <Login setIsAuthenticated={setIsAuthenticated} />
-          } 
+          }
         />
 
+        {/* SuperAdmin Routes */}
+        <Route
+          path="/superadmin/dashboard"
+          element={
+            isAuthenticated && currentUser.role === "SUPER_ADMIN"
+              ? <SuperAdminDashboard />
+              : <Navigate to="/login" replace />
+          }
+        />
 
-        {/* Admin Routes */}
+        {/* Admin Routes - Only accessible to ADMIN and HOSTEL_ADMIN */}
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN")
+              ? <Dashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/add-resident" 
@@ -136,16 +165,26 @@ function App() {
           element={isAuthenticated ? <ManageRoomsPage /> : <Navigate to="/login" replace />}
         />
         <Route
+          path="/electricity-billing"
+          element={isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" || currentUser.role === "SUPER_ADMIN")
+            ? <ElectricityBillingPage />
+            : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />}
+        />
+        <Route
           path="/admin-food-confirmations"
           element={isAuthenticated ? <AdminFoodConfirmationList /> : <Navigate to="/login" replace />}
         />        <Route 
           path="/food-menu-management"
           element={isAuthenticated ? <FoodMenuManagement /> : <Navigate to="/login" replace />}
         />
-        {/* User Routes */}
+        {/* User Routes - Only accessible to USER role */}
         <Route 
           path="/user-dashboard" 
-          element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && currentUser.role === "USER"
+              ? <UserDashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" ? "/dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/food-menu" 
@@ -169,9 +208,9 @@ function App() {
         />
 
         {/* Default Route - Always go to login if not authenticated */}
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to={getRedirectPath()} replace /> : <Navigate to="/login" replace />}
         />
 
         {/* 404 - Not Found */}

@@ -28,25 +28,31 @@ export default function Login({ setIsAuthenticated }) {
       localStorage.removeItem("user");
       localStorage.removeItem("admin");
       
-      const res = await API.post("/auth/login", formData);
+      const loginEndpoint = formData.email.trim().toLowerCase() === "superadmin@hostel.com"
+        ? "/auth/super-admin/login"
+        : "/auth/login";
+
+      const res = await API.post(loginEndpoint, formData);
       
       if (res.data.success) {
         const userRole = res.data.user.role;
         
-        // Store tokens based on user role (separate from other tokens)
-        if (userRole === "ADMIN") {
+        // Store tokens based on user role
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
           localStorage.setItem("adminToken", res.data.token);
           localStorage.setItem("admin", JSON.stringify(res.data.user));
         } else {
           localStorage.setItem("userToken", res.data.token);
           localStorage.setItem("user", JSON.stringify(res.data.user));
         }
-        
+
         setIsAuthenticated(true);
         
         // Redirect based on user role
         if (userRole === "ADMIN") {
           navigate("/dashboard", { replace: true });
+        } else if (userRole === "SUPER_ADMIN") {
+          navigate("/superadmin/dashboard", { replace: true });
         } else {
           navigate("/user-dashboard", { replace: true });
         }
