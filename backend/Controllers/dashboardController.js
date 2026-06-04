@@ -11,7 +11,11 @@ export const getDashboardStats = async (req, res) => {
 
     // Get total active residents
     const totalResidents = await User.count({
-      where: { status: "ACTIVE" }
+      where: { 
+        status: "ACTIVE",
+        role: "USER",
+        block_number: ["1", "2"]
+      }
     });
 
     // Get residents grouped by block
@@ -20,19 +24,29 @@ export const getDashboardStats = async (req, res) => {
         'block_number',
         [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
       ],
-      where: { status: "ACTIVE" },
+      where: { 
+        status: "ACTIVE",
+        role: "USER",
+        block_number: ["1", "2"]
+      },
       group: ['block_number'],
       raw: true,
       order: [['block_number', 'ASC']]
     });
 
     const rooms = await Room.findAll({
+      where: { block_number: ["1", "2"] },
       order: [['block_number', 'ASC'], ['floor_number', 'ASC'], ['room_number', 'ASC']]
     });
 
-    const totalRooms = await Room.count();
+    const totalRooms = await Room.count({
+      where: { block_number: ["1", "2"] }
+    });
     const occupiedRooms = await Room.count({
-      where: { status: "OCCUPIED" }
+      where: { 
+        status: "OCCUPIED",
+        block_number: ["1", "2"]
+      }
     });
 
     const roomStats = await Promise.all(
@@ -41,7 +55,8 @@ export const getDashboardStats = async (req, res) => {
           where: {
             block_number: room.block_number,
             room_number: room.room_number,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            role: "USER"
           }
         });
 
@@ -68,11 +83,14 @@ export const getDashboardStats = async (req, res) => {
       }
     });
 
-    // Calculate occupancy data
-    const occupancyData = blockGroups.map(block => ({
-      block: block.block_number || "Not Assigned",
-      residents: parseInt(block.count || 0)
-    }));
+    // Calculate occupancy data for exactly Block 1 and Block 2
+    const occupancyData = ["1", "2"].map(blockNum => {
+      const found = blockGroups.find(bg => String(bg.block_number || "").trim() === blockNum);
+      return {
+        block: blockNum,
+        residents: found ? parseInt(found.count || 0) : 0
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -147,6 +165,7 @@ export const getRoomOccupancySummary = async (req, res) => {
     await syncRoomsFromActiveResidents();
 
     const rooms = await Room.findAll({
+      where: { block_number: ["1", "2"] },
       order: [['block_number', 'ASC'], ['floor_number', 'ASC'], ['room_number', 'ASC']]
     });
 
@@ -156,7 +175,8 @@ export const getRoomOccupancySummary = async (req, res) => {
           where: {
             block_number: room.block_number,
             room_number: room.room_number,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            role: "USER"
           }
         });
         return {

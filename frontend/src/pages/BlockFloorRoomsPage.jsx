@@ -111,7 +111,7 @@ export default function BlockFloorRoomsPage() {
                 <Button
                   key={`${blockNumber}-${displayRoomNumber}`}
                   type="button"
-                  className={`room-number-tile ${vacant ? "vacant" : "occupied"}`}
+                  className={`block-simple-card room-number-tile ${vacant ? "vacant" : "occupied"}`}
                   variant="secondary"
                   onClick={() =>
                     navigate(
@@ -119,10 +119,12 @@ export default function BlockFloorRoomsPage() {
                     )
                   }
                 >
-                  <span className="tile-label">{displayRoomNumber}</span>
-                  <span className="tile-meta">
-                    {vacant ? "Vacant" : `${occ} resident(s)`}
-                  </span>
+                  <div className="block-simple-header">
+                    <h3>Room {displayRoomNumber}</h3>
+                  </div>
+                  <p className="block-simple-hint">
+                    {vacant ? "🟢 Vacant" : `🔴 Occupied (${occ} resident(s))` } →
+                  </p>
                 </Button>
               );
             })}

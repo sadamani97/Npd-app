@@ -6,7 +6,6 @@ import "../styles/BlocksHierarchy.css";
 import { Button, Alert } from "../components/ui";
 
 export default function BlocksPage() {
-  const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -17,9 +16,7 @@ export default function BlocksPage() {
         setLoading(true);
         setError("");
         const res = await API.get("/rooms/blocks");
-        if (res.data.success) {
-          setBlocks(res.data.data || []);
-        } else {
+        if (!res.data.success) {
           setError("Could not load blocks");
         }
       } catch (err) {
@@ -30,13 +27,7 @@ export default function BlocksPage() {
     })();
   }, []);
 
-  const baseBlocks = ["1", "2"];
-  const availableBlocks = Array.from(
-    new Set([
-      ...baseBlocks,
-      ...blocks.map((block) => String(block.block_number || "").trim()).filter(Boolean)
-    ])
-  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  const availableBlocks = ["1", "2"];
 
   if (loading) {
     return (
@@ -56,7 +47,7 @@ export default function BlocksPage() {
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
             <button
               type="button"
-              className="room-action-btn secondary"
+              className="back-btn"
               onClick={() => navigate("/dashboard")}
             >
               ← Back to Dashboard
