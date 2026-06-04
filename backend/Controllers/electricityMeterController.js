@@ -5,6 +5,13 @@ import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Op } from "sequelize";
 
+const stripTime = (d) => {
+  if (!d) return null;
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return null;
+  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+};
+
 // Get all meters by block
 export const getMetersByBlock = async (req, res) => {
   try {
@@ -98,10 +105,10 @@ export const recordMeterReading = async (req, res) => {
     await meter.save();
 
     // Determine billing period: from prior reading date (if present) to reading date or today
-    const readingDate = reading_date ? new Date(reading_date) : new Date();
-    const periodEnd = new Date(readingDate.getFullYear(), readingDate.getMonth(), readingDate.getDate());
+    const readingDate = reading_date ? stripTime(reading_date) : stripTime(new Date());
+    const periodEnd = readingDate;
     const periodStart = prevReadingDate
-      ? new Date(prevReadingDate.getFullYear(), prevReadingDate.getMonth(), prevReadingDate.getDate())
+      ? stripTime(prevReadingDate)
       : new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
     const dayMs = 1000 * 60 * 60 * 24;
 
@@ -130,25 +137,82 @@ export const recordMeterReading = async (req, res) => {
     };
 
     activeResidents.forEach((resident) => {
-      const joinDate = resident.join_date ? new Date(resident.join_date) : periodStart;
+      const joinDate = resident.join_date ? stripTime(resident.join_date) : periodStart;
       const daysStayed = overlapDays(joinDate, periodEnd, periodStart, periodEnd);
-      if (daysStayed > 0) entries.push({ type: "active", resident, daysStayed });
+      if (daysStayed > 0) {
+        entries.push({ 
+          type: "active", 
+          resident, 
+          daysStayed, 
+          joinDate: joinDate > periodStart ? joinDate : periodStart, 
+          endDate: periodEnd 
+        });
+      }
     });
 
     vacatedResidents.forEach((v) => {
-      const joinDate = v.join_date ? new Date(v.join_date) : periodStart;
-      const vacDate = v.vacatedAt ? new Date(v.vacatedAt) : periodEnd;
+      const joinDate = v.join_date ? stripTime(v.join_date) : periodStart;
+      const vacDate = v.vacatedAt ? stripTime(v.vacatedAt) : periodEnd;
       const daysStayed = overlapDays(joinDate, vacDate, periodStart, periodEnd);
-      if (daysStayed > 0) entries.push({ type: "vacated", vacated: v, daysStayed });
+      if (daysStayed > 0) {
+        entries.push({ 
+          type: "vacated", 
+          vacated: v, 
+          daysStayed, 
+          joinDate: joinDate > periodStart ? joinDate : periodStart, 
+          endDate: vacDate < periodEnd ? vacDate : periodEnd 
+        });
+      }
     });
 
-    const totalPersonDays = entries.reduce((sum, e) => sum + e.daysStayed, 0);
+    const totalDays = Math.max(Math.floor((periodEnd - periodStart) / dayMs) + 1, 1);
+    const dailyOccupancy = [];
+    let activeDaysCount = 0;
+
+    for (let d = 0; d < totalDays; d++) {
+      const currentDayStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate() + d);
+      const currentDayEnd = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate() + d, 23, 59, 59, 999);
+      
+      const todaysOccupants = [];
+      entries.forEach((entry) => {
+        const stayStart = new Date(entry.joinDate.getFullYear(), entry.joinDate.getMonth(), entry.joinDate.getDate());
+        const stayEnd = new Date(entry.endDate.getFullYear(), entry.endDate.getMonth(), entry.endDate.getDate(), 23, 59, 59, 999);
+        
+        if (stayStart <= currentDayEnd && stayEnd >= currentDayStart) {
+          todaysOccupants.push(entry);
+        }
+      });
+
+      dailyOccupancy.push(todaysOccupants);
+      if (todaysOccupants.length > 0) {
+        activeDaysCount++;
+      }
+    }
+
+    const divisorDays = activeDaysCount > 0 ? activeDaysCount : totalDays;
+    const dailyCost = monthlyCharge / divisorDays;
+
+    const finalShares = new Map();
+
+    for (let d = 0; d < totalDays; d++) {
+      const occupants = dailyOccupancy[d];
+      const N = occupants.length;
+      if (N > 0) {
+        const sharePerPerson = dailyCost / N;
+        occupants.forEach((entry) => {
+          const currentVal = finalShares.get(entry) || 0;
+          finalShares.set(entry, currentVal + sharePerPerson);
+        });
+      }
+    }
+
     const updatedResidentsCount = entries.length;
 
-    if (totalPersonDays > 0 && monthlyCharge > 0) {
-      const perDayCharge = monthlyCharge / totalPersonDays;
+    if (updatedResidentsCount > 0 && monthlyCharge > 0) {
       await Promise.all(entries.map(async (entry) => {
-        const electricityShare = parseFloat((perDayCharge * entry.daysStayed).toFixed(2));
+        const rawShare = finalShares.get(entry) || 0;
+        const electricityShare = parseFloat(rawShare.toFixed(2));
+        
         if (entry.type === "active") {
           const resident = entry.resident;
           resident.electricity_charges = electricityShare;
@@ -355,5 +419,166 @@ export const getConsumptionReport = async (req, res) => {
       success: false,
       message: err.message
     });
+  }
+};
+
+// Helper function to recalculate room electricity charges for all roommates
+export const recalculateRoomElectricityCharges = async (block_number, room_number) => {
+  try {
+    const meter = await ElectricityMeter.findOne({
+      where: { block_number, room_number }
+    });
+
+    const activeResidents = await User.findAll({
+      where: {
+        block_number,
+        room_number,
+        status: "ACTIVE"
+      }
+    });
+
+    if (!meter) {
+      // No meter: reset all active residents' charges to 0
+      for (const resident of activeResidents) {
+        resident.electricity_charges = 0.00;
+        resident.total_charges = parseFloat((parseFloat(resident.rent_amount || 0)).toFixed(2));
+        await resident.save();
+      }
+      return;
+    }
+
+    const monthlyCharge = Number(meter.monthly_charge || 0);
+
+    if (monthlyCharge <= 0) {
+      // Monthly charge is 0: reset all active residents' charges to 0
+      for (const resident of activeResidents) {
+        resident.electricity_charges = 0.00;
+        resident.total_charges = parseFloat((parseFloat(resident.rent_amount || 0)).toFixed(2));
+        await resident.save();
+      }
+      return;
+    }
+
+    const periodEnd = meter.last_reading_date ? stripTime(meter.last_reading_date) : stripTime(new Date());
+
+    // Default periodStart to 1 month before periodEnd to reconstruct the billing cycle
+    const periodStart = new Date(periodEnd.getFullYear(), periodEnd.getMonth() - 1, periodEnd.getDate());
+    
+    const dayMs = 1000 * 60 * 60 * 24;
+
+    const vacatedResidents = await VacatedUser.findAll({
+      where: {
+        block_number,
+        room_number,
+        vacatedAt: { [Op.between]: [periodStart, periodEnd] }
+      }
+    });
+
+    const entries = [];
+    const overlapDays = (s1, e1, s2, e2) => {
+      const start = s1 > s2 ? s1 : s2;
+      const end = e1 < e2 ? e1 : e2;
+      if (end < start) return 0;
+      return Math.floor((end - start) / dayMs) + 1;
+    };
+
+    activeResidents.forEach((resident) => {
+      const joinDate = resident.join_date ? stripTime(resident.join_date) : periodStart;
+      const daysStayed = overlapDays(joinDate, periodEnd, periodStart, periodEnd);
+      if (daysStayed > 0) {
+        entries.push({ 
+          type: "active", 
+          resident, 
+          daysStayed, 
+          joinDate: joinDate > periodStart ? joinDate : periodStart, 
+          endDate: periodEnd 
+        });
+      } else {
+        // Active but not in this billing period window
+        entries.push({
+          type: "active",
+          resident,
+          daysStayed: 0,
+          joinDate: periodEnd,
+          endDate: periodEnd
+        });
+      }
+    });
+
+    vacatedResidents.forEach((v) => {
+      const joinDate = v.join_date ? stripTime(v.join_date) : periodStart;
+      const vacDate = v.vacatedAt ? stripTime(v.vacatedAt) : periodEnd;
+      const daysStayed = overlapDays(joinDate, vacDate, periodStart, periodEnd);
+      if (daysStayed > 0) {
+        entries.push({ 
+          type: "vacated", 
+          vacated: v, 
+          daysStayed, 
+          joinDate: joinDate > periodStart ? joinDate : periodStart, 
+          endDate: vacDate < periodEnd ? vacDate : periodEnd 
+        });
+      }
+    });
+
+    const totalDays = Math.max(Math.floor((periodEnd - periodStart) / dayMs) + 1, 1);
+    const dailyOccupancy = [];
+    let activeDaysCount = 0;
+
+    for (let d = 0; d < totalDays; d++) {
+      const currentDayStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate() + d);
+      const currentDayEnd = new Date(periodStart.getFullYear(), periodStart.getMonth(), periodStart.getDate() + d, 23, 59, 59, 999);
+      
+      const todaysOccupants = [];
+      entries.forEach((entry) => {
+        if (entry.daysStayed === 0) return;
+        const stayStart = new Date(entry.joinDate.getFullYear(), entry.joinDate.getMonth(), entry.joinDate.getDate());
+        const stayEnd = new Date(entry.endDate.getFullYear(), entry.endDate.getMonth(), entry.endDate.getDate(), 23, 59, 59, 999);
+        
+        if (stayStart <= currentDayEnd && stayEnd >= currentDayStart) {
+          todaysOccupants.push(entry);
+        }
+      });
+
+      dailyOccupancy.push(todaysOccupants);
+      if (todaysOccupants.length > 0) {
+        activeDaysCount++;
+      }
+    }
+
+    const divisorDays = activeDaysCount > 0 ? activeDaysCount : totalDays;
+    const dailyCost = monthlyCharge / divisorDays;
+
+    const finalShares = new Map();
+
+    for (let d = 0; d < totalDays; d++) {
+      const occupants = dailyOccupancy[d];
+      const N = occupants.length;
+      if (N > 0) {
+        const sharePerPerson = dailyCost / N;
+        occupants.forEach((entry) => {
+          const currentVal = finalShares.get(entry) || 0;
+          finalShares.set(entry, currentVal + sharePerPerson);
+        });
+      }
+    }
+
+    await Promise.all(entries.map(async (entry) => {
+      const rawShare = finalShares.get(entry) || 0;
+      const electricityShare = parseFloat(rawShare.toFixed(2));
+      
+      if (entry.type === "active") {
+        const resident = entry.resident;
+        resident.electricity_charges = electricityShare;
+        resident.total_charges = parseFloat((parseFloat(resident.rent_amount || 0) + electricityShare).toFixed(2));
+        await resident.save();
+      } else {
+        const v = entry.vacated;
+        v.electricity_charges = electricityShare;
+        v.total_charges = parseFloat((parseFloat(v.rent_amount || 0) + electricityShare).toFixed(2));
+        await v.save();
+      }
+    }));
+  } catch (err) {
+    console.error("Error in recalculateRoomElectricityCharges:", err);
   }
 };

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/Form.css";
-import { Button, Input, Select, Alert } from "../components/ui";
+import { Button, Input, Select } from "../components/ui";
 
 export default function EditResident() {
   const { id } = useParams();
@@ -19,6 +19,7 @@ export default function EditResident() {
     room_type: "DOUBLE_SHARE",
     ac_status: "NON_AC",
     photo: null,
+    electricity_meter_reading: "",
     father_name: "",
     father_phone: "",
     mother_name: "",
@@ -38,14 +39,37 @@ export default function EditResident() {
 
   useEffect(() => {
     fetchResidentData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchResidentData = async () => {
     try {
       setLoading(true);
-      // Get resident data from state if available
+      
+      let resident = null;
       if (location.state && location.state.resident) {
-        const resident = location.state.resident;
+        resident = location.state.resident;
+      } else {
+        const res = await API.get(`/users/${id}`);
+        if (res.data.success) {
+          resident = res.data.data;
+        }
+      }
+
+      if (resident) {
+        let initialReading = "";
+        try {
+          const meterRes = await API.get(`/electricity-meters/block/${resident.block_number}`);
+          if (meterRes.data.success) {
+            const meter = meterRes.data.data.find(m => String(m.room_number) === String(resident.room_number));
+            if (meter) {
+              initialReading = String(meter.current_reading || 0);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch meter reading:", e);
+        }
+
         setFormData({
           name: resident.name || "",
           phone: resident.phone || "",
@@ -55,6 +79,7 @@ export default function EditResident() {
           room_type: resident.room_type || "DOUBLE_SHARE",
           ac_status: resident.ac_status || "NON_AC",
           photo: null,
+          electricity_meter_reading: initialReading,
           father_name: resident.father_name || "",
           father_phone: resident.father_phone || "",
           mother_name: resident.mother_name || "",
@@ -68,35 +93,6 @@ export default function EditResident() {
         });
         if (resident.photo) {
           setPhotoPreview(resident.photo);
-        }
-      } else {
-        // Fallback: fetch from API
-        const res = await API.get(`/users/${id}`);
-        if (res.data.success) {
-          const resident = res.data.data;
-          setFormData({
-            name: resident.name || "",
-            phone: resident.phone || "",
-            email: resident.email || "",
-            block_number: resident.block_number || "",
-            room_number: resident.room_number || "",
-            room_type: resident.room_type || "DOUBLE_SHARE",
-            ac_status: resident.ac_status || "NON_AC",
-            photo: null,
-            father_name: resident.father_name || "",
-            father_phone: resident.father_phone || "",
-            mother_name: resident.mother_name || "",
-            emergency_name: resident.emergency_name || "",
-            emergency_phone: resident.emergency_phone || "",
-            guardian_name: resident.guardian_name || "",
-            guardian_phone: resident.guardian_phone || "",
-            occupation: resident.occupation || "STUDYING",
-            company_name: resident.company_name || "",
-            college_name: resident.college_name || ""
-          });
-          if (resident.photo) {
-            setPhotoPreview(resident.photo);
-          }
         }
       }
     } catch (err) {
@@ -220,15 +216,17 @@ export default function EditResident() {
                 required
                 placeholder="Email address"
               />
-              <Input
+              <Select
                 label="Block Number *"
-                type="text"
                 name="block_number"
                 value={formData.block_number}
                 onChange={handleChange}
                 required
-                placeholder="e.g., A, B, C"
-              />
+              >
+                <option value="">Select Block</option>
+                <option value="1">Block 1</option>
+                <option value="2">Block 2</option>
+              </Select>
             </div>
 
             <div className="form-row">
@@ -281,6 +279,18 @@ export default function EditResident() {
                   <img src={photoPreview} alt="Preview" style={{ maxWidth: "100px", marginTop: "10px", borderRadius: "5px" }} />
                 </div>
               )}
+            </div>
+
+            <div className="form-row">
+              <Input
+                label="Electricity Meter Reading"
+                type="number"
+                step="0.01"
+                name="electricity_meter_reading"
+                value={formData.electricity_meter_reading}
+                onChange={handleChange}
+                placeholder="Current meter reading"
+              />
             </div>
           </fieldset>
 

@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Room } from "../models/room.model.js";
 import { ElectricityMeter } from "../models/electricityMeter.model.js";
+import { recalculateRoomElectricityCharges } from "./electricityMeterController.js";
 import {
   refreshRoomStatus,
   normalizeRoomType,
@@ -134,6 +135,50 @@ export const addUser = async (req, res) => {
 
     await refreshRoomStatus(normalizedBlock, normalizedRoom);
 
+    // Sync initial electricity meter reading if provided
+    const initialMeterReading = body.electricity_meter_reading;
+    if (normalizedBlock && normalizedRoom && initialMeterReading !== undefined && initialMeterReading !== "") {
+      const readingVal = parseFloat(initialMeterReading);
+      if (!isNaN(readingVal)) {
+        let meter = await ElectricityMeter.findOne({
+          where: { block_number: normalizedBlock, room_number: normalizedRoom }
+        });
+        if (meter) {
+          const prev = Number(meter.current_reading || 0);
+          const units = readingVal - prev;
+          meter.previous_reading = prev;
+          meter.current_reading = readingVal;
+          meter.units_consumed = units >= 0 ? units : 0;
+          meter.monthly_charge = meter.units_consumed * (meter.rate_per_unit || 14.00);
+          meter.last_reading_date = new Date();
+          await meter.save();
+        } else {
+          const roomObj = await Room.findOne({
+            where: { block_number: normalizedBlock, room_number: normalizedRoom }
+          });
+          const meterNumber = roomObj?.electricity_meter_number || `M-${normalizedBlock}-${normalizedRoom}`;
+          await ElectricityMeter.create({
+            meter_number: meterNumber,
+            block_number: normalizedBlock,
+            floor_number: roomObj?.floor_number || String(normalizedRoom[0] || "1"),
+            room_number: normalizedRoom,
+            current_reading: readingVal,
+            previous_reading: readingVal,
+            units_consumed: 0,
+            monthly_charge: 0,
+            last_reading_date: new Date(),
+            rate_per_unit: 14.00,
+            status: "ACTIVE"
+          });
+        }
+      }
+    }
+
+    if (normalizedBlock && normalizedRoom) {
+      await recalculateRoomElectricityCharges(normalizedBlock, normalizedRoom);
+      await user.reload();
+    }
+
     res.status(201).json({ 
       success: true, 
       message: "Resident added successfully", 
@@ -146,7 +191,7 @@ export const addUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const where = { status: "ACTIVE" };
+    const where = { status: "ACTIVE", role: "USER" };
     if (req.user.role !== "SUPER_ADMIN") {
       Object.assign(where, getHostelFilter(req.user));
     }
@@ -404,6 +449,53 @@ export const updateUser = async (req, res) => {
       await refreshRoomStatus(afterBlock, afterRoom);
     }
 
+    // Sync initial/current electricity meter reading if provided
+    const initialMeterReading = body.electricity_meter_reading;
+    if (afterBlock && afterRoom && initialMeterReading !== undefined && initialMeterReading !== "") {
+      const readingVal = parseFloat(initialMeterReading);
+      if (!isNaN(readingVal)) {
+        let meter = await ElectricityMeter.findOne({
+          where: { block_number: afterBlock, room_number: afterRoom }
+        });
+        if (meter) {
+          const prev = Number(meter.current_reading || 0);
+          const units = readingVal - prev;
+          meter.previous_reading = prev;
+          meter.current_reading = readingVal;
+          meter.units_consumed = units >= 0 ? units : 0;
+          meter.monthly_charge = meter.units_consumed * (meter.rate_per_unit || 14.00);
+          meter.last_reading_date = new Date();
+          await meter.save();
+        } else {
+          const roomObj = await Room.findOne({
+            where: { block_number: afterBlock, room_number: afterRoom }
+          });
+          const meterNumber = roomObj?.electricity_meter_number || `M-${afterBlock}-${afterRoom}`;
+          await ElectricityMeter.create({
+            meter_number: meterNumber,
+            block_number: afterBlock,
+            floor_number: roomObj?.floor_number || String(afterRoom[0] || "1"),
+            room_number: afterRoom,
+            current_reading: readingVal,
+            previous_reading: readingVal,
+            units_consumed: 0,
+            monthly_charge: 0,
+            last_reading_date: new Date(),
+            rate_per_unit: 14.00,
+            status: "ACTIVE"
+          });
+        }
+      }
+    }
+
+    if (previousBlock && previousRoom && (previousBlock !== afterBlock || previousRoom !== afterRoom)) {
+      await recalculateRoomElectricityCharges(previousBlock, previousRoom);
+    }
+    if (afterBlock && afterRoom) {
+      await recalculateRoomElectricityCharges(afterBlock, afterRoom);
+      await user.reload();
+    }
+
     res.json({
       success: true,
       message: "Resident updated successfully",
@@ -432,6 +524,9 @@ export const deleteUser = async (req, res) => {
 
     await user.destroy();
     await refreshRoomStatus(previousBlock, previousRoom);
+    if (previousBlock && previousRoom) {
+      await recalculateRoomElectricityCharges(previousBlock, previousRoom);
+    }
 
     res.json({ 
       success: true, 

@@ -79,15 +79,7 @@ export default function ManageRoomsPage() {
     fetchRooms();
   }, []);
 
-  const blocks = useMemo(() => {
-    return Array.from(
-      new Set([
-        "1",
-        "2",
-        ...rooms.map((room) => String(room.block_number || "").trim()).filter(Boolean)
-      ])
-    ).sort(compareNumbers);
-  }, [rooms]);
+  const blocks = ["1", "2"];
 
   const visibleRooms = useMemo(() => {
     const list = filterBlock === "all"

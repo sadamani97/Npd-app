@@ -15,6 +15,7 @@ export default function AddResident() {
     room_type: "DOUBLE_SHARE",
     ac_status: "NON_AC",
     photo: null,
+    electricity_meter_reading: "",
     father_name: "",
     father_phone: "",
     mother_name: "",
@@ -131,15 +132,19 @@ export default function AddResident() {
                 placeholder="Email address"
               />
 
-              <Input
-                label="Block Number *"
-                type="text"
-                name="block_number"
-                value={formData.block_number}
-                onChange={handleChange}
-                required
-                placeholder="e.g., A, B, C"
-              />
+              <div className="form-group">
+                <label>Block Number *</label>
+                <select
+                  name="block_number"
+                  value={formData.block_number}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Block</option>
+                  <option value="1">Block 1</option>
+                  <option value="2">Block 2</option>
+                </select>
+              </div>
             </div>
 
             <div className="form-row">
@@ -200,6 +205,18 @@ export default function AddResident() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="form-row">
+              <Input
+                label="Electricity Meter Reading"
+                type="number"
+                step="0.01"
+                name="electricity_meter_reading"
+                value={formData.electricity_meter_reading}
+                onChange={handleChange}
+                placeholder="Initial meter reading"
+              />
             </div>
           </fieldset>
 
