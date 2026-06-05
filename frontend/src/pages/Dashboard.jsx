@@ -94,7 +94,9 @@ export default function Dashboard() {
   };
 
   const getBlockStats = () => {
-    return stats.blockGroups || [];
+    return (stats.blockGroups || []).filter(
+      (block) => String(block.block) === "1" || String(block.block) === "2"
+    );
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -216,7 +218,7 @@ export default function Dashboard() {
         <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer"}}>
           <div className="stat-icon">🏠</div>
           <div className="stat-content">
-            <div className="stat-value">{stats.blockGroups?.length || 0}</div>
+            <div className="stat-value">{getBlockStats().length}</div>
             <div className="stat-label">Blocks</div>
           </div>
         </div>

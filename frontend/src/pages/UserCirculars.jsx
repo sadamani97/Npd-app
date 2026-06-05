@@ -94,7 +94,7 @@ export default function UserCirculars() {
               <div className="description-section">
                 <h3>📌 Details</h3>
                 <div className="description-text">
-                  {selectedCircular.description}
+                  {selectedCircular.message}
                 </div>
               </div>
 
@@ -164,7 +164,7 @@ export default function UserCirculars() {
                     {getPriorityBadge(circular.priority)}
                   </div>
 
-                  <p className="circular-description">{circular.description}</p>
+                  <p className="circular-description">{circular.message}</p>
 
                   <div className="circular-footer">
                     <span className="date">

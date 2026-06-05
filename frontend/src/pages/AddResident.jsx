@@ -10,6 +10,7 @@ export default function AddResident() {
     name: "",
     phone: "",
     email: "",
+    password: "",
     block_number: "",
     room_number: "",
     room_type: "DOUBLE_SHARE",
@@ -132,6 +133,18 @@ export default function AddResident() {
                 placeholder="Email address"
               />
 
+              <Input
+                label="Password *"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Login password for resident"
+              />
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label>Block Number *</label>
                 <select
@@ -145,9 +158,7 @@ export default function AddResident() {
                   <option value="2">Block 2</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-row">
               <Input
                 label="Room Number *"
                 type="text"
@@ -157,7 +168,9 @@ export default function AddResident() {
                 required
                 placeholder="e.g., 101, 202"
               />
+            </div>
 
+            <div className="form-row">
               <div className="form-group">
                 <label>Room Type *</label>
                 <select 
@@ -174,9 +187,7 @@ export default function AddResident() {
                   <option value="SIX_SHARE">Six Share</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-row">
               <div className="form-group">
                 <label>AC Status *</label>
                 <select 
@@ -189,7 +200,9 @@ export default function AddResident() {
                   <option value="NON_AC">Non-AC</option>
                 </select>
               </div>
+            </div>
 
+            <div className="form-row">
               <div className="form-group">
                 <label>Photo</label>
                 <Input
@@ -205,9 +218,7 @@ export default function AddResident() {
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="form-row">
               <Input
                 label="Electricity Meter Reading"
                 type="number"

@@ -81,7 +81,7 @@ export default function UserDashboard() {
               circulars.map((circular) => (
                 <div key={circular.id} className="item">
                   <h4>{circular.title}</h4>
-                  <p>{circular.description}</p>
+                  <p>{circular.message}</p>
                   <small>{new Date(circular.createdAt).toLocaleDateString()}</small>
                 </div>
               ))

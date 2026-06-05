@@ -121,9 +121,9 @@ export default function Complaints() {
                 </p>
                 <p className="description">{complaint.description}</p>
                 
-                {complaint.User && (
+                {(complaint.user || complaint.User) && (
                   <p className="resident-info">
-                    <strong>From:</strong> {complaint.User.name} ({complaint.User.phone})
+                    <strong>From:</strong> {(complaint.user || complaint.User).name} ({(complaint.user || complaint.User).phone})
                   </p>
                 )}
 

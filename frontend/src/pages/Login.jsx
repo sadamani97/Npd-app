@@ -38,7 +38,7 @@ export default function Login({ setIsAuthenticated }) {
         const userRole = res.data.user.role;
         
         // Store tokens based on user role
-        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "HOSTEL_ADMIN") {
           localStorage.setItem("adminToken", res.data.token);
           localStorage.setItem("admin", JSON.stringify(res.data.user));
         } else {
@@ -49,7 +49,7 @@ export default function Login({ setIsAuthenticated }) {
         setIsAuthenticated(true);
         
         // Redirect based on user role
-        if (userRole === "ADMIN") {
+        if (userRole === "ADMIN" || userRole === "HOSTEL_ADMIN") {
           navigate("/dashboard", { replace: true });
         } else if (userRole === "SUPER_ADMIN") {
           navigate("/superadmin/dashboard", { replace: true });
@@ -99,13 +99,13 @@ export default function Login({ setIsAuthenticated }) {
 
         <form onSubmit={handleLogin}>
           <Input
-            label="Email"
-            type="email"
+            label="Email or Phone Number"
+            type="text"
             id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
+            placeholder="Enter your email or phone number"
             required
           />
 

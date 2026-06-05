@@ -39,6 +39,15 @@ function App() {
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
 
   useEffect(() => {
+    // Clear localStorage on fresh app run (new session) to force user to login first
+    if (!sessionStorage.getItem("sessionStarted")) {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("admin");
+      sessionStorage.setItem("sessionStarted", "true");
+    }
+
     const syncAuthState = () => {
       const userToken = localStorage.getItem("userToken");
       const adminToken = localStorage.getItem("adminToken");
@@ -62,7 +71,7 @@ function App() {
 
   const getRedirectPath = () => {
     if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
-    if (currentUser.role === "ADMIN") return "/dashboard";
+    if (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN") return "/dashboard";
     if (currentUser.role === "USER") return "/user-dashboard";
     return "/login";
   };
