@@ -1,0 +1,3 @@
+$kind: collection
+name: Residents
+description: Management of hostel residents — add, update, vacate, and delete resident records.

@@ -1,35 +1,15 @@
 import React, { useState, useEffect } from "react";
-import API from "../services/api";
+import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
 import "../styles/FoodMenu.css";
 
 export default function FoodMenu() {
-  const [menus, setMenus] = useState([]);
+  const { menuForDate, fetchMenuForDate, loading, error } = useFoodMenu();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchMenusForDate(selectedDate);
+    fetchMenuForDate(selectedDate);
   }, [selectedDate]);
-
-  const fetchMenusForDate = async (date) => {
-    try {
-      setLoading(true);
-      setError("");
-      const res = await API.get("/food-menus/date", { params: { date } });
-      
-      if (res.data.success) {
-        const groupedMenus = groupByMealType(res.data.data);
-        setMenus(groupedMenus);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load menu");
-      setMenus([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const groupByMealType = (items) => {
     const grouped = {
@@ -38,7 +18,7 @@ export default function FoodMenu() {
       DINNER: []
     };
     
-    items.forEach(item => {
+    (items || []).forEach(item => {
       if (grouped[item.meal_type]) {
         grouped[item.meal_type].push(item);
       }
@@ -46,6 +26,8 @@ export default function FoodMenu() {
     
     return grouped;
   };
+
+  const menus = groupByMealType(menuForDate);
 
   const handlePreviousDay = () => {
     const prev = new Date(selectedDate);

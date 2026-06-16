@@ -1,68 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useAuth } from "../hooks/useAuth";
+import { useCirculars } from "../hooks/useCirculars";
+import { useComplaints } from "../hooks/useComplaints";
+import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
 import "../styles/UserDashboard.css";
 
 export default function UserDashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
+  const { currentUser: user } = useAuth();
   const [activeView, setActiveView] = useState("overview");
-  const [circulars, setCirculars] = useState([]);
-  const [complaints, setComplaints] = useState([]);
-  const [todayMenu, setTodayMenu] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { circulars, fetchCirculars, loading: circLoading } = useCirculars();
+  const { complaints, fetchComplaints, loading: compLoading } = useComplaints();
+  const { menuForDate: todayMenu, fetchMenuForDate, loading: menuLoading, error: menuError } = useFoodMenu();
+
+  const loading = circLoading || compLoading || menuLoading;
+  const error = menuError;
+
+  const recentCirculars = (circulars || []).slice(0, 3);
+  const recentComplaints = (complaints || []).slice(0, 3);
 
   useEffect(() => {
     fetchUserData();
   }, []);
 
   const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      // Fetch circulars
-      try {
-        const circularsRes = await API.get("/circulars");
-        if (circularsRes.data.success && Array.isArray(circularsRes.data.data)) {
-          setCirculars(circularsRes.data.data.slice(0, 3));
-        }
-      } catch (err) {
-        console.error("Circulars fetch error:", err);
-      }
-
-      // Fetch user's complaints
-      try {
-        const complaintsRes = await API.get("/complaints");
-        if (complaintsRes.data.success && Array.isArray(complaintsRes.data.data)) {
-          setComplaints(complaintsRes.data.data.slice(0, 3));
-        }
-      } catch (err) {
-        console.error("Complaints fetch error:", err);
-      }
-
-      // Get today's menu
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const menuRes = await API.get("/food-menus/date", { params: { date: today } });
-        if (menuRes.data.success && Array.isArray(menuRes.data.data)) {
-          setTodayMenu(menuRes.data.data);
-        }
-      } catch (err) {
-        console.error("Food menu fetch error:", err);
-        // Don't show error if menu is not available
-        if (err.response?.status !== 404) {
-          console.error("Error fetching menu:", err.message);
-        }
-      }
-    } catch (err) {
-      setError("Failed to load some dashboard data. Please refresh the page.");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
+    const today = new Date().toISOString().split("T")[0];
+    await Promise.allSettled([
+      fetchCirculars(),
+      fetchComplaints(),
+      fetchMenuForDate(today)
+    ]);
   };
 
   const renderOverview = () => (
@@ -77,11 +44,11 @@ export default function UserDashboard() {
         <div className="dashboard-card">
           <h3>📢 Recent Announcements</h3>
           <div className="card-content">
-            {circulars.length > 0 ? (
-              circulars.map((circular) => (
+            {recentCirculars.length > 0 ? (
+              recentCirculars.map((circular) => (
                 <div key={circular.id} className="item">
                   <h4>{circular.title}</h4>
-                  <p>{circular.description}</p>
+                  <p>{circular.message}</p>
                   <small>{new Date(circular.createdAt).toLocaleDateString()}</small>
                 </div>
               ))
@@ -133,8 +100,8 @@ export default function UserDashboard() {
         <div className="dashboard-card">
           <h3>📝 My Complaints</h3>
           <div className="card-content">
-            {complaints.length > 0 ? (
-              complaints.map((complaint) => (
+            {recentComplaints.length > 0 ? (
+              recentComplaints.map((complaint) => (
                 <div key={complaint.id} className="complaint-item">
                   <h4>{complaint.title}</h4>
                   <span className={`status-badge ${complaint.status?.toLowerCase()}`}>

@@ -2,7 +2,7 @@ import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Room } from "../models/room.model.js";
 import { ElectricityMeter } from "../models/electricityMeter.model.js";
-import { recalculateRoomElectricityCharges } from "./electricityMeterController.js";
+import { recalculateRoomElectricityCharges } from "./electricityMeter.controller.js";
 import {
   refreshRoomStatus,
   normalizeRoomType,
@@ -53,10 +53,16 @@ export const addUser = async (req, res) => {
       ...otherData
     } = body;
 
-    // Check if user already exists
+    // Check if user already exists by email
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    // Check if user already exists by phone
+    const existingUserByPhone = await User.findOne({ where: { phone } });
+    if (existingUserByPhone) {
+      return res.status(400).json({ success: false, message: "User with this phone number already exists" });
     }
 
     const normalizedBlock = String(block_number || "").trim();
@@ -96,8 +102,12 @@ export const addUser = async (req, res) => {
       }
     }
 
+    if (!password) {
+      return res.status(400).json({ success: false, message: "Password is required" });
+    }
+
     // Hash password
-    const hashedPassword = await bcrypt.hash(password || "12345678", 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Handle photo upload
     let photoData = null;

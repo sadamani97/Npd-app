@@ -1,0 +1,56 @@
+$kind: http-request
+name: Add Resident (Admin)
+method: POST
+order: 1000
+url: '{{base_url}}/api/users'
+body:
+  type: formdata
+  content:
+    - key: name
+      type: text
+      value: Jane Resident
+    - key: phone
+      type: text
+      value: '9112345678'
+    - key: email
+      type: text
+      value: jane@example.com
+    - key: password
+      type: text
+      value: resident123
+    - key: block_number
+      type: text
+      value: '1'
+    - key: room_number
+      type: text
+      value: '101'
+    - key: room_type
+      type: text
+      value: DOUBLE_SHARE
+    - key: ac_status
+      type: text
+      value: AC
+    - key: father_name
+      type: text
+      value: Robert Resident
+    - key: father_phone
+      type: text
+      value: '9111222333'
+    - key: emergency_name
+      type: text
+      value: Robert Resident
+    - key: emergency_phone
+      type: text
+      value: '9111222333'
+    - key: occupation
+      type: text
+      value: Student
+    - key: college_name
+      type: text
+      value: NPD University
+    - key: rent_amount
+      type: text
+      value: '8500'
+    - key: electricity_meter_reading
+      type: text
+      value: '120.5'

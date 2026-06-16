@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useResidents } from "../hooks/useResidents";
 import Layout from "../components/Layout";
 import "../styles/Form.css";
 import { Button, Input, Alert } from "../components/ui";
@@ -10,6 +10,7 @@ export default function AddResident() {
     name: "",
     phone: "",
     email: "",
+    password: "",
     block_number: "",
     room_number: "",
     room_type: "DOUBLE_SHARE",
@@ -29,9 +30,8 @@ export default function AddResident() {
   });
 
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { addResident, loading, error } = useResidents();
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -54,36 +54,10 @@ export default function AddResident() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const submitData = new FormData();
-      
-      // Add all form fields
-      Object.keys(formData).forEach((key) => {
-        if (key === "photo" && formData[key]) {
-          submitData.append(key, formData[key]);
-        } else if (key !== "photo") {
-          submitData.append(key, formData[key]);
-        }
-      });
-
-      const res = await API.post("/users", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      });
-      
-      if (res.data.success) {
-        alert("Resident added successfully!");
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to add resident");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+    const res = await addResident(formData);
+    if (res.success) {
+      alert("Resident added successfully!");
+      navigate("/dashboard");
     }
   };
 
@@ -132,6 +106,18 @@ export default function AddResident() {
                 placeholder="Email address"
               />
 
+              <Input
+                label="Password *"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Login password for resident"
+              />
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label>Block Number *</label>
                 <select
@@ -145,9 +131,7 @@ export default function AddResident() {
                   <option value="2">Block 2</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-row">
               <Input
                 label="Room Number *"
                 type="text"
@@ -157,7 +141,9 @@ export default function AddResident() {
                 required
                 placeholder="e.g., 101, 202"
               />
+            </div>
 
+            <div className="form-row">
               <div className="form-group">
                 <label>Room Type *</label>
                 <select 
@@ -174,9 +160,7 @@ export default function AddResident() {
                   <option value="SIX_SHARE">Six Share</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-row">
               <div className="form-group">
                 <label>AC Status *</label>
                 <select 
@@ -189,7 +173,9 @@ export default function AddResident() {
                   <option value="NON_AC">Non-AC</option>
                 </select>
               </div>
+            </div>
 
+            <div className="form-row">
               <div className="form-group">
                 <label>Photo</label>
                 <Input
@@ -205,9 +191,7 @@ export default function AddResident() {
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="form-row">
               <Input
                 label="Electricity Meter Reading"
                 type="number"

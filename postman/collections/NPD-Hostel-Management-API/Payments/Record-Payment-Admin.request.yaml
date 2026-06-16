@@ -1,0 +1,19 @@
+$kind: http-request
+name: Record Payment (Admin)
+method: POST
+order: 1000
+url: '{{base_url}}/api/payments'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "user_id": 1,
+      "amount": 9500,
+      "month": "2026-06",
+      "payment_method": "UPI",
+      "receipt_number": "REC-UPI-9922",
+      "notes": "June rent + electricity share"
+    }

@@ -9,7 +9,7 @@ import {
   vacateUser,
   updateUser,
   deleteUser
-} from "../Controllers/ResidentController.js";
+} from "../controllers/resident.controller.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });

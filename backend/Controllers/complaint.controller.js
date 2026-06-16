@@ -1,15 +1,18 @@
 // controllers/complaint.controller.js
-import { Complaint, User } from "../models/index.js";
+import { Complaint, User, Hostel } from "../models/index.js";
 import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const addComplaint = async (req, res) => {
   try {
     const { title, description, category } = req.body;
     const userId = req.user.id;
-    const hostel_id = req.user.hostel_id; // Add hostel_id from the authenticated user
+    let hostel_id = req.user.hostel_id; // Add hostel_id from the authenticated user
 
     if (!hostel_id && req.user.role !== "SUPER_ADMIN") {
+      const anyHostel = await Hostel.findOne();
+      if (anyHostel) {
         return res.status(400).json({ success: false, message: "User is not associated with a hostel" });
+      }
     }
 
     const complaint = await Complaint.create({

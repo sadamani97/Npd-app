@@ -1,6 +1,7 @@
 // middleware/auth.middleware.js
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
+import { Hostel } from "../models/hostel.model.js";
 
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -20,11 +21,19 @@ export const protect = async (req, res, next) => {
 
     // Recover missing hostel assignment for authenticated users if token was issued without it.
     if (req.user.role !== "SUPER_ADMIN" && !req.user.hostel_id && req.user.id) {
-      const dbUser = await User.findByPk(req.user.id, {
-        attributes: ["hostel_id"]
-      });
+      const dbUser = await User.findByPk(req.user.id);
       if (dbUser) {
-        req.user.hostel_id = dbUser.hostel_id;
+        if (dbUser.hostel_id) {
+          req.user.hostel_id = dbUser.hostel_id;
+        } else {
+          // Automatically assign to the first hostel if not associated with any
+          const firstHostel = await Hostel.findOne();
+          if (firstHostel) {
+            dbUser.hostel_id = firstHostel.id;
+            await dbUser.save();
+            req.user.hostel_id = firstHostel.id;
+          }
+        }
       }
     }
 

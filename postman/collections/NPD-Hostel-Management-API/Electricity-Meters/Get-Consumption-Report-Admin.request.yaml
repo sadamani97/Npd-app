@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Consumption Report (Admin)
+method: GET
+order: 8000
+url: '{{base_url}}/api/electricity-meters/report/:blockNumber'
+pathVariables:
+  - key: blockNumber
+    value: '1'

@@ -8,7 +8,7 @@ import {
   getOverduePayments,
   getMonthlyPaymentSummary,
   updatePaymentStatus
-} from "../Controllers/paymentController.js";
+} from "../controllers/payment.controller.js";
 
 const router = express.Router();
 

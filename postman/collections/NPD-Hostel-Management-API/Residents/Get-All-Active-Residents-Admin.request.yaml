@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Active Residents (Admin)
+method: GET
+order: 2000
+url: '{{base_url}}/api/users'

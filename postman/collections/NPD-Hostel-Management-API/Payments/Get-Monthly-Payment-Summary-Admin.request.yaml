@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Monthly Payment Summary (Admin)
+method: GET
+order: 5000
+url: '{{base_url}}/api/payments/summary/monthly'
