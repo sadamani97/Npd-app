@@ -4,6 +4,7 @@ import { Room } from "../models/room.model.js";
 import { Payment } from "../models/payment.model.js";
 import { Sequelize } from "sequelize";
 import { syncRoomsFromActiveResidents } from "../utils/roomSync.js";
+import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const getDashboardStats = async (req, res) => {
   try {
@@ -123,20 +124,42 @@ export const getBlockSummary = async (req, res) => {
     const { blockNumber } = req.params;
     await syncRoomsFromActiveResidents();
 
-    const residents = await User.count({
-      where: { block_number: blockNumber, status: "ACTIVE" }
+    // Construct block filter with hostel isolation
+    const blockFilter = { block_number: blockNumber };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(blockFilter, getHostelFilter(req.user));
+    }
+
+    // Check if there are any rooms configured in this block
+    const roomsCount = await Room.count({
+      where: blockFilter
     });
 
-    const rooms = await Room.count({
-      where: { block_number: blockNumber }
+    if (roomsCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Block ${blockNumber} not found`
+      });
+    }
+
+    const residents = await User.count({
+      where: {
+        block_number: blockNumber,
+        status: "ACTIVE",
+        role: "USER",
+        ...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
+      }
     });
 
     const occupiedRooms = await Room.count({
-      where: { block_number: blockNumber, status: "OCCUPIED" }
+      where: {
+        ...blockFilter,
+        status: "OCCUPIED"
+      }
     });
 
     const roomDetails = await Room.findAll({
-      where: { block_number: blockNumber },
+      where: blockFilter,
       order: [['floor_number', 'ASC'], ['room_number', 'ASC']]
     });
 
@@ -145,9 +168,9 @@ export const getBlockSummary = async (req, res) => {
       data: {
         block_number: blockNumber,
         total_residents: residents,
-        total_rooms: rooms,
+        total_rooms: roomsCount,
         occupied_rooms: occupiedRooms,
-        vacant_rooms: rooms - occupiedRooms,
+        vacant_rooms: roomsCount - occupiedRooms,
         rooms: roomDetails
       }
     });
@@ -164,8 +187,15 @@ export const getRoomOccupancySummary = async (req, res) => {
   try {
     await syncRoomsFromActiveResidents();
 
+    const roomWhere = {};
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(roomWhere, getHostelFilter(req.user));
+    } else {
+      roomWhere.block_number = ["1", "2"];
+    }
+
     const rooms = await Room.findAll({
-      where: { block_number: ["1", "2"] },
+      where: roomWhere,
       order: [['block_number', 'ASC'], ['floor_number', 'ASC'], ['room_number', 'ASC']]
     });
 
@@ -182,7 +212,7 @@ export const getRoomOccupancySummary = async (req, res) => {
         return {
           ...room.toJSON(),
           occupants,
-          vacancy: room.capacity - occupants
+          vacancy: Math.max((room.capacity || 0) - occupants, 0)
         };
       })
     );
@@ -190,6 +220,71 @@ export const getRoomOccupancySummary = async (req, res) => {
     res.status(200).json({
       success: true,
       data: summary
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Get individual room occupancy
+export const getIndividualRoomOccupancy = async (req, res) => {
+  try {
+    const { roomNumber } = req.params;
+    await syncRoomsFromActiveResidents();
+
+    const roomWhere = { room_number: roomNumber };
+    if (req.user.role !== "SUPER_ADMIN") {
+      Object.assign(roomWhere, getHostelFilter(req.user));
+    }
+
+    const rooms = await Room.findAll({
+      where: roomWhere,
+      order: [['block_number', 'ASC']]
+    });
+
+    if (rooms.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Room ${roomNumber} not found`
+      });
+    }
+
+    const summary = await Promise.all(
+      rooms.map(async (room) => {
+        const occupants = await User.count({
+          where: {
+            block_number: room.block_number,
+            room_number: room.room_number,
+            status: "ACTIVE",
+            role: "USER"
+          }
+        });
+
+        const residents = await User.findAll({
+          where: {
+            block_number: room.block_number,
+            room_number: room.room_number,
+            status: "ACTIVE",
+            role: "USER"
+          },
+          attributes: ['id', 'name', 'phone', 'email']
+        });
+
+        return {
+          ...room.toJSON(),
+          occupants,
+          vacancy: Math.max((room.capacity || 0) - occupants, 0),
+          residents_details: residents
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: summary.length === 1 ? summary[0] : summary
     });
   } catch (err) {
     res.status(500).json({

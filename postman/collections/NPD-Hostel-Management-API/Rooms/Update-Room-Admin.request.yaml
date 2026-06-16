@@ -1,0 +1,22 @@
+$kind: http-request
+name: Update Room (Admin)
+method: PUT
+order: 5000
+url: '{{base_url}}/api/rooms/:roomId'
+pathVariables:
+  - key: roomId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "room_type": "DOUBLE_SHARE",
+      "is_premium": true,
+      "ac_status": "AC",
+      "capacity": 2,
+      "base_rent": 9500,
+      "electricity_meter_number": "M-1-102-UPDATED"
+    }

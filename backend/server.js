@@ -16,7 +16,7 @@ const startServer = async () => {
     console.log("Database synced successfully");
 
     // Start server
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`http://localhost:${PORT}`);
     });

@@ -1,6 +1,6 @@
 // routes/foodConfirmation.routes.js
 import express from "express";
-import * as foodConfirmationController from "../Controllers/foodConfirmation.controller.js";
+import * as foodConfirmationController from "../controllers/foodConfirmation.controller.js";
 import { protect, isAdmin } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();

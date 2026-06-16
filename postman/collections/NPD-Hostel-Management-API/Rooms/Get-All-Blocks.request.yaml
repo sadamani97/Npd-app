@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Blocks
+method: GET
+order: 1000
+url: '{{base_url}}/api/rooms/blocks'

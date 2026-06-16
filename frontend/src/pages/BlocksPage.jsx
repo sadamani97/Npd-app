@@ -52,13 +52,6 @@ export default function BlocksPage() {
             >
               ← Back to Dashboard
             </button>
-            <button
-              type="button"
-              className="room-action-btn primary"
-              onClick={() => navigate("/manage-rooms")}
-            >
-              Manage Rooms
-            </button>
           </div>
           <h2>🏢 Blocks</h2>
           <p className="hierarchy-sub">{availableBlocks.length} block(s)</p>

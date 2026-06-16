@@ -1,0 +1,3 @@
+$kind: collection
+name: Electricity Meters
+description: Endpoints for monitoring and recording electricity meter readings — create, read, update, reset, and delete meters.

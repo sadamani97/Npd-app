@@ -1,34 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import API from "../services/api";
-import { getCurrentUser } from "../utils/authUtils";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/Sidebar.css";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = getCurrentUser();
+  const { currentUser: user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = user.role === "ADMIN" || user.role === "HOSTEL_ADMIN";
   const isSuperAdmin = user.role === "SUPER_ADMIN";
 
-  const handleLogout = async () => {
-    try {
-      // Call logout API
-      await API.post("/auth/logout");
-    } catch (err) {
-      console.error("Logout error:", err);
-    } finally {
-      // Clear all auth data
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("admin");
-
-      // Always redirect to login page
-      navigate("/login", { replace: true });
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
   const isActive = (path) => {
@@ -37,7 +23,7 @@ export default function Sidebar() {
 
   const adminNavLinks = [
     { path: "/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/add-resident", label: "Add Resident", icon: "➕" },
+    { path: "/residents-list", label: "Resident Details", icon: "👥" },
     { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
     { path: "/electricity-billing", label: "Electricity Billing", icon: "⚡" },
     { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },

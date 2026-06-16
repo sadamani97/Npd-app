@@ -1,0 +1,24 @@
+$kind: http-request
+name: Verify OTP (Resident)
+method: POST
+order: 6000
+url: '{{base_url}}/api/auth/verify-otp'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "phone_number": "9876543210",
+      "otp": "123456"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      var jsonData = pm.response.json();
+      if (jsonData.success && jsonData.token) {
+          pm.collectionVariables.set("token", jsonData.token);
+          console.log("Saved Resident JWT Token to collection variables!");
+      }

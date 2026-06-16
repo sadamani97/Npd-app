@@ -2,7 +2,7 @@ import { User } from "../models/user.model.js";
 import { VacatedUser } from "../models/vacateduser.model.js";
 import { Room } from "../models/room.model.js";
 import { ElectricityMeter } from "../models/electricityMeter.model.js";
-import { recalculateRoomElectricityCharges } from "./electricityMeterController.js";
+import { recalculateRoomElectricityCharges } from "./electricityMeter.controller.js";
 import {
   refreshRoomStatus,
   normalizeRoomType,

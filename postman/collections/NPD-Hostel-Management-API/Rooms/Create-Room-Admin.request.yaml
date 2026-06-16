@@ -1,0 +1,22 @@
+$kind: http-request
+name: Create Room (Admin)
+method: POST
+order: 4000
+url: '{{base_url}}/api/rooms'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "block_number": "1",
+      "floor_number": "1",
+      "room_number": "102",
+      "room_type": "DOUBLE_SHARE",
+      "is_premium": false,
+      "ac_status": "AC",
+      "capacity": 2,
+      "base_rent": 8500,
+      "electricity_meter_number": "M-1-102"
+    }

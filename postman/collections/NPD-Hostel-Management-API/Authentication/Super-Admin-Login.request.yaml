@@ -1,0 +1,24 @@
+$kind: http-request
+name: Super Admin Login
+method: POST
+order: 3000
+url: '{{base_url}}/api/auth/super-admin/login'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "superadmin@example.com",
+      "password": "super123"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      var jsonData = pm.response.json();
+      if (jsonData.success && jsonData.token) {
+          pm.collectionVariables.set("token", jsonData.token);
+          console.log("Saved Super Admin JWT Token to collection variables!");
+      }

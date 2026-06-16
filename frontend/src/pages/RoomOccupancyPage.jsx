@@ -115,7 +115,7 @@ export default function RoomOccupancyPage() {
       setError("");
 
       const [summaryResult, statsResult, usersResult] = await Promise.allSettled([
-        API.get("/dashboard/rooms/occupancy-summary"),
+        API.get("/dashboard/rooms"),
         API.get("/dashboard/stats"),
         API.get("/users")
       ]);

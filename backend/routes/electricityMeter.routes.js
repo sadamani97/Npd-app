@@ -10,7 +10,7 @@ import {
   resetMeter,
   createMeter,
   getConsumptionReport
-} from "../Controllers/electricityMeterController.js";
+} from "../controllers/electricityMeter.controller.js";
 
 const router = express.Router();
 

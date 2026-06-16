@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
 
 // Admin Pages
 import Dashboard from "./pages/Dashboard.jsx";
-import AddResident from "./pages/AddResident.jsx";
 import EditResident from "./pages/EditResident.jsx";
 import Complaints from "./pages/Complaints.jsx";
 import Circulars from "./pages/Circulars.jsx";
@@ -29,52 +29,18 @@ import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
 import ElectricityBillingPage from "./pages/ElectricityBillingPage.jsx";
-import { getCurrentUser } from "./utils/authUtils";
+import { useAuth } from "./hooks/useAuth";
 
 import "./App.css";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
-
-  useEffect(() => {
-    // Clear localStorage on fresh app run (new session) to force user to login first
-    if (!sessionStorage.getItem("sessionStarted")) {
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("admin");
-      sessionStorage.setItem("sessionStarted", "true");
-    }
-
-    const syncAuthState = () => {
-      const userToken = localStorage.getItem("userToken");
-      const adminToken = localStorage.getItem("adminToken");
-      const userInfo = localStorage.getItem("user");
-      const adminInfo = localStorage.getItem("admin");
-
-      setCurrentUser(getCurrentUser());
-      setIsAuthenticated(!!((userToken && userInfo) || (adminToken && adminInfo)));
-      setLoading(false);
-    };
-
-    syncAuthState();
-
-    window.addEventListener("authChanged", syncAuthState);
-    return () => window.removeEventListener("authChanged", syncAuthState);
-  }, []);
-
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, [isAuthenticated]);
-
-  const getRedirectPath = () => {
-    if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
-    if (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN") return "/dashboard";
-    if (currentUser.role === "USER") return "/user-dashboard";
-    return "/login";
-  };
+  const {
+    isAuthenticated,
+    loading,
+    currentUser,
+    getRedirectPath,
+    setIsAuthenticated
+  } = useAuth();
 
   if (loading) {
     return (
@@ -95,6 +61,14 @@ function App() {
             currentUser.role
               ? <Navigate to={getRedirectPath()} replace />
               : <Login setIsAuthenticated={setIsAuthenticated} />
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            currentUser.role
+              ? <Navigate to={getRedirectPath()} replace />
+              : <Signup />
           }
         />
 
@@ -119,7 +93,7 @@ function App() {
         />
         <Route 
           path="/add-resident" 
-          element={isAuthenticated ? <AddResident /> : <Navigate to="/login" replace />} 
+          element={isAuthenticated ? <Navigate to="/residents-list?add=true" replace /> : <Navigate to="/login" replace />} 
         />
         <Route 
           path="/edit-resident/:id" 

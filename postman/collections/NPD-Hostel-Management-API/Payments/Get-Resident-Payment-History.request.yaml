@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Resident Payment History
+method: GET
+order: 3000
+url: '{{base_url}}/api/payments/history/:userId'
+pathVariables:
+  - key: userId
+    value: '1'

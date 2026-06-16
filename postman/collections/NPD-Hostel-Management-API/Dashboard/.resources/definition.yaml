@@ -1,0 +1,3 @@
+$kind: collection
+name: Dashboard
+description: Endpoints for retrieving dashboard statistics, block summaries, and room occupancy data.

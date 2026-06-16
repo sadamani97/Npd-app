@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import API from "../services/api";
+import { useComplaints } from "../hooks/useComplaints";
 import Layout from "../components/Layout";
 import { Button, Select } from "../components/ui";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Complaints.css";
 
 export default function Complaints() {
-  const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { complaints, loading, error, fetchComplaints, updateStatus, removeComplaint } = useComplaints();
   const [filtering, setFiltering] = useState("ALL");
   const user = getCurrentUser();
 
@@ -16,46 +14,22 @@ export default function Complaints() {
     fetchComplaints();
   }, []);
 
-  const fetchComplaints = async () => {
-    try {
-      setLoading(true);
-      const res = await API.get("/complaints");
-      
-      if (res.data.success) {
-        setComplaints(res.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load complaints");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+  const handleUpdateStatus = async (id, newStatus) => {
+    const res = await updateStatus(id, newStatus);
+    if (res.success) {
+      fetchComplaints();
+    } else {
+      alert(res.message || "Failed to update complaint");
     }
   };
 
-  const updateStatus = async (id, newStatus) => {
-    try {
-      const res = await API.put(`/complaints/${id}/status`, { status: newStatus });
-      
-      if (res.data.success) {
-        fetchComplaints();
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update complaint");
-    }
-  };
-
-  const deleteComplaint = async (id) => {
+  const handleDeleteComplaint = async (id) => {
     if (!window.confirm("Are you sure you want to delete this complaint?")) return;
-
-    try {
-      const res = await API.delete(`/complaints/${id}`);
-      
-      if (res.data.success) {
-        fetchComplaints();
-        alert("Complaint deleted");
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete complaint");
+    const res = await removeComplaint(id);
+    if (res.success) {
+      alert("Complaint deleted");
+    } else {
+      alert(res.message || "Failed to delete complaint");
     }
   };
 
@@ -137,7 +111,7 @@ export default function Complaints() {
                   {complaint.status !== "RESOLVED" && (
                     <Select 
                       value={complaint.status}
-                      onChange={(e) => updateStatus(complaint.id, e.target.value)}
+                      onChange={(e) => handleUpdateStatus(complaint.id, e.target.value)}
                       options={[
                         { value: 'OPEN', label: 'Open' },
                         { value: 'IN_PROGRESS', label: 'In Progress' },
@@ -148,7 +122,7 @@ export default function Complaints() {
                   <Button 
                     variant="danger"
                     size="sm"
-                    onClick={() => deleteComplaint(complaint.id)}
+                    onClick={() => handleDeleteComplaint(complaint.id)}
                   >
                     Delete
                   </Button>

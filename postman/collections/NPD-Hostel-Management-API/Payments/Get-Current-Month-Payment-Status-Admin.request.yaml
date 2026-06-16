@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Current Month Payment Status (Admin)
+method: GET
+order: 6000
+url: '{{base_url}}/api/payments/status/current-month'

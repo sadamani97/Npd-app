@@ -1,0 +1,9 @@
+$kind: http-request
+name: Delete Resident (Admin)
+method: DELETE
+order: 7000
+url: '{{base_url}}/api/users/:id'
+pathVariables:
+  - key: id
+    value: '1'
+    description: Resident ID

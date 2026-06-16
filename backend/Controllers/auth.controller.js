@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import { User } from "../models/user.model.js";
 import { SuperAdmin } from "../models/superAdmin.model.js";
 import { OtpVerification } from "../models/otpVerification.model.js";
+import { Hostel } from "../models/hostel.model.js";
 import { generateOTP, sendOTPviaSMS, sendOTPviaWhatsApp } from "../utils/otpapi.js";
 
 /**
@@ -119,6 +120,15 @@ export const requestOTP = async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         msg: "Invalid phone number format" 
+      });
+    }
+
+    // Check if the user/resident exists in the database
+    const user = await User.findOne({ where: { phone: normalizedPhone } });
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        msg: "please enter the valid number" 
       });
     }
 
@@ -379,6 +389,15 @@ export const createHostelAdmin = async (req, res) => {
       return res.status(400).json({
         success: false,
         msg: "Name, email, password, and hostel_id are required"
+      });
+    }
+
+    // Check if the hostel exists
+    const hostel = await Hostel.findByPk(hostel_id);
+    if (!hostel) {
+      return res.status(404).json({
+        success: false,
+        msg: "Hostel not found with the provided hostel_id"
       });
     }
 
