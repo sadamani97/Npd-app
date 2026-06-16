@@ -27,6 +27,8 @@ body {
 .dashboard-container {
   display: flex;
   background-color: #f5f7fa;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
@@ -34,7 +36,8 @@ body {
   width: calc(100% - 250px);
   margin-left: 250px;
   padding: 40px;
-  overflow: auto;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .loading-container {
@@ -290,6 +293,8 @@ body {
 @media (max-width: 768px) {
   .dashboard-container {
     flex-direction: column;
+    height: auto;
+    overflow: visible;
   }
 
   .main-content {
@@ -297,6 +302,8 @@ body {
     min-height: auto;
     margin-left: 0;
     padding: 16px;
+    height: auto;
+    overflow: visible;
   }
 }
 

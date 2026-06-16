@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useResidents } from "../hooks/useResidents";
 import { useRooms } from "../hooks/useRooms";
+import { usePayments } from "../hooks/usePayments";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Dashboard.css";
@@ -28,6 +29,7 @@ const block2MonthlyData = [
 export default function Dashboard({ defaultActiveView = "stats" }) {
   const { residents, fetchResidents, vacateResident, loading: residentsLoading, error: residentsError } = useResidents();
   const { stats, fetchDashboardStats, loading: statsLoading, error: statsError } = useRooms();
+  const { payments, fetchCurrentMonthPayments, loading: paymentsLoading, error: paymentsError } = usePayments();
   const [activeView, setActiveView] = useState(defaultActiveView); // stats, residents, blocks, analytics
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("Jun");
@@ -38,8 +40,10 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
   const location = useLocation();
   const user = getCurrentUser();
 
-  const loading = residentsLoading || statsLoading;
-  const error = residentsError || statsError;
+  const loading = residentsLoading || statsLoading || paymentsLoading;
+  const error = residentsError || statsError || paymentsError;
+
+  const unpaidCount = payments?.filter(p => p.payment_status === "PENDING" || p.payment_status === "OVERDUE").length || 0;
 
   useEffect(() => {
     fetchData();
@@ -58,7 +62,8 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
   const fetchData = async () => {
     await Promise.allSettled([
       fetchResidents(),
-      fetchDashboardStats()
+      fetchDashboardStats(),
+      fetchCurrentMonthPayments()
     ]);
   };
 
@@ -309,35 +314,8 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
 
       <Alert>{error}</Alert>
 
-      {/* Main Stats Cards - Now Clickable */}
-      <div className="stats-container">
-        <div className="stat-card stat-primary" onClick={() => navigate("/residents-list")} style={{cursor: "pointer"}}>
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalResidents}</div>
-            <div className="stat-label">Total Residents</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer"}}>
-          <div className="stat-icon">🏠</div>
-          <div className="stat-content">
-            <div className="stat-value">{getBlockStats().length}</div>
-            <div className="stat-label">Blocks</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-success" onClick={handleRoomClick} style={{cursor: "pointer"}}>
-          <div className="stat-icon">🛏️</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.roomStats?.occupiedRooms || 0}</div>
-            <div className="stat-label">Rooms Occupied</div>
-          </div>
-        </div>
-      </div>
-
       {/* View Toggle Buttons */}
-      <div className="view-toggle">
+      <div className="view-toggle" style={{ justifyContent: "center", marginBottom: "20px" }}>
         <Button
           variant="secondary"
           className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
@@ -366,6 +344,41 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
         >
           📊 Growth Insights
         </Button>
+      </div>
+
+      {/* Main Stats Cards - Now Clickable */}
+      <div className="stats-container" style={{ justifyContent: "center", display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div className="stat-card stat-primary" onClick={() => navigate("/residents-list")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
+          <div className="stat-icon">👥</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.totalResidents}</div>
+            <div className="stat-label">Total Residents</div>
+          </div>
+        </div>
+
+        <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
+          <div className="stat-icon">🏠</div>
+          <div className="stat-content">
+            <div className="stat-value">{getBlockStats().length}</div>
+            <div className="stat-label">Blocks</div>
+          </div>
+        </div>
+
+        <div className="stat-card stat-success" onClick={() => setActiveView('blocks')} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
+          <div className="stat-icon">🛏️</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.roomStats?.vacantRooms || 0}</div>
+            <div className="stat-label">Vacant Rooms</div>
+          </div>
+        </div>
+
+        <div className="stat-card stat-warning" onClick={() => navigate("/unpaid-residents")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
+          <div className="stat-icon">💳</div>
+          <div className="stat-content">
+            <div className="stat-value">{unpaidCount}</div>
+            <div className="stat-label">Pending Payments</div>
+          </div>
+        </div>
       </div>
 
       {/* Block Statistics View */}
