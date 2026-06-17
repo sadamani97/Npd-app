@@ -34,6 +34,11 @@ export default function UnpaidResidents() {
 
   return (
     <Layout>
+      <div style={{ marginBottom: '20px' }}>
+        <Button variant="secondary" onClick={() => navigate(-1)}>
+          ← Back
+        </Button>
+      </div>
       <div className="dashboard-header">
         <div>
           <h2>💳 Unpaid Residents</h2>

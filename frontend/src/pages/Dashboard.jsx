@@ -7,6 +7,7 @@ import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Dashboard.css";
 import { Button, Alert } from "../components/ui";
+import API from "../services/api";
 
 const block1MonthlyData = [
   { month: "Jan", newResidents: 8, vacatedResidents: 2, totalResidents: 38, occupiedRooms: 20, vacantRooms: 5, totalRooms: 25, newLeads: 80, siteVisits: 50, registrations: 25, joinedResidents: 8 },
@@ -26,7 +27,7 @@ const block2MonthlyData = [
   { month: "Jun", newResidents: 5, vacatedResidents: 2, totalResidents: 25, occupiedRooms: 14, vacantRooms: 11, totalRooms: 25, newLeads: 55, siteVisits: 30, registrations: 14, joinedResidents: 5 }
 ];
 
-export default function Dashboard({ defaultActiveView = "stats" }) {
+export default function Dashboard({ defaultActiveView = null }) {
   const { residents, fetchResidents, vacateResident, loading: residentsLoading, error: residentsError } = useResidents();
   const { stats, fetchDashboardStats, loading: statsLoading, error: statsError } = useRooms();
   const { payments, fetchCurrentMonthPayments, loading: paymentsLoading, error: paymentsError } = usePayments();
@@ -36,6 +37,7 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
   const [selectedBlockFilter, setSelectedBlockFilter] = useState("All");
   const [hoveredBar, setHoveredBar] = useState(null);
   const [hoveredLine, setHoveredLine] = useState(null);
+  const [foodCount, setFoodCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
@@ -59,11 +61,24 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
     }
   }, [location.state]);
 
+  const fetchFoodCount = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${today}`);
+      if (res.data && res.data.success) {
+        setFoodCount(res.data.count || 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch food count", err);
+    }
+  };
+
   const fetchData = async () => {
     await Promise.allSettled([
       fetchResidents(),
       fetchDashboardStats(),
-      fetchCurrentMonthPayments()
+      fetchCurrentMonthPayments(),
+      fetchFoodCount()
     ]);
   };
 
@@ -282,6 +297,9 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
 
   const filteredVacantRoomsByBlock = getVacantRoomsByBlock();
 
+  const totalVacantBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.vacancy || 0), 0);
+  const totalBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.capacity || 0), 0);
+
   if (loading) {
     return (
       <Layout>
@@ -314,8 +332,10 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
 
       <Alert>{error}</Alert>
 
-      {/* View Toggle Buttons */}
-      <div className="view-toggle" style={{ justifyContent: "center", marginBottom: "20px" }}>
+      {!activeView && (
+        <>
+          {/* View Toggle Buttons */}
+          <div className="view-toggle" style={{ justifyContent: "center", marginBottom: "20px" }}>
         <Button
           variant="secondary"
           className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
@@ -380,6 +400,88 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
           </div>
         </div>
       </div>
+
+      {/* Overview Interactive Graph Section */}
+      <div className="overview-graph-section">
+        <h3 className="overview-title">Dashboard Overview</h3>
+        <div className="overview-cards">
+          <div className="overview-card glass-panel">
+            <div className="overview-card-header">
+              <h4>Total Vacant Beds</h4>
+              <span className="overview-icon">🛏️</span>
+            </div>
+            <div className="overview-value">{totalVacantBeds}</div>
+            <div className="overview-bar">
+              <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+            </div>
+            <p className="overview-subtext">Across all blocks</p>
+          </div>
+          
+          <div className="overview-card glass-panel">
+            <div className="overview-card-header">
+              <h4>Food Count (Today)</h4>
+              <span className="overview-icon">🍽️</span>
+            </div>
+            <div className="overview-value">{foodCount}</div>
+            <div className="overview-bar">
+              <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodCount / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
+            </div>
+            <p className="overview-subtext">Confirmed daily requirements.</p>
+          </div>
+          
+          <div className="overview-card glass-panel">
+            <div className="overview-card-header">
+              <h4>Monthly Growth</h4>
+              <span className="overview-icon">🚀</span>
+            </div>
+            <div className="overview-value">+12%</div>
+            <div className="overview-chart-mock">
+               <svg viewBox="0 0 100 30" className="sparkline">
+                 <path d="M0,25 L20,20 L40,22 L60,10 L80,15 L100,5" fill="none" stroke="url(#sparkGradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                 <defs>
+                   <linearGradient id="sparkGradient" x1="0" y1="0" x2="1" y2="0">
+                     <stop offset="0%" stopColor="#4facfe" />
+                     <stop offset="100%" stopColor="#00f2fe" />
+                   </linearGradient>
+                 </defs>
+               </svg>
+            </div>
+            <p className="overview-subtext">Compared to last month</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Access Section */}
+      <div className="quick-access-section">
+        <h3 className="overview-title" style={{ marginTop: '20px' }}>Quick Access</h3>
+        <div className="quick-access-container">
+          <div className="quick-access-btn" onClick={() => navigate("/manage-rooms")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)" }}>🛏️</div>
+            <span>Book a Room</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/complaints")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>🎟️</div>
+            <span>Issue Ticket</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/food-menu-management")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>🍛</div>
+            <span>Food Menu</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/circulars")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}>📢</div>
+            <span>Create a Circular</span>
+          </div>
+        </div>
+      </div>
+      </>
+      )}
+
+      {/* Inline Detailed Views */}
+      {activeView && (
+        <div className="active-view-page" style={{ animation: "fadeIn 0.4s ease" }}>
+          <Button onClick={() => setActiveView(null)} variant="secondary" style={{ marginBottom: "20px" }}>
+            ← Back to Dashboard
+          </Button>
 
       {/* Block Statistics View */}
       {activeView === 'stats' && (
@@ -1281,6 +1383,8 @@ export default function Dashboard({ defaultActiveView = "stats" }) {
           </div>
         );
       })()}
+        </div>
+      )}
     </Layout>
   );
 }
