@@ -16,6 +16,7 @@ import RoomDetailsPage from "./pages/RoomDetailsPage.jsx";
 import PaymentTrackingPage from "./pages/PaymentTrackingPage.jsx";
 import RoomOccupancyPage from "./pages/RoomOccupancyPage.jsx";
 import ResidentsListPage from "./pages/ResidentsListPage.jsx";
+import UnpaidResidents from "./pages/UnpaidResidents.jsx";
 import ManageRoomsPage from "./pages/ManageRoomsPage.jsx";
 import AdminFoodConfirmationList from "./pages/AdminFoodConfirmationList.jsx";
 import FoodMenuManagement from "./pages/FoodMenuManagement.jsx";
@@ -142,6 +143,10 @@ function App() {
         <Route 
           path="/residents-list" 
           element={isAuthenticated ? <ResidentsListPage /> : <Navigate to="/login" replace />} 
+        />
+        <Route 
+          path="/unpaid-residents" 
+          element={isAuthenticated ? <UnpaidResidents /> : <Navigate to="/login" replace />} 
         />
         <Route
           path="/manage-rooms"
