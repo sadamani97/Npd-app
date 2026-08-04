@@ -49,6 +49,7 @@ export default function Dashboard({ defaultActiveView = null }) {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function Dashboard({ defaultActiveView = null }) {
     if (dashboardRefresh != null) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   const fetchFoodCount = async () => {
@@ -384,7 +386,7 @@ export default function Dashboard({ defaultActiveView = null }) {
           </div>
         </div>
 
-        <div className="stat-card stat-success" onClick={() => setActiveView('blocks')} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
+        <div className="stat-card stat-success" onClick={handleRoomClick} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
           <div className="stat-icon">🛏️</div>
           <div className="stat-content">
             <div className="stat-value">{stats.roomStats?.vacantRooms || 0}</div>

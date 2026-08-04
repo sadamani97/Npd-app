@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Npd Hostel",
+    "slug": "npd-hostel-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "backgroundColor": "#ffffff"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}
