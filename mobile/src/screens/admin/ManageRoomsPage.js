@@ -6,6 +6,7 @@ import { COLORS, SPACING, SHADOWS } from '../../styles/theme';
 export default function ManageRoomsPage() {
   const [loading, setLoading] = useState(true);
   const [roomStats, setRoomStats] = useState(null);
+  const [blockSummary, setBlockSummary] = useState([]);
 
   useEffect(() => {
     fetchRooms();
@@ -15,8 +16,10 @@ export default function ManageRoomsPage() {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/dashboard/stats');
-      if (res.data && res.data.success) {
-        setRoomStats(res.data.stats);
+      if (res.data?.success) {
+        const payload = res.data.data || {};
+        setRoomStats(payload.roomStats || null);
+        setBlockSummary(Array.isArray(payload.blockGroups) ? payload.blockGroups : []);
       }
     } catch (e) {
       console.log('Failed to fetch rooms stats', e);
@@ -34,16 +37,18 @@ export default function ManageRoomsPage() {
       ) : (
         <View>
           <View style={styles.card}>
-            <Text style={styles.cardHeader}>Block A Summary</Text>
-            <Text style={styles.cardDetail}>Total Rooms: 25</Text>
-            <Text style={styles.cardDetail}>Occupied: 20 | Vacant: 5</Text>
+            <Text style={styles.cardHeader}>Room Statistics</Text>
+            <Text style={styles.cardDetail}>Total Rooms: {roomStats?.totalRooms ?? 0}</Text>
+            <Text style={styles.cardDetail}>Occupied Rooms: {roomStats?.occupiedRooms ?? 0}</Text>
+            <Text style={styles.cardDetail}>Vacant Rooms: {roomStats?.vacantRooms ?? 0}</Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardHeader}>Block B Summary</Text>
-            <Text style={styles.cardDetail}>Total Rooms: 25</Text>
-            <Text style={styles.cardDetail}>Occupied: 14 | Vacant: 11</Text>
-          </View>
+          {blockSummary.map((block) => (
+            <View key={block.block} style={styles.card}>
+              <Text style={styles.cardHeader}>Block {block.block}</Text>
+              <Text style={styles.cardDetail}>Residents in block: {block.residents ?? 0}</Text>
+            </View>
+          ))}
         </View>
       )}
     </ScrollView>

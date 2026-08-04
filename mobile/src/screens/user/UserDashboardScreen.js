@@ -8,114 +8,147 @@ export default function UserDashboardScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [circulars, setCirculars] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [paymentSummary, setPaymentSummary] = useState([]);
+  const [foodConfirm, setFoodConfirm] = useState({ breakfast: false, lunch: false, dinner: false });
   const [foodConfirmed, setFoodConfirmed] = useState(false);
-  const [ebBill, setEbBill] = useState({ month: 'August 2026', units: 145, amount: '₹ 1,160', status: 'PENDING' });
-  const [rentDetails, setRentDetails] = useState({ month: 'August 2026', rentAmount: '₹ 6,500', dueDate: '10 Aug 2026', status: 'PAID' });
 
   useEffect(() => {
     fetchUserData();
-  }, []);
+  }, [user?.id]);
 
   const fetchUserData = async () => {
+    if (!user?.id) return;
+
     try {
       setLoading(true);
-      const res = await axiosInstance.get('/circulars');
-      if (res.data && res.data.success) {
-        setCirculars(res.data.circulars || []);
+      const [circularRes, profileRes, paymentRes, foodRes] = await Promise.all([
+        axiosInstance.get('/circulars'),
+        axiosInstance.get(`/users/${user.id}`),
+        axiosInstance.get(`/payments/history/${user.id}`),
+        axiosInstance.get('/food-confirmations/user/date', {
+          params: { confirmation_date: new Date().toISOString().split('T')[0] },
+        }),
+      ]);
+
+      if (circularRes.data?.success) {
+        setCirculars(Array.isArray(circularRes.data.data) ? circularRes.data.data : []);
+      }
+
+      if (profileRes.data?.success) {
+        setProfile(profileRes.data.data || null);
+      }
+
+      if (paymentRes.data?.success) {
+        const payments = Array.isArray(paymentRes.data.data?.payments) ? paymentRes.data.data.payments : [];
+        setPaymentSummary(payments);
+      }
+
+      if (foodRes.data?.success && foodRes.data.data) {
+        setFoodConfirm({
+          breakfast: Boolean(foodRes.data.data.breakfast),
+          lunch: Boolean(foodRes.data.data.lunch),
+          dinner: Boolean(foodRes.data.data.dinner),
+        });
+        setFoodConfirmed(Boolean(foodRes.data.data.is_confirmed));
       }
     } catch (e) {
-      console.log('Error fetching circulars', e);
+      console.log('Error fetching user dashboard data', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFoodConfirmation = async (status) => {
+  const currentMonthPayment = paymentSummary[0] || null;
+  const rentStatus = currentMonthPayment?.payment_status || 'PENDING';
+  const rentAmount = profile?.rent_amount || 0;
+  const electricityAmount = profile?.electricity_charges || 0;
+
+  const handleFoodConfirmation = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       await axiosInstance.post('/food-confirmations', {
         confirmation_date: today,
-        will_eat: status === 'YES',
+        breakfast: foodConfirm.breakfast,
+        lunch: foodConfirm.lunch,
+        dinner: foodConfirm.dinner,
+        notes: 'Confirmed from mobile app',
       });
       setFoodConfirmed(true);
       alert('Food status updated successfully!');
     } catch (e) {
       console.log('Error confirming food', e);
-      alert('Updated food preference.');
-      setFoodConfirmed(true);
+      alert('Food status update failed. Please try again.');
     }
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Resident Welcome Card */}
       <View style={styles.welcomeCard}>
         <View style={styles.welcomeHeader}>
           <View>
             <Text style={styles.greeting}>Welcome Back 👋</Text>
-            <Text style={styles.name}>{user?.name || 'Resident Name'}</Text>
+            <Text style={styles.name}>{profile?.name || user?.name || 'Resident Name'}</Text>
           </View>
           <View style={styles.roomTag}>
-            <Text style={styles.roomText}>Block A • Room 104</Text>
+            <Text style={styles.roomText}>{profile?.block_number ? `Block ${profile.block_number}` : 'Room'} • {profile?.room_number || 'N/A'}</Text>
           </View>
         </View>
       </View>
 
-      {/* Food Confirmation Card */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
           <Text style={styles.cardTitle}>Daily Meal Confirmation 🍽️</Text>
           <Text style={styles.badgeLabel}>{foodConfirmed ? 'Confirmed' : 'Pending'}</Text>
         </View>
-        <Text style={styles.cardSub}>Confirm if you will eat food at the hostel mess today.</Text>
+        <Text style={styles.cardSub}>Choose your meals for today and submit them to the hostel admin.</Text>
 
         <View style={styles.foodActionRow}>
-          <TouchableOpacity
-            style={[styles.foodBtn, styles.foodYes]}
-            onPress={() => handleFoodConfirmation('YES')}
-          >
-            <Text style={styles.foodBtnText}>✅ Eating Today</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.foodBtn, styles.foodNo]}
-            onPress={() => handleFoodConfirmation('NO')}
-          >
-            <Text style={styles.foodBtnText}>❌ Not Eating</Text>
-          </TouchableOpacity>
+          {['breakfast', 'lunch', 'dinner'].map((meal) => (
+            <TouchableOpacity
+              key={meal}
+              style={[styles.foodBtn, foodConfirm[meal] ? styles.foodYes : styles.foodNo]}
+              onPress={() => setFoodConfirm((prev) => ({ ...prev, [meal]: !prev[meal] }))}
+            >
+              <Text style={styles.foodBtnText}>{foodConfirm[meal] ? '✓' : '○'} {meal.toUpperCase()}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
+
+        <TouchableOpacity style={styles.submitFoodBtn} onPress={handleFoodConfirmation}>
+          <Text style={styles.submitFoodBtnText}>Save Food Confirmation</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Rent & Electricity Billing Section */}
       <Text style={styles.sectionTitle}>My Dues & Calculations 💳</Text>
 
       <View style={styles.duesGrid}>
-        {/* Rent Dues */}
-        <View style={[styles.dueCard, { backgroundColor: '#EEF2FF' }]}>
+        <View style={[styles.dueCard, { backgroundColor: '#EEF2FF' }]}> 
           <Text style={styles.dueIcon}>🏠</Text>
           <Text style={styles.dueTitle}>Monthly Rent</Text>
-          <Text style={styles.dueAmount}>{rentDetails.rentAmount}</Text>
-          <Text style={styles.dueMeta}>Due: {rentDetails.dueDate}</Text>
-          <View style={[styles.statusPill, rentDetails.status === 'PAID' ? styles.pillPaid : styles.pillPending]}>
-            <Text style={styles.statusPillText}>{rentDetails.status}</Text>
+          <Text style={styles.dueAmount}>₹{Number(rentAmount || 0).toFixed(2)}</Text>
+          <Text style={styles.dueMeta}>Current status: {rentStatus}</Text>
+          <View style={[styles.statusPill, rentStatus === 'PAID' ? styles.pillPaid : styles.pillPending]}>
+            <Text style={styles.statusPillText}>{rentStatus}</Text>
           </View>
         </View>
 
-        {/* EB Dues */}
-        <View style={[styles.dueCard, { backgroundColor: '#FEF3C7' }]}>
+        <View style={[styles.dueCard, { backgroundColor: '#FEF3C7' }]}> 
           <Text style={styles.dueIcon}>⚡</Text>
           <Text style={styles.dueTitle}>Electricity Bill</Text>
-          <Text style={styles.dueAmount}>{ebBill.amount}</Text>
-          <Text style={styles.dueMeta}>{ebBill.units} Units Consumed</Text>
-          <View style={[styles.statusPill, ebBill.status === 'PAID' ? styles.pillPaid : styles.pillPending]}>
-            <Text style={styles.statusPillText}>{ebBill.status}</Text>
+          <Text style={styles.dueAmount}>₹{Number(electricityAmount || 0).toFixed(2)}</Text>
+          <Text style={styles.dueMeta}>Current month charges</Text>
+          <View style={[styles.statusPill, currentMonthPayment?.payment_status === 'PAID' ? styles.pillPaid : styles.pillPending]}>
+            <Text style={styles.statusPillText}>{currentMonthPayment?.payment_status || 'PENDING'}</Text>
           </View>
         </View>
       </View>
 
-      {/* Admin Circulars & Notices */}
       <Text style={styles.sectionTitle}>Notice Board & Circulars 📢</Text>
 
-      {circulars.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      ) : circulars.length === 0 ? (
         <View style={styles.noticeCard}>
           <Text style={styles.noticeTitle}>📌 Hostel General Guidelines</Text>
           <Text style={styles.noticeBody}>
@@ -126,16 +159,12 @@ export default function UserDashboardScreen({ navigation }) {
         circulars.map((item, idx) => (
           <View key={idx} style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>📢 {item.title || 'Admin Notice'}</Text>
-            <Text style={styles.noticeBody}>{item.description || item.content}</Text>
+            <Text style={styles.noticeBody}>{item.message || item.description || item.content}</Text>
           </View>
         ))
       )}
 
-      {/* Raise Complaint Action */}
-      <TouchableOpacity
-        style={styles.complaintBtn}
-        onPress={() => navigation.navigate('Complaints')}
-      >
+      <TouchableOpacity style={styles.complaintBtn} onPress={() => navigation.navigate('Complaints')}>
         <Text style={styles.complaintBtnText}>📝 Raise a New Complaint</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -192,6 +221,14 @@ const styles = StyleSheet.create({
   foodYes: { backgroundColor: '#10B981' },
   foodNo: { backgroundColor: '#EF4444' },
   foodBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 },
+  submitFoodBtn: {
+    backgroundColor: '#1E293B',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: SPACING.md,
+  },
+  submitFoodBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 },
 
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: SPACING.md },
   duesGrid: { flexDirection: 'row', gap: 12, marginBottom: SPACING.lg },

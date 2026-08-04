@@ -29,6 +29,8 @@ export default function AdminTabNavigator() {
           if (route.name === 'Dashboard') icon = '📊';
           if (route.name === 'Blocks') icon = '🏢';
           if (route.name === 'ResidentsList') icon = '👥';
+          if (route.name === 'AddResident') icon = '➕';
+          if (route.name === 'ManageRooms') icon = '🛏️';
           if (route.name === 'FoodMenu') icon = '🍲';
           if (route.name === 'Electricity') icon = '⚡';
           if (route.name === 'Circulars') icon = '📢';
@@ -41,6 +43,8 @@ export default function AdminTabNavigator() {
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} options={{ headerShown: false, title: 'Dashboard' }} />
       <Tab.Screen name="Blocks" component={BlocksPage} options={{ title: 'Blocks' }} />
       <Tab.Screen name="ResidentsList" component={ResidentsListPage} options={{ title: 'Residents' }} />
+      <Tab.Screen name="AddResident" component={AddResidentScreen} options={{ title: 'Add Resident' }} />
+      <Tab.Screen name="ManageRooms" component={ManageRoomsPage} options={{ title: 'Manage Rooms' }} />
       <Tab.Screen name="FoodMenu" component={FoodMenuManagementScreen} options={{ title: 'Mess Menu' }} />
       <Tab.Screen name="Electricity" component={ElectricityBillingScreen} options={{ title: 'EB Bill' }} />
       <Tab.Screen name="Circulars" component={CircularManagementScreen} options={{ title: 'Notice' }} />

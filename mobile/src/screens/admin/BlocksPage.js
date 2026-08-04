@@ -37,8 +37,8 @@ export default function BlocksPage({ navigation, route }) {
     setLoading(true);
     try {
       const res = await axiosInstance.get(`/rooms/block/${selectedBlock}`);
-      if (res.data && res.data.success) {
-        setRooms(res.data.rooms || []);
+      if (res.data?.success) {
+        setRooms(Array.isArray(res.data.data) ? res.data.data : []);
       }
     } catch (e) {
       console.log('Error loading floor rooms', e);
@@ -53,8 +53,8 @@ export default function BlocksPage({ navigation, route }) {
     setLoading(true);
     try {
       const res = await axiosInstance.get(`/rooms/${selectedBlock}/${roomItem.room_number}`);
-      if (res.data && res.data.success) {
-        setRoomDetails(res.data.room);
+      if (res.data?.success) {
+        setRoomDetails(res.data.data || roomItem);
       } else {
         setRoomDetails(roomItem);
       }
