@@ -37,7 +37,7 @@ export default function Dashboard({ defaultActiveView = null }) {
   const [selectedBlockFilter, setSelectedBlockFilter] = useState("All");
   const [hoveredBar, setHoveredBar] = useState(null);
   const [hoveredLine, setHoveredLine] = useState(null);
-  const [foodCount, setFoodCount] = useState(0);
+  const [foodStats, setFoodStats] = useState({ total: 0, breakfast: 0, lunch: 0, dinner: 0 });
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
@@ -68,7 +68,16 @@ export default function Dashboard({ defaultActiveView = null }) {
       const today = new Date().toISOString().split('T')[0];
       const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${today}`);
       if (res.data && res.data.success) {
-        setFoodCount(res.data.count || 0);
+        const list = res.data.data || [];
+        const breakfast = list.filter(c => c.breakfast).length;
+        const lunch = list.filter(c => c.lunch).length;
+        const dinner = list.filter(c => c.dinner).length;
+        setFoodStats({
+          total: res.data.count || list.length,
+          breakfast,
+          lunch,
+          dinner
+        });
       }
     } catch (err) {
       console.error("Failed to fetch food count", err);
@@ -336,100 +345,125 @@ export default function Dashboard({ defaultActiveView = null }) {
 
       {!activeView && (
         <>
-          {/* View Toggle Buttons */}
-          <div className="view-toggle" style={{ justifyContent: "center", marginBottom: "20px" }}>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveView('stats')}
-        >
-          📈 Block Statistics
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'blocks' ? 'active' : ''}`}
-          onClick={() => setActiveView('blocks')}
-        >
-          🏗️ Vacant rooms
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'residents' ? 'active' : ''}`}
-          onClick={() => setActiveView('residents')}
-        >
-          👨‍👩‍👧‍👦 Residents List
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveView('analytics')}
-        >
-          📊 Growth Insights
-        </Button>
-      </div>
-
-      {/* Main Stats Cards - Now Clickable */}
-      <div className="stats-container" style={{ justifyContent: "center", display: "flex", flexWrap: "wrap", gap: "20px" }}>
-        <div className="stat-card stat-primary" onClick={() => navigate("/residents-list")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalResidents}</div>
-            <div className="stat-label">Total Residents</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">🏠</div>
-          <div className="stat-content">
-            <div className="stat-value">{getBlockStats().length}</div>
-            <div className="stat-label">Blocks</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-success" onClick={handleRoomClick} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">🛏️</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.roomStats?.vacantRooms || 0}</div>
-            <div className="stat-label">Vacant Rooms</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-warning" onClick={() => navigate("/unpaid-residents")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">💳</div>
-          <div className="stat-content">
-            <div className="stat-value">{unpaidCount}</div>
-            <div className="stat-label">Pending Payments</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Overview Interactive Graph Section */}
-      <div className="overview-graph-section">
-        <h3 className="overview-title">Dashboard Overview</h3>
-        <div className="overview-cards">
-          <div className="overview-card glass-panel">
-            <div className="overview-card-header">
-              <h4>Total Vacant Beds</h4>
-              <span className="overview-icon">🛏️</span>
+          {/* Summary Count Cards (Metric display) */}
+          <div className="metrics-count-strip">
+            <div className="count-card primary" onClick={() => navigate("/residents-list")}>
+              <div className="count-icon">👥</div>
+              <div className="count-info">
+                <span className="count-number">{stats.totalResidents || 0}</span>
+                <span className="count-label">Total Residents</span>
+              </div>
             </div>
-            <div className="overview-value">{totalVacantBeds}</div>
-            <div className="overview-bar">
-              <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+
+            <div className="count-card info" onClick={() => navigate("/blocks")}>
+              <div className="count-icon">🏠</div>
+              <div className="count-info">
+                <span className="count-number">{getBlockStats().length}</span>
+                <span className="count-label">Blocks</span>
+              </div>
             </div>
-            <p className="overview-subtext">Across all blocks</p>
+
+            <div className="count-card success" onClick={handleRoomClick}>
+              <div className="count-icon">🛏️</div>
+              <div className="count-info">
+                <span className="count-number">{totalVacantBeds}</span>
+                <span className="count-label">Total Vacant Beds</span>
+              </div>
+            </div>
+
+            <div className="count-card warning" onClick={() => navigate("/unpaid-residents")}>
+              <div className="count-icon">💳</div>
+              <div className="count-info">
+                <span className="count-number">{unpaidCount}</span>
+                <span className="count-label">Pending Payments</span>
+              </div>
+            </div>
+
+            <div className="count-card food" onClick={() => navigate("/admin-food-confirmations")}>
+              <div className="count-icon">🍽️</div>
+              <div className="count-info">
+                <div className="count-header-row">
+                  <span className="count-number">{foodStats.total}</span>
+                  <span className="count-label">Food Required Today</span>
+                </div>
+                <div className="food-breakdown-pills">
+                  <span className="meal-pill breakfast" title="Breakfast count">🌅 {foodStats.breakfast}</span>
+                  <span className="meal-pill lunch" title="Lunch count">☀️ {foodStats.lunch}</span>
+                  <span className="meal-pill dinner" title="Dinner count">🌙 {foodStats.dinner}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="overview-card glass-panel">
-            <div className="overview-card-header">
-              <h4>Food Count (Today)</h4>
-              <span className="overview-icon">🍽️</span>
+
+          {/* Main View Cards (Converted from top tabs) */}
+          <div className="feature-cards-section">
+            <h3 className="section-title">Dashboard Sections</h3>
+            <div className="feature-cards-grid">
+              <div className="feature-card stats-feature" onClick={() => setActiveView('stats')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📈</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Block Statistics</h4>
+                <p>View block-wise occupancy distribution, resident ratios, and room metrics.</p>
+              </div>
+
+              <div className="feature-card blocks-feature" onClick={() => setActiveView('blocks')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">🏗️</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Vacant Rooms</h4>
+                <p>Inspect vacant rooms, bed vacancies, and room capacities by block.</p>
+              </div>
+
+              <div className="feature-card residents-feature" onClick={() => setActiveView('residents')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">👨‍👩‍👧‍👦</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Residents List</h4>
+                <p>Browse full directory of active hostel residents, contact info, and status.</p>
+              </div>
+
+              <div className="feature-card analytics-feature" onClick={() => setActiveView('analytics')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📊</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Growth Insights</h4>
+                <p>Track monthly move-ins/outs, conversion rates, and growth trends.</p>
+              </div>
             </div>
-            <div className="overview-value">{foodCount}</div>
-            <div className="overview-bar">
-              <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodCount / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
-            </div>
-            <p className="overview-subtext">Confirmed daily requirements.</p>
           </div>
+
+          {/* Overview Interactive Graph Section */}
+          <div className="overview-graph-section">
+            <h3 className="overview-title">Dashboard Overview</h3>
+            <div className="overview-cards">
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Total Vacant Beds</h4>
+                  <span className="overview-icon">🛏️</span>
+                </div>
+                <div className="overview-value">{totalVacantBeds}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Across all blocks</p>
+              </div>
+              
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Food Count (Today)</h4>
+                  <span className="overview-icon">🍽️</span>
+                </div>
+                <div className="overview-value">{foodStats.total}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodStats.total / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Confirmed daily requirements.</p>
+              </div>
           
           <div className="overview-card glass-panel">
             <div className="overview-card-header">
