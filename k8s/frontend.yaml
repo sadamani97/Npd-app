@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostel-frontend
+spec:
+  replicas: 2 # 2 pods for high-availability
+  selector:
+    matchLabels:
+      app: hostel-frontend
+  template:
+    metadata:
+      labels:
+        app: hostel-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: hostel-frontend:latest # Build from frontend/Dockerfile
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: LoadBalancer # Exposes the frontend service
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080 # Exposes on node port if LoadBalancer is not available
+  selector:
+    app: hostel-frontend
