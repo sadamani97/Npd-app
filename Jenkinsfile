@@ -16,23 +16,23 @@ pipeline {
         stage('Docker Clean') {
             steps {
                 echo 'Cleaning existing containers...'
-                sh 'docker-compose down --remove-orphans || true'
+                bat 'docker-compose down --remove-orphans || exit 0'
             }
         }
 
         stage('Docker Build') {
             steps {
                 echo 'Building Docker images...'
-                sh 'docker-compose build --no-cache'
+                bat 'docker-compose build --no-cache'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo 'Launching containerized services...'
-                sh 'docker-compose up -d'
+                bat 'docker-compose up -d'
                 echo 'Verifying running containers...'
-                sh 'docker ps'
+                bat 'docker ps'
             }
         }
     }
