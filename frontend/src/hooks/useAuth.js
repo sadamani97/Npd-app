@@ -4,6 +4,8 @@ import {
   logoutUser, 
   registerUser, 
   registerTestUserThunk, 
+  requestOtpThunk,
+  verifyOtpThunk,
   setAuthenticated 
 } from "../redux/authSlice.jsx";
 
@@ -20,6 +22,37 @@ export function useAuth() {
         return { success: true, role: resultAction.payload.user.role };
       } else {
         return { success: false, message: resultAction.payload || "Login failed" };
+      }
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const requestOtp = async (phone_number, channel = "SMS") => {
+    try {
+      const resultAction = await dispatch(requestOtpThunk({ phone_number, channel }));
+      if (requestOtpThunk.fulfilled.match(resultAction)) {
+        return { 
+          success: true, 
+          message: resultAction.payload.msg, 
+          demoOtp: resultAction.payload.data?.demo_otp,
+          channel: resultAction.payload.channel
+        };
+      } else {
+        return { success: false, message: resultAction.payload || "Failed to send OTP" };
+      }
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const verifyOtp = async (phone_number, otp) => {
+    try {
+      const resultAction = await dispatch(verifyOtpThunk({ phone_number, otp }));
+      if (verifyOtpThunk.fulfilled.match(resultAction)) {
+        return { success: true, role: resultAction.payload.user.role };
+      } else {
+        return { success: false, message: resultAction.payload || "OTP verification failed" };
       }
     } catch (err) {
       return { success: false, message: err.message };
@@ -57,10 +90,10 @@ export function useAuth() {
   };
 
   const getRedirectPath = (role = currentUser?.role) => {
-    if (role === "SUPER_ADMIN") return "/superadmin/dashboard";
-    if (role === "ADMIN" || role === "HOSTEL_ADMIN") return "/dashboard";
-    if (role === "USER") return "/user-dashboard";
-    return "/login";
+    const userRole = role || currentUser?.role || "USER";
+    if (userRole === "SUPER_ADMIN") return "/superadmin/dashboard";
+    if (userRole === "ADMIN" || userRole === "HOSTEL_ADMIN") return "/dashboard";
+    return "/user-dashboard";
   };
 
   const setIsAuthenticated = (val) => {
@@ -73,6 +106,8 @@ export function useAuth() {
     loading,
     logout,
     login,
+    requestOtp,
+    verifyOtp,
     signup,
     registerTestUser,
     getRedirectPath,

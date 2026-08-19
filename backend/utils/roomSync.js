@@ -14,9 +14,9 @@ const ROOM_TYPE_CAPACITY = {
 const VALID_AC_STATUS = new Set(["AC", "NON_AC"]);
 
 const ROOM_RENT_SCHEDULE = {
-  SINGLE_SHARE: { AC: 10500, NON_AC: 9500, PREMIUM: 20000 },
-  DOUBLE_SHARE: { AC: 7750, NON_AC: 7000, PREMIUM: 15000 },
-  TRIPLE_SHARE: { AC: 7500, NON_AC: 6750, PREMIUM: 10000 },
+  SINGLE_SHARE: { AC: 10500, NON_AC: 9500, PREMIUM: 19999 },
+  DOUBLE_SHARE: { AC: 7750, NON_AC: 7000, PREMIUM: 14999 },
+  TRIPLE_SHARE: { AC: 7500, NON_AC: 6750, PREMIUM: 9999 },
   FOUR_SHARE: { AC: 7250, NON_AC: 6500 },
   FIVE_SHARE: { NON_AC: 6250 },
   SIX_SHARE: { NON_AC: 6000 }
@@ -55,11 +55,16 @@ export const normalizeAcStatus = (acStatus) => {
 };
 
 export const inferFloorNumber = (roomNumber) => {
-  const digits = cleanValue(roomNumber).match(/\d+/)?.[0];
-  if (!digits) return "1";
+  const str = cleanValue(roomNumber).toUpperCase();
+  if (str.includes("G")) return "G";
+  if (str.includes("F")) return "F";
+  if (str.includes("S")) return "S";
+
+  const digits = str.match(/\d+/)?.[0];
+  if (!digits) return "G";
 
   const numericRoom = Number.parseInt(digits, 10);
-  if (!Number.isFinite(numericRoom) || numericRoom <= 0) return "1";
+  if (!Number.isFinite(numericRoom) || numericRoom <= 0) return "G";
 
   return numericRoom >= 100
     ? String(Math.floor(numericRoom / 100))
@@ -186,7 +191,94 @@ export const refreshRoomStatus = async (blockNumber, roomNumber) => {
   return room.status === nextStatus ? room : room.update({ status: nextStatus });
 };
 
+export const HOSTEL_ROOM_DEFINITIONS = [
+  // Block 1 Ground Floor (G)
+  { block: "1", floor: "G", room: "1G1", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "G", room: "1G2", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "G", room: "1G3", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "G", room: "1G4", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "G", room: "1G5", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+
+  // Block 1 1st Floor (F)
+  { block: "1", floor: "F", room: "1F11", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F12", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F13", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F14", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F21", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F22", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F23", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "1", floor: "F", room: "1F24", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+
+  // Block 1 2nd Floor (S)
+  { block: "1", floor: "S", room: "1S11", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S12", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S13", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S14", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S21", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S22", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S23", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "1", floor: "S", room: "1S24", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+
+  // Block 2 Ground Floor (G)
+  { block: "2", floor: "G", room: "2G1", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "G", room: "2G2", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "G", room: "2G3", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "G", room: "2G4", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "G", room: "2G5", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+
+  // Block 2 1st Floor (F)
+  { block: "2", floor: "F", room: "2F11", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F12", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F13", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F21", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F22", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F23", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F31", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F32", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F33", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+  { block: "2", floor: "F", room: "2F34", capacity: 4, type: "FOUR_SHARE", base_rent: 6500 },
+
+  // Block 2 2nd Floor (S)
+  { block: "2", floor: "S", room: "2S11", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S12", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S13", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S21", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S22", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S23", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S31", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S32", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S33", capacity: 6, type: "SIX_SHARE", base_rent: 6000 },
+  { block: "2", floor: "S", room: "2S34", capacity: 6, type: "SIX_SHARE", base_rent: 6000 }
+];
+
+export const seedAllHostelRooms = async () => {
+  try {
+    for (const def of HOSTEL_ROOM_DEFINITIONS) {
+      const existing = await Room.findOne({
+        where: { block_number: def.block, room_number: def.room }
+      });
+      if (!existing) {
+        await Room.create({
+          block_number: def.block,
+          floor_number: def.floor,
+          room_number: def.room,
+          room_type: def.type,
+          capacity: def.capacity,
+          base_rent: def.base_rent,
+          ac_status: "NON_AC",
+          status: "AVAILABLE",
+          electricity_meter_number: `${def.block}-${def.room}`
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error seeding hostel rooms:", err);
+  }
+};
+
 export const syncRoomsFromActiveResidents = async () => {
+  await seedAllHostelRooms();
+
   const residents = await User.findAll({
     where: { status: "ACTIVE" },
     attributes: [

@@ -104,7 +104,7 @@ export const login = async (req, res) => {
  */
 export const requestOTP = async (req, res) => {
   try {
-    const { phone_number } = req.body;
+    const { phone_number, channel } = req.body;
 
     // Validate input
     if (!phone_number) {
@@ -119,7 +119,7 @@ export const requestOTP = async (req, res) => {
     if (normalizedPhone.length < 10) {
       return res.status(400).json({ 
         success: false, 
-        msg: "Invalid phone number format" 
+        msg: "Please enter a valid 10-digit phone number" 
       });
     }
 
@@ -128,7 +128,7 @@ export const requestOTP = async (req, res) => {
     if (!user) {
       return res.status(400).json({ 
         success: false, 
-        msg: "please enter the valid number" 
+        msg: "Please enter a registered mobile number" 
       });
     }
 
@@ -138,7 +138,7 @@ export const requestOTP = async (req, res) => {
     // Calculate expiration time (10 minutes)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Store OTP in database
+    // Store OTP in database (remove previous unverified OTPs for this number)
     await OtpVerification.destroy({ where: { phone_number: normalizedPhone, is_verified: false } });
     
     const otpRecord = await OtpVerification.create({
@@ -147,28 +147,35 @@ export const requestOTP = async (req, res) => {
       expires_at: expiresAt
     });
 
-    // Send OTP via WhatsApp (preferred) or SMS
-    const result = await sendOTPviaWhatsApp(normalizedPhone, otp);
+    // Send OTP via SMS (or WhatsApp if channel === 'WHATSAPP')
+    let result;
+    if (channel === "WHATSAPP") {
+      result = await sendOTPviaWhatsApp(normalizedPhone, otp);
+      if (!result.success && result.mode !== "DEMO") {
+        result = await sendOTPviaSMS(normalizedPhone, otp);
+      }
+    } else {
+      result = await sendOTPviaSMS(normalizedPhone, otp);
+    }
     
     if (!result.success && result.mode !== "DEMO") {
-      // Fallback to SMS
-      const smsResult = await sendOTPviaSMS(normalizedPhone, otp);
-      if (!smsResult.success) {
-        return res.status(500).json({ 
-          success: false, 
-          msg: "Failed to send OTP. Please try again." 
-        });
-      }
+      return res.status(500).json({ 
+        success: false, 
+        msg: "Failed to send OTP via SMS. Please try again." 
+      });
     }
 
     res.json({ 
       success: true, 
-      msg: "OTP sent successfully",
-      channel: result.mode || "DEMO",
+      msg: result.mode === "DEMO" 
+        ? "OTP generated (Demo Mode). Use code shown below." 
+        : "OTP sent via mobile SMS successfully",
+      channel: result.mode || "SMS",
       phone: normalizedPhone,
       data: {
         otp_id: otpRecord.id,
-        expires_in_minutes: 10
+        expires_in_minutes: 10,
+        ...(result.mode === "DEMO" ? { demo_otp: otp } : {})
       }
     });
   } catch (err) {
@@ -269,7 +276,7 @@ export const verifyOTP = async (req, res) => {
         floor_number: user.floor_number,
         room_number: user.room_number,
         room_type: user.room_type,
-        role: user.role,
+        role: user.role || "USER",
         hostel_id: user.hostel_id
       }
     });
