@@ -28,6 +28,7 @@ import UserComplaints from "./pages/UserComplaints.jsx";
 import UserCirculars from "./pages/UserCirculars.jsx";
 import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
+import UserPaymentHistory from "./pages/UserPaymentHistory.jsx";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
 import ElectricityBillingPage from "./pages/ElectricityBillingPage.jsx";
 import { useAuth } from "./hooks/useAuth";
@@ -189,6 +190,10 @@ function App() {
         <Route 
           path="/user-circulars" 
           element={isAuthenticated ? <UserCirculars /> : <Navigate to="/login" replace />} 
+        />
+        <Route 
+          path="/user-payments" 
+          element={isAuthenticated ? <UserPaymentHistory /> : <Navigate to="/login" replace />} 
         />
         <Route 
           path="/user-profile" 

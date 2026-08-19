@@ -19,8 +19,8 @@ export default function FoodMenuManagementScreen() {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/food-menus');
-      if (res.data && res.data.success) {
-        setMenuList(res.data.data || res.data.menus || []);
+      if (res.data?.success) {
+        setMenuList(Array.isArray(res.data.data) ? res.data.data : []);
       }
     } catch (e) {
       console.log('Error fetching food menus', e);
@@ -111,10 +111,8 @@ export default function FoodMenuManagementScreen() {
       ) : (
         menuList.map((item, idx) => (
           <View key={idx} style={styles.menuCard}>
-            <Text style={styles.dayTitle}>📅 {item.day || 'Daily Menu'}</Text>
-            <Text style={styles.menuItem}>☕ Breakfast: {item.breakfast}</Text>
-            <Text style={styles.menuItem}>🍛 Lunch: {item.lunch}</Text>
-            <Text style={styles.menuItem}>🌙 Dinner: {item.dinner}</Text>
+            <Text style={styles.dayTitle}>📅 {item.menu_date || 'Daily Menu'}</Text>
+            <Text style={styles.menuItem}>{item.meal_type || 'Meal'}: {item.item_name || item.description}</Text>
           </View>
         ))
       )}

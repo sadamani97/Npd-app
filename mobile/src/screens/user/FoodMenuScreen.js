@@ -14,8 +14,26 @@ export default function FoodMenuScreen() {
 
   const fetchFoodMenu = async () => {
     try {
-      const res = await axiosInstance.get('/food-menu/today');
-      setMenu(res.data);
+      const today = new Date().toISOString().split('T')[0];
+      const res = await axiosInstance.get('/food-menus/date', {
+        params: { date: today },
+      });
+
+      if (res.data?.success) {
+        const meals = Array.isArray(res.data.data) ? res.data.data : [];
+        const menuMap = {};
+
+        meals.forEach((item) => {
+          const key = String(item.meal_type || '').toLowerCase();
+          menuMap[key] = item.item_name || item.description || item.name || '';
+        });
+
+        setMenu({
+          breakfast: menuMap.breakfast || '',
+          lunch: menuMap.lunch || '',
+          dinner: menuMap.dinner || '',
+        });
+      }
     } catch (e) {
       console.log('Failed to fetch food menu', e);
     } finally {

@@ -1,57 +1,46 @@
-/* FoodConfirmation.css */
+/* FoodConfirmation.css - Web Desktop Application Layout */
 
-.food-confirmation-page {
-  padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  min-height: 100%;
+.food-confirmation-web-page {
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
 }
 
-.confirmation-container {
-  max-width: 600px;
+.confirmation-web-container {
+  max-width: 1200px;
   margin: 0 auto;
-  background: white;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .confirmation-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .confirmation-header h2 {
   margin: 0;
-  color: #333;
-  font-size: 24px;
-  flex: 1;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.back-btn {
-  background: white;
-  border: 2px solid #667eea;
-  color: #667eea;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s ease;
+.header-subtitle {
+  margin: 4px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
 }
 
-.back-btn:hover {
-  background: #667eea;
-  color: white;
+.confirmation-web-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
 }
 
-.confirmation-form {
+.confirmation-form-web {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  margin-bottom: 30px;
+  gap: 20px;
 }
 
 .form-group {
@@ -61,328 +50,153 @@
 }
 
 .form-group label {
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #1e293b;
   font-size: 14px;
 }
 
-.form-group input[type="date"],
-.form-group textarea {
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
-}
-
-.form-group input[type="date"]:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.form-hint {
-  color: #999;
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-/* Confirmation Options */
-.confirmation-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.option-btn {
+.date-picker-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  color: #666;
+  gap: 16px;
 }
 
-.option-btn:hover {
-  border-color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-}
-
-.option-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-}
-
-.option-btn .icon {
-  font-size: 32px;
-}
-
-.option-btn .label {
+.date-input-web {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
   font-size: 14px;
-}
-
-/* Info Box */
-.info-box {
-  background: #e7f3ff;
-  border-left: 4px solid #2196f3;
-  padding: 15px;
-  border-radius: 6px;
-}
-
-.info-box p {
-  margin: 8px 0;
-  color: #1565c0;
-  font-size: 13px;
-}
-
-.info-box strong {
-  color: #0d47a1;
-}
-
-/* Textarea */
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-size: 13px;
-}
-
-/* Submit Button */
-.submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  color: #0f172a;
 }
 
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.submit-btn.loading {
-  opacity: 0.8;
-}
-
-/* Info Card */
-.info-card {
-  background: #f8f9fa;
-  border: 2px solid #e0e0e0;
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.info-card h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 16px;
-}
-
-.info-card ul {
-  margin: 0;
-  padding: 0 0 0 20px;
-  list-style-position: inside;
-}
-
-.info-card li {
-  color: #666;
+.date-hint-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 13px;
-  margin: 8px 0;
-  line-height: 1.4;
+  font-weight: 700;
 }
 
-/* Meals Grid */
-.meals-grid {
+.meals-grid-web {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 12px;
+  gap: 16px;
 }
 
-.meal-checkbox-wrapper {
-  display: flex;
-}
-
-.meal-checkbox {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  user-select: none;
-}
-
-.meal-checkbox input[type="checkbox"] {
-  display: none;
-}
-
-.meal-content {
+.meal-card-toggle {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
   text-align: center;
 }
 
-.meal-checkbox .icon {
-  font-size: 28px;
+.meal-card-toggle:hover {
+  transform: translateY(-3px);
+  border-color: #6366f1;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
 }
 
-.meal-checkbox .label {
-  font-weight: 600;
-  color: #333;
+.meal-card-toggle.active-meal {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  border-color: #4f46e5;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+}
+
+.meal-card-toggle.active-meal h4,
+.meal-card-toggle.active-meal span {
+  color: white !important;
+}
+
+.meal-card-icon {
+  font-size: 32px;
+}
+
+.meal-card-info h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.meal-card-info span {
   font-size: 12px;
+  color: #64748b;
 }
 
-.meal-checkbox:hover {
-  border-color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+.meal-card-checkbox {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.meal-checkbox.checked {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+.notes-input-web {
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
 }
 
-.meal-checkbox.checked .label {
-  color: white;
+.info-box-web {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1e40af;
 }
 
-/* Button Group */
-.button-group {
+.button-group-web {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-.submit-btn,
-.cancel-btn {
-  flex: 1;
-  min-width: 140px;
-  padding: 14px 24px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
+.confirm-btn-web {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: white !important;
+  padding: 12px 24px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
 }
 
-.submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.side-guidelines {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+.guidelines-list {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
 }
 
-.cancel-btn {
-  background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
-  color: white;
+.guidelines-list li {
+  margin-bottom: 8px;
 }
 
-.cancel-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(243, 156, 18, 0.4);
-}
-
-.submit-btn:disabled,
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Messages */
-.error-message {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 12px 15px;
-  border-radius: 6px;
-  border: 1px solid #f5c6cb;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.success-message {
-  background: #d4edda;
-  color: #155724;
-  padding: 12px 15px;
-  border-radius: 6px;
-  border: 1px solid #c3e6cb;
-  margin-bottom: 20px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Responsive Design */
-@media (max-width: 640px) {
-  .confirmation-container {
-    padding: 20px;
-  }
-
-  .confirmation-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .confirmation-options {
+@media (max-width: 900px) {
+  .confirmation-web-grid {
     grid-template-columns: 1fr;
   }
 
-  .meals-grid {
+  .meals-grid-web {
     grid-template-columns: 1fr;
-  }
-
-  .button-group {
-    flex-direction: column;
-  }
-
-  .submit-btn,
-  .cancel-btn {
-    width: 100%;
-  }
-
-  .option-btn {
-    padding: 15px;
-  }
-
-  .option-btn .icon {
-    font-size: 28px;
-  }
-
-  .submit-btn {
-    padding: 12px 20px;
-    font-size: 14px;
   }
 }

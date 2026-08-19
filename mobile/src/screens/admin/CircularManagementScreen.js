@@ -17,8 +17,8 @@ export default function CircularManagementScreen() {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/circulars');
-      if (res.data && res.data.success) {
-        setCirculars(res.data.circulars || []);
+      if (res.data?.success) {
+        setCirculars(Array.isArray(res.data.data) ? res.data.data : []);
       }
     } catch (e) {
       console.log('Error fetching circulars', e);
@@ -88,7 +88,7 @@ export default function CircularManagementScreen() {
         circulars.map((item, index) => (
           <View key={index} style={styles.noticeCard}>
             <Text style={styles.noticeTitle}>📌 {item.title}</Text>
-            <Text style={styles.noticeBody}>{item.content || item.description}</Text>
+            <Text style={styles.noticeBody}>{item.message || item.content || item.description}</Text>
           </View>
         ))
       )}

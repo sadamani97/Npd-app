@@ -45,6 +45,7 @@ export default function Sidebar() {
     { path: "/user-dashboard", label: "Home", icon: "🏠" },
     { path: "/food-menu", label: "Today Food Menu", icon: "🍽️" },
     { path: "/food-confirmation", label: "Food Confirmation", icon: "✅" },
+    { path: "/user-payments", label: "My Payments", icon: "💳" },
     { path: "/user-complaints", label: "My Complaints", icon: "📝" },
     { path: "/user-circulars", label: "Announcements", icon: "📢" },
     { path: "/user-profile", label: "Profile", icon: "👤" },
@@ -72,7 +73,7 @@ export default function Sidebar() {
         </div>
         
         <div className="user-role-badge">
-          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : "👤 User"}
+          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : `👤 ${user.name || "User"}`}
         </div>
 
         <nav className="sidebar-nav">
@@ -92,12 +93,8 @@ export default function Sidebar() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-info">
-            <p className="user-name">{user.name || "User"}</p>
-            <p className="user-email">{user.email || "N/A"}</p>
-          </div>
           <button onClick={handleLogout} className="btn-logout">
-            🚪 Logout
+            🚪 LOGOUT
           </button>
         </div>
       </aside>

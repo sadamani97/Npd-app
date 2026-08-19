@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
+import { Card } from "../components/ui";
 import "../styles/FoodMenu.css";
 
 export default function FoodMenu() {
@@ -51,12 +52,21 @@ export default function FoodMenu() {
     return date.toLocaleDateString("en-IN", options);
   };
 
+  const mealIcons = {
+    BREAKFAST: "🌅",
+    LUNCH: "☀️",
+    DINNER: "🌙"
+  };
+
   const MealSection = ({ mealType, items }) => (
-    <div className="meal-section">
-      <h3 className="meal-title">🍴 {mealType}</h3>
+    <Card 
+      title={mealType} 
+      icon={mealIcons[mealType] || "🍴"} 
+      className="food-meal-card"
+    >
       <div className="meal-items">
         {items.length === 0 ? (
-          <p className="no-items">No menu items available</p>
+          <p className="no-items">No menu items available for {mealType.toLowerCase()}</p>
         ) : (
           items.map((item, idx) => (
             <div key={idx} className="meal-item">
@@ -80,7 +90,7 @@ export default function FoodMenu() {
           ))
         )}
       </div>
-    </div>
+    </Card>
   );
 
   return (
@@ -93,19 +103,22 @@ export default function FoodMenu() {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="date-selector">
-          <button onClick={handlePreviousDay} className="btn-date-nav">← Previous</button>
-          <div className="date-display">
+        <div className="compact-date-bar">
+          <div className="date-quick-actions">
+            <button onClick={handlePreviousDay} className="date-nav-btn">← Prev</button>
+            <button onClick={handleToday} className="date-today-btn">Today</button>
+            <button onClick={handleNextDay} className="date-nav-btn">Next →</button>
+          </div>
+          <div className="compact-date-badge">
+            <span className="calendar-icon">📅</span>
+            <span className="selected-date-title">{formatDateDisplay(selectedDate)}</span>
             <input 
               type="date" 
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="date-input"
+              className="compact-date-picker"
             />
-            <span className="date-text">{formatDateDisplay(selectedDate)}</span>
           </div>
-          <button onClick={handleNextDay} className="btn-date-nav">Next →</button>
-          <button onClick={handleToday} className="btn-today">Today</button>
         </div>
 
         {loading ? (

@@ -41,11 +41,20 @@ export default function AdminDashboardScreen({ navigation }) {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/dashboard/stats');
-      if (res.data && res.data.success) {
+      if (res.data?.success) {
+        const dashboardData = res.data.data || {};
+        const roomStats = dashboardData.roomStats || {};
+        const payments = dashboardData.payments || {};
+
         setStats((prev) => ({
           ...prev,
-          totalResidents: res.data.stats?.totalResidents || prev.totalResidents,
-          vacantRooms: res.data.stats?.roomStats?.vacantRooms || prev.vacantRooms,
+          totalResidents: dashboardData.totalResidents ?? prev.totalResidents,
+          blocks: dashboardData.blockGroups?.length ?? prev.blocks,
+          vacantRooms: roomStats.vacantRooms ?? prev.vacantRooms,
+          vacantBeds: dashboardData.roomOccupancy?.reduce((sum, room) => sum + Math.max((room.capacity || 0) - (room.occupied || 0), 0), 0) ?? prev.vacantBeds,
+          pendingPayments: payments.unpaidCount ?? prev.pendingPayments,
+          foodCount: dashboardData.foodCount ?? prev.foodCount,
+          growth: dashboardData.growth ?? prev.growth,
         }));
       }
     } catch (e) {

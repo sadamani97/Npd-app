@@ -16,8 +16,8 @@ export default function ResidentsListPage({ navigation }) {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/users');
-      if (res.data && res.data.success) {
-        setResidents(res.data.users || res.data.residents || []);
+      if (res.data?.success) {
+        setResidents(Array.isArray(res.data.data) ? res.data.data : []);
       }
     } catch (e) {
       console.log('Failed to fetch residents', e);

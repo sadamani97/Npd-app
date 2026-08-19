@@ -9,23 +9,7 @@ import "../styles/Dashboard.css";
 import { Button, Alert } from "../components/ui";
 import API from "../services/api";
 
-const block1MonthlyData = [
-  { month: "Jan", newResidents: 8, vacatedResidents: 2, totalResidents: 38, occupiedRooms: 20, vacantRooms: 5, totalRooms: 25, newLeads: 80, siteVisits: 50, registrations: 25, joinedResidents: 8 },
-  { month: "Feb", newResidents: 5, vacatedResidents: 3, totalResidents: 40, occupiedRooms: 21, vacantRooms: 4, totalRooms: 25, newLeads: 70, siteVisits: 40, registrations: 20, joinedResidents: 5 },
-  { month: "Mar", newResidents: 10, vacatedResidents: 4, totalResidents: 46, occupiedRooms: 23, vacantRooms: 2, totalRooms: 25, newLeads: 90, siteVisits: 60, registrations: 30, joinedResidents: 10 },
-  { month: "Apr", newResidents: 6, vacatedResidents: 5, totalResidents: 47, occupiedRooms: 24, vacantRooms: 1, totalRooms: 25, newLeads: 75, siteVisits: 45, registrations: 22, joinedResidents: 6 },
-  { month: "May", newResidents: 12, vacatedResidents: 3, totalResidents: 56, occupiedRooms: 24, vacantRooms: 1, totalRooms: 25, newLeads: 110, siteVisits: 75, registrations: 40, joinedResidents: 12 },
-  { month: "Jun", newResidents: 7, vacatedResidents: 4, totalResidents: 59, occupiedRooms: 24, vacantRooms: 1, totalRooms: 25, newLeads: 85, siteVisits: 55, registrations: 28, joinedResidents: 7 }
-];
-
-const block2MonthlyData = [
-  { month: "Jan", newResidents: 4, vacatedResidents: 2, totalResidents: 12, occupiedRooms: 6, vacantRooms: 19, totalRooms: 25, newLeads: 40, siteVisits: 20, registrations: 10, joinedResidents: 4 },
-  { month: "Feb", newResidents: 4, vacatedResidents: 3, totalResidents: 13, occupiedRooms: 7, vacantRooms: 18, totalRooms: 25, newLeads: 45, siteVisits: 22, registrations: 11, joinedResidents: 4 },
-  { month: "Mar", newResidents: 5, vacatedResidents: 1, totalResidents: 17, occupiedRooms: 9, vacantRooms: 16, totalRooms: 25, newLeads: 50, siteVisits: 25, registrations: 15, joinedResidents: 5 },
-  { month: "Apr", newResidents: 3, vacatedResidents: 2, totalResidents: 18, occupiedRooms: 10, vacantRooms: 15, totalRooms: 25, newLeads: 35, siteVisits: 18, registrations: 8, joinedResidents: 3 },
-  { month: "May", newResidents: 8, vacatedResidents: 4, totalResidents: 22, occupiedRooms: 12, vacantRooms: 13, totalRooms: 25, newLeads: 70, siteVisits: 38, registrations: 20, joinedResidents: 8 },
-  { month: "Jun", newResidents: 5, vacatedResidents: 2, totalResidents: 25, occupiedRooms: 14, vacantRooms: 11, totalRooms: 25, newLeads: 55, siteVisits: 30, registrations: 14, joinedResidents: 5 }
-];
+const currentMonthName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][new Date().getMonth()];
 
 export default function Dashboard({ defaultActiveView = null }) {
   const { residents, fetchResidents, vacateResident, loading: residentsLoading, error: residentsError } = useResidents();
@@ -37,7 +21,7 @@ export default function Dashboard({ defaultActiveView = null }) {
   const [selectedBlockFilter, setSelectedBlockFilter] = useState("All");
   const [hoveredBar, setHoveredBar] = useState(null);
   const [hoveredLine, setHoveredLine] = useState(null);
-  const [foodCount, setFoodCount] = useState(0);
+  const [foodStats, setFoodStats] = useState({ total: 0, breakfast: 0, lunch: 0, dinner: 0 });
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
@@ -68,7 +52,16 @@ export default function Dashboard({ defaultActiveView = null }) {
       const today = new Date().toISOString().split('T')[0];
       const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${today}`);
       if (res.data && res.data.success) {
-        setFoodCount(res.data.count || 0);
+        const list = res.data.data || [];
+        const breakfast = list.filter(c => c.breakfast).length;
+        const lunch = list.filter(c => c.lunch).length;
+        const dinner = list.filter(c => c.dinner).length;
+        setFoodStats({
+          total: res.data.count || list.length,
+          breakfast,
+          lunch,
+          dinner
+        });
       }
     } catch (err) {
       console.error("Failed to fetch food count", err);
@@ -105,58 +98,63 @@ export default function Dashboard({ defaultActiveView = null }) {
     navigate("/rooms-occupancy");
   };
 
-  const getMergedData = () => {
-    const b1List = block1MonthlyData.map(d => ({ ...d }));
-    const b2List = block2MonthlyData.map(d => ({ ...d }));
-
-    const b1ResidentsLive = (stats.blockGroups || []).find(b => String(b.block) === "1")?.residents || 9;
-    const b2ResidentsLive = (stats.blockGroups || []).find(b => String(b.block) === "2")?.residents || 1;
-    
-    const b1Rooms = (stats.roomOccupancy || []).filter(r => String(r.block_number) === "1");
-    const b1OccupiedRooms = b1Rooms.filter(r => Number(r.occupied) > 0).length;
-    const b1TotalRooms = b1Rooms.length || 10;
-    const b1VacantRooms = Math.max(b1TotalRooms - b1OccupiedRooms, 0);
-
-    const b2Rooms = (stats.roomOccupancy || []).filter(r => String(r.block_number) === "2");
-    const b2OccupiedRooms = b2Rooms.filter(r => Number(r.occupied) > 0).length;
-    const b2TotalRooms = b2Rooms.length || 10;
-    const b2VacantRooms = Math.max(b2TotalRooms - b2OccupiedRooms, 0);
-
-    if (b1List[5]) {
-      b1List[5].totalResidents = b1ResidentsLive;
-      b1List[5].occupiedRooms = b1OccupiedRooms || b1List[5].occupiedRooms;
-      b1List[5].vacantRooms = b1VacantRooms || b1List[5].vacantRooms;
-      b1List[5].totalRooms = b1TotalRooms || b1List[5].totalRooms;
-    }
-    if (b2List[5]) {
-      b2List[5].totalResidents = b2ResidentsLive;
-      b2List[5].occupiedRooms = b2OccupiedRooms || b2List[5].occupiedRooms;
-      b2List[5].vacantRooms = b2VacantRooms || b2List[5].vacantRooms;
-      b2List[5].totalRooms = b2TotalRooms || b2List[5].totalRooms;
-    }
-
-    return { b1List, b2List };
-  };
-
   const getFilteredData = () => {
-    const { b1List, b2List } = getMergedData();
-    if (selectedBlockFilter === "1") return b1List;
-    if (selectedBlockFilter === "2") return b2List;
+    let filteredRooms = stats.roomOccupancy || [];
+    if (selectedBlockFilter !== "All") {
+      filteredRooms = filteredRooms.filter(r => String(r.block_number) === String(selectedBlockFilter));
+    }
 
-    return b1List.map((m1, idx) => {
-      const m2 = b2List[idx];
+    let filteredRes = residents || [];
+    if (selectedBlockFilter !== "All") {
+      filteredRes = filteredRes.filter(r => String(r.block_number) === String(selectedBlockFilter));
+    }
+
+    const occupiedRoomsCount = filteredRooms.filter(r => Number(r.occupied) > 0).length;
+    const totalRoomsCount = filteredRooms.length;
+    const vacantRoomsCount = Math.max(totalRoomsCount - occupiedRoomsCount, 0);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentMonthIdx = new Date().getMonth();
+
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const idx = (currentMonthIdx - i + 12) % 12;
+      months.push(idx);
+    }
+
+    return months.map((mIdx) => {
+      const monthLabel = monthNames[mIdx];
+
+      const newResidentsCount = filteredRes.filter(r => {
+        const d = r.createdAt ? new Date(r.createdAt) : (r.join_date ? new Date(r.join_date) : null);
+        return d && d.getMonth() === mIdx;
+      }).length;
+
+      const vacatedResidentsCount = filteredRes.filter(r => {
+        const isVacated = r.status === "VACATED" || r.status === "INACTIVE";
+        if (!isVacated) return false;
+        const d = r.updatedAt ? new Date(r.updatedAt) : (r.vacated_at ? new Date(r.vacated_at) : null);
+        return d && d.getMonth() === mIdx;
+      }).length;
+
+      const totalResidentsUpToMonth = filteredRes.filter(r => {
+        const d = r.createdAt ? new Date(r.createdAt) : (r.join_date ? new Date(r.join_date) : null);
+        if (!d) return true;
+        return d.getMonth() <= mIdx;
+      }).length;
+
       return {
-        month: m1.month,
-        newResidents: m1.newResidents + m2.newResidents,
-        vacatedResidents: m1.vacatedResidents + m2.vacatedResidents,
-        totalResidents: m1.totalResidents + m2.totalResidents,
-        occupiedRooms: m1.occupiedRooms + m2.occupiedRooms,
-        vacantRooms: m1.vacantRooms + m2.vacantRooms,
-        totalRooms: m1.totalRooms + m2.totalRooms,
-        newLeads: m1.newLeads + m2.newLeads,
-        siteVisits: m1.siteVisits + m2.siteVisits,
-        registrations: m1.registrations + m2.registrations,
-        joinedResidents: m1.joinedResidents + m2.joinedResidents
+        month: monthLabel,
+        newResidents: newResidentsCount,
+        vacatedResidents: vacatedResidentsCount,
+        totalResidents: totalResidentsUpToMonth,
+        occupiedRooms: occupiedRoomsCount,
+        vacantRooms: vacantRoomsCount,
+        totalRooms: totalRoomsCount,
+        newLeads: newResidentsCount,
+        siteVisits: newResidentsCount,
+        registrations: newResidentsCount,
+        joinedResidents: newResidentsCount
       };
     });
   };
@@ -336,100 +334,125 @@ export default function Dashboard({ defaultActiveView = null }) {
 
       {!activeView && (
         <>
-          {/* View Toggle Buttons */}
-          <div className="view-toggle" style={{ justifyContent: "center", marginBottom: "20px" }}>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveView('stats')}
-        >
-          📈 Block Statistics
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'blocks' ? 'active' : ''}`}
-          onClick={() => setActiveView('blocks')}
-        >
-          🏗️ Vacant rooms
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'residents' ? 'active' : ''}`}
-          onClick={() => setActiveView('residents')}
-        >
-          👨‍👩‍👧‍👦 Residents List
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveView('analytics')}
-        >
-          📊 Growth Insights
-        </Button>
-      </div>
-
-      {/* Main Stats Cards - Now Clickable */}
-      <div className="stats-container" style={{ justifyContent: "center", display: "flex", flexWrap: "wrap", gap: "20px" }}>
-        <div className="stat-card stat-primary" onClick={() => navigate("/residents-list")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalResidents}</div>
-            <div className="stat-label">Total Residents</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">🏠</div>
-          <div className="stat-content">
-            <div className="stat-value">{getBlockStats().length}</div>
-            <div className="stat-label">Blocks</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-success" onClick={handleRoomClick} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">🛏️</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.roomStats?.vacantRooms || 0}</div>
-            <div className="stat-label">Vacant Rooms</div>
-          </div>
-        </div>
-
-        <div className="stat-card stat-warning" onClick={() => navigate("/unpaid-residents")} style={{cursor: "pointer", flex: "1", minWidth: "200px", maxWidth: "250px"}}>
-          <div className="stat-icon">💳</div>
-          <div className="stat-content">
-            <div className="stat-value">{unpaidCount}</div>
-            <div className="stat-label">Pending Payments</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Overview Interactive Graph Section */}
-      <div className="overview-graph-section">
-        <h3 className="overview-title">Dashboard Overview</h3>
-        <div className="overview-cards">
-          <div className="overview-card glass-panel">
-            <div className="overview-card-header">
-              <h4>Total Vacant Beds</h4>
-              <span className="overview-icon">🛏️</span>
+          {/* Summary Count Cards (Metric display) */}
+          <div className="metrics-count-strip">
+            <div className="count-card primary" onClick={() => navigate("/residents-list")}>
+              <div className="count-icon">👥</div>
+              <div className="count-info">
+                <span className="count-number">{stats.totalResidents || 0}</span>
+                <span className="count-label">Total Residents</span>
+              </div>
             </div>
-            <div className="overview-value">{totalVacantBeds}</div>
-            <div className="overview-bar">
-              <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+
+            <div className="count-card info" onClick={() => navigate("/blocks")}>
+              <div className="count-icon">🏠</div>
+              <div className="count-info">
+                <span className="count-number">{getBlockStats().length}</span>
+                <span className="count-label">Blocks</span>
+              </div>
             </div>
-            <p className="overview-subtext">Across all blocks</p>
+
+            <div className="count-card success" onClick={handleRoomClick}>
+              <div className="count-icon">🛏️</div>
+              <div className="count-info">
+                <span className="count-number">{totalVacantBeds}</span>
+                <span className="count-label">Total Vacant Beds</span>
+              </div>
+            </div>
+
+            <div className="count-card warning" onClick={() => navigate("/unpaid-residents")}>
+              <div className="count-icon">💳</div>
+              <div className="count-info">
+                <span className="count-number">{unpaidCount}</span>
+                <span className="count-label">Pending Payments</span>
+              </div>
+            </div>
+
+            <div className="count-card food" onClick={() => navigate("/admin-food-confirmations")}>
+              <div className="count-icon">🍽️</div>
+              <div className="count-info">
+                <div className="count-header-row">
+                  <span className="count-number">{foodStats.total}</span>
+                  <span className="count-label">Food Required Today</span>
+                </div>
+                <div className="food-breakdown-pills">
+                  <span className="meal-pill breakfast" title="Breakfast count">🌅 {foodStats.breakfast}</span>
+                  <span className="meal-pill lunch" title="Lunch count">☀️ {foodStats.lunch}</span>
+                  <span className="meal-pill dinner" title="Dinner count">🌙 {foodStats.dinner}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="overview-card glass-panel">
-            <div className="overview-card-header">
-              <h4>Food Count (Today)</h4>
-              <span className="overview-icon">🍽️</span>
+
+          {/* Main View Cards (Converted from top tabs) */}
+          <div className="feature-cards-section">
+            <h3 className="section-title">Dashboard Sections</h3>
+            <div className="feature-cards-grid">
+              <div className="feature-card stats-feature" onClick={() => setActiveView('stats')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📈</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Block Statistics</h4>
+                <p>View block-wise occupancy distribution, resident ratios, and room metrics.</p>
+              </div>
+
+              <div className="feature-card blocks-feature" onClick={() => setActiveView('blocks')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">🏗️</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Vacant Rooms</h4>
+                <p>Inspect vacant rooms, bed vacancies, and room capacities by block.</p>
+              </div>
+
+              <div className="feature-card residents-feature" onClick={() => setActiveView('residents')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">👨‍👩‍👧‍👦</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Residents List</h4>
+                <p>Browse full directory of active hostel residents, contact info, and status.</p>
+              </div>
+
+              <div className="feature-card analytics-feature" onClick={() => setActiveView('analytics')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📊</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Growth Insights</h4>
+                <p>Track monthly move-ins/outs, conversion rates, and growth trends.</p>
+              </div>
             </div>
-            <div className="overview-value">{foodCount}</div>
-            <div className="overview-bar">
-              <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodCount / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
-            </div>
-            <p className="overview-subtext">Confirmed daily requirements.</p>
           </div>
+
+          {/* Overview Interactive Graph Section */}
+          <div className="overview-graph-section">
+            <h3 className="overview-title">Dashboard Overview</h3>
+            <div className="overview-cards">
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Total Vacant Beds</h4>
+                  <span className="overview-icon">🛏️</span>
+                </div>
+                <div className="overview-value">{totalVacantBeds}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Across all blocks</p>
+              </div>
+              
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Food Count (Today)</h4>
+                  <span className="overview-icon">🍽️</span>
+                </div>
+                <div className="overview-value">{foodStats.total}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodStats.total / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Confirmed daily requirements.</p>
+              </div>
           
           <div className="overview-card glass-panel">
             <div className="overview-card-header">
@@ -712,7 +735,7 @@ export default function Dashboard({ defaultActiveView = null }) {
       {/* Analytics & Growth Insights View */}
       {activeView === 'analytics' && (() => {
         const data = getFilteredData();
-        const currentData = data.find(d => d.month === selectedMonth) || data[5];
+        const currentData = data.find(d => d.month === selectedMonth) || data[data.length - 1] || {};
 
         // KPI Calculations
         const newResidents = currentData.newResidents;

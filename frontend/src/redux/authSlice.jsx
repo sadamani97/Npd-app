@@ -140,6 +140,62 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Async thunk to request OTP
+export const requestOtpThunk = createAsyncThunk(
+  "auth/requestOtp",
+  async ({ phone_number, channel = "SMS" }, { rejectWithValue }) => {
+    try {
+      const res = await API.post("/auth/request-otp", { phone_number, channel });
+      if (res.data.success) {
+        return res.data;
+      }
+      return rejectWithValue("Failed to send OTP");
+    } catch (err) {
+      const msg = err.response?.data?.msg || err.response?.data?.message || "Failed to send OTP";
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+// Async thunk to verify OTP and login
+export const verifyOtpThunk = createAsyncThunk(
+  "auth/verifyOtp",
+  async ({ phone_number, otp }, { rejectWithValue }) => {
+    try {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("admin");
+
+      const res = await API.post("/auth/verify-otp", { phone_number, otp });
+
+      if (res.data.success) {
+        const user = res.data.user || {};
+        if (!user.role) {
+          user.role = "USER";
+        }
+        const token = res.data.token;
+        const userRole = user.role;
+
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "HOSTEL_ADMIN") {
+          localStorage.setItem("adminToken", token);
+          localStorage.setItem("admin", JSON.stringify(user));
+        } else {
+          localStorage.setItem("userToken", token);
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+
+        window.dispatchEvent(new Event("authChanged"));
+        return { user, role: userRole };
+      }
+      return rejectWithValue("OTP verification failed");
+    } catch (err) {
+      const msg = err.response?.data?.msg || err.response?.data?.message || "OTP verification failed";
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -170,6 +226,35 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
+      // OTP Request flow
+      .addCase(requestOtpThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(requestOtpThunk.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(requestOtpThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // OTP Verify flow
+      .addCase(verifyOtpThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyOtpThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentUser = action.payload.user;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(verifyOtpThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
