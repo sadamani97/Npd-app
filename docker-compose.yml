@@ -16,10 +16,7 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: hostel-backend
     restart: always
-    ports:
-      - "5001:5001"
     environment:
       - DB_HOST=db
       - DB_PORT=3306
@@ -33,11 +30,12 @@ services:
       - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER}
     depends_on:
       - db
+    deploy:
+      replicas: 3
 
   frontend:
     build:
       context: ./frontend
-    container_name: hostel-frontend
     restart: always
     ports:
       - "80:80"

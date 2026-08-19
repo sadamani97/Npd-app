@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostel-backend
+spec:
+  replicas: 3 # 3 pods for load balancing
+  selector:
+    matchLabels:
+      app: hostel-backend
+  template:
+    metadata:
+      labels:
+        app: hostel-backend
+    spec:
+      containers:
+        - name: backend
+          image: hostel-backend:latest # Build from backend/Dockerfile
+          imagePullPolicy: Never # Uses local Minikube cache image
+          ports:
+            - containerPort: 5001
+          env:
+            - name: DB_HOST
+              value: "db"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "hostel_tenant"
+            - name: DB_USER
+              value: "root"
+            - name: DB_PASSWORD
+              value: "root"
+            - name: PORT
+              value: "5001"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  ports:
+    - port: 5001
+      targetPort: 5001
+  selector:
+    app: hostel-backend
