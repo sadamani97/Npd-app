@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
+import { Card, Button } from "../components/ui";
 import "../styles/FoodConfirmation.css";
 
 export default function FoodConfirmation() {
@@ -15,11 +16,10 @@ export default function FoodConfirmation() {
   });
   const [existingConfirmation, setExistingConfirmation] = useState(null);
   const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Set default date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const formattedDate = tomorrow.toISOString().split("T")[0];
@@ -28,7 +28,6 @@ export default function FoodConfirmation() {
       confirmation_date: formattedDate
     }));
 
-    // Check if user already submitted for tomorrow
     checkExistingConfirmation(formattedDate);
   }, []);
 
@@ -47,7 +46,6 @@ export default function FoodConfirmation() {
           notes: res.data.data.notes || ""
         }));
       } else {
-        // Reset form for new date
         setExistingConfirmation(null);
         setFormData((prev) => ({
           ...prev,
@@ -89,9 +87,8 @@ export default function FoodConfirmation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if at least one meal is selected
     if (!formData.breakfast && !formData.lunch && !formData.dinner) {
-      setError("Please select at least one meal");
+      setError("Please select at least one meal to confirm");
       return;
     }
 
@@ -108,12 +105,12 @@ export default function FoodConfirmation() {
         if (formData.lunch) meals.push("Lunch");
         if (formData.dinner) meals.push("Dinner");
 
-        setSuccessMessage(`✅ Confirmed: ${meals.join(", ")}`);
+        setSuccessMessage(`✅ Meal confirmation recorded for ${meals.join(", ")}`);
         setExistingConfirmation(res.data.data);
 
         setTimeout(() => {
           navigate("/user-dashboard");
-        }, 2000);
+        }, 1500);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit confirmation");
@@ -135,7 +132,7 @@ export default function FoodConfirmation() {
       });
 
       if (res.data.success) {
-        setSuccessMessage("✅ Confirmation cancelled");
+        setSuccessMessage("✅ Meal confirmation cancelled");
         setFormData((prev) => ({
           ...prev,
           breakfast: false,
@@ -147,7 +144,7 @@ export default function FoodConfirmation() {
 
         setTimeout(() => {
           navigate("/user-dashboard");
-        }, 2000);
+        }, 1500);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to cancel confirmation");
@@ -156,19 +153,19 @@ export default function FoodConfirmation() {
     }
   };
 
-  const MealCheckbox = ({ meal, label, icon }) => (
-    <div className="meal-checkbox-wrapper">
-      <label className={`meal-checkbox ${formData[meal] ? "checked" : ""}`}>
-        <input
-          type="checkbox"
-          checked={formData[meal]}
-          onChange={() => handleMealChange(meal)}
-        />
-        <div className="meal-content">
-          <span className="icon">{icon}</span>
-          <span className="label">{label}</span>
-        </div>
-      </label>
+  const MealCardToggle = ({ meal, label, icon, subtitle }) => (
+    <div 
+      className={`meal-card-toggle ${formData[meal] ? "active-meal" : ""}`}
+      onClick={() => handleMealChange(meal)}
+    >
+      <div className="meal-card-icon">{icon}</div>
+      <div className="meal-card-info">
+        <h4>{label}</h4>
+        <span>{subtitle}</span>
+      </div>
+      <div className="meal-card-checkbox">
+        {formData[meal] ? "✅ Selected" : "+ Add Meal"}
+      </div>
     </div>
   );
 
@@ -191,107 +188,124 @@ export default function FoodConfirmation() {
 
   return (
     <Layout>
-      <div className="food-confirmation-page">
-        <div className="confirmation-container">
+      <div className="food-confirmation-web-page">
+        <div className="confirmation-web-container">
           <div className="confirmation-header">
             <button className="back-btn" onClick={() => navigate("/user-dashboard")}>
               ← Back
             </button>
-            <h2>🍽️ Confirm Meals</h2>
+            <div>
+              <h2>🍽️ Food Confirmation System</h2>
+              <p className="header-subtitle">Confirm your daily meal attendance for tomorrow</p>
+            </div>
           </div>
 
           {error && <div className="error-message">{error}</div>}
           {successMessage && <div className="success-message">{successMessage}</div>}
 
-          <form onSubmit={handleSubmit} className="confirmation-form">
-            {/* Date Selection */}
-            <div className="form-group">
-              <label htmlFor="confirmation_date">Select Date</label>
-              <input
-                type="date"
-                id="confirmation_date"
-                min={getMinDate()}
-                value={formData.confirmation_date}
-                onChange={handleDateChange}
-                required
-              />
-              <small className="form-hint">
-                {getTomorrowDate()}
-              </small>
-            </div>
+          <div className="confirmation-web-grid">
+            {/* Form Section */}
+            <Card className="form-card-web">
+              <form onSubmit={handleSubmit} className="confirmation-form-web">
+                <div className="form-group">
+                  <label htmlFor="confirmation_date">Target Confirmation Date</label>
+                  <div className="date-picker-row">
+                    <input
+                      type="date"
+                      id="confirmation_date"
+                      min={getMinDate()}
+                      value={formData.confirmation_date}
+                      onChange={handleDateChange}
+                      required
+                      className="date-input-web"
+                    />
+                    <span className="date-hint-badge">{getTomorrowDate()}</span>
+                  </div>
+                </div>
 
-            {/* Meal Selection */}
-            <div className="form-group">
-              <label>Select Meals Needed</label>
-              <div className="meals-grid">
-                <MealCheckbox meal="breakfast" label="Breakfast" icon="🌅" />
-                <MealCheckbox meal="lunch" label="Lunch" icon="☀️" />
-                <MealCheckbox meal="dinner" label="Dinner" icon="🌙" />
-              </div>
-            </div>
+                <div className="form-group">
+                  <label>Select Meals Required</label>
+                  <div className="meals-grid-web">
+                    <MealCardToggle meal="breakfast" label="Breakfast" icon="🌅" subtitle="Morning Meal" />
+                    <MealCardToggle meal="lunch" label="Lunch" icon="☀️" subtitle="Afternoon Meal" />
+                    <MealCardToggle meal="dinner" label="Dinner" icon="🌙" subtitle="Night Meal" />
+                  </div>
+                </div>
 
-            {/* Notes */}
-            <div className="form-group">
-              <label htmlFor="notes">Additional Notes (Optional)</label>
-              <textarea
-                id="notes"
-                rows="4"
-                placeholder="Any special dietary requirements or additional notes..."
-                value={formData.notes}
-                onChange={handleNotesChange}
-              />
-            </div>
+                <div className="form-group">
+                  <label htmlFor="notes">Special Dietary Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    rows="3"
+                    placeholder="E.g. Vegetarian preference, allergies, or special notes..."
+                    value={formData.notes}
+                    onChange={handleNotesChange}
+                    className="notes-input-web"
+                  />
+                </div>
 
-            {/* Status Info */}
-            {existingConfirmation && (
-              <div className="info-box">
+                {existingConfirmation && (
+                  <div className="info-box-web">
+                    <p>
+                      <strong>Current Confirmed Status:</strong>{" "}
+                      {[
+                        existingConfirmation.breakfast && "Breakfast 🌅",
+                        existingConfirmation.lunch && "Lunch ☀️",
+                        existingConfirmation.dinner && "Dinner 🌙"
+                      ].filter(Boolean).join(" | ") || "None"}
+                    </p>
+                  </div>
+                )}
+
+                <div className="button-group-web">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="confirm-btn-web"
+                  >
+                    {loading ? "Saving..." : "✅ Confirm Meal Choices"}
+                  </Button>
+                  {existingConfirmation && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={handleCancel}
+                      disabled={loading}
+                      className="cancel-btn-web"
+                    >
+                      ❌ Cancel Confirmation
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Card>
+
+            {/* Sidebar Guidelines */}
+            <div className="side-guidelines">
+              <Card title="📌 Meal Rules & Guidelines" icon="📌">
+                <ul className="guidelines-list">
+                  <li>Please confirm your meals at least <strong>one day in advance</strong>.</li>
+                  <li>Confirmations help prevent food wastage.</li>
+                  <li>Cancellations after 2 PM may not be updated for mess preparation.</li>
+                  <li>Your preferences are automatically updated in admin meal counts.</li>
+                </ul>
+              </Card>
+
+              <Card title="ℹ️ Confirmation Status" icon="📊" className="status-card-web">
                 <p>
-                  <strong>Last Updated:</strong>{" "}
-                  {new Date(existingConfirmation.confirmed_at).toLocaleString()}
+                  Date: <strong>{formData.confirmation_date || "Tomorrow"}</strong>
                 </p>
                 <p>
-                  <strong>Current Meals:</strong>{" "}
-                  {[
-                    existingConfirmation.breakfast && "Breakfast",
-                    existingConfirmation.lunch && "Lunch",
-                    existingConfirmation.dinner && "Dinner"
-                  ].filter(Boolean).join(", ") || "None"}
+                  Selected: <strong>
+                    {[
+                      formData.breakfast && "Breakfast",
+                      formData.lunch && "Lunch",
+                      formData.dinner && "Dinner"
+                    ].filter(Boolean).join(", ") || "None"}
+                  </strong>
                 </p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="button-group">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`submit-btn ${loading ? "loading" : ""}`}
-              >
-                {loading ? "Submitting..." : "✅ Confirm Meals"}
-              </button>
-              {existingConfirmation && (
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={loading}
-                  className="cancel-btn"
-                >
-                  ❌ Cancel Confirmation
-                </button>
-              )}
+              </Card>
             </div>
-          </form>
-
-          {/* Info Card */}
-          <div className="info-card">
-            <h3>📌 Important Information</h3>
-            <ul>
-              <li>Select the meals you need for the selected date</li>
-              <li>Changes made after 2 PM may not be processed</li>
-              <li>Admin will see your confirmation in the food list</li>
-              <li>You can update your selections up to tomorrow morning</li>
-              <li>At least one meal must be selected to confirm</li>
-            </ul>
           </div>
         </div>
       </div>

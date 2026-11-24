@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Resident Details
+method: GET
+order: 4000
+url: '{{base_url}}/api/users/:id'
+pathVariables:
+  - key: id
+    value: '1'
+    description: Resident ID

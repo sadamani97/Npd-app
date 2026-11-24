@@ -1,0 +1,17 @@
+$kind: http-request
+name: Update Payment Status (Admin)
+method: PUT
+order: 2000
+url: '{{base_url}}/api/payments/:paymentId'
+pathVariables:
+  - key: paymentId
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "payment_status": "PAID"
+    }

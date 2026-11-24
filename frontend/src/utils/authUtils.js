@@ -32,4 +32,5 @@ export const logout = () => {
   localStorage.removeItem("adminToken");
   localStorage.removeItem("user");
   localStorage.removeItem("admin");
+  window.dispatchEvent(new Event("authChanged"));
 };

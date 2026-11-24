@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { useResidents } from "../hooks/useResidents";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/UserProfile.css";
-import { Button, Alert } from "../components/ui";
+import { Button } from "../components/ui";
 
 export default function UserProfile() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const { editResident } = useResidents();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,29 +46,19 @@ export default function UserProfile() {
   };
 
   const handleSave = async () => {
-    try {
-      setLoading(true);
-      const res = await API.put(`/users/${user.id}`, formData);
-      
-      if (res.data.success) {
-        setUser(res.data.data);
-        localStorage.setItem("user", JSON.stringify(res.data.data));
-        setIsEditing(false);
-        setError("");
-        // Show success message (you can add toast here)
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
-    } finally {
-      setLoading(false);
+    const res = await editResident(user.id, formData);
+    if (res.success) {
+      setUser(res.data);
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setIsEditing(false);
+      setError("");
+    } else {
+      setError(res.message);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("admin");
+    logout();
     navigate("/login", { replace: true });
   };
 

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Request OTP (Resident)
+method: POST
+order: 5000
+url: '{{base_url}}/api/auth/request-otp'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "phone_number": "9876543210"
+    }

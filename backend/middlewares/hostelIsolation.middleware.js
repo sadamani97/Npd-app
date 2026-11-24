@@ -58,11 +58,15 @@ export const validateHostelAccess = (req, res, next) => {
  */
 export const getHostelFilter = (user) => {
   // SuperAdmin sees all (no filter)
-  if (user.role === "SUPER_ADMIN") {
+  if (!user || user.role === "SUPER_ADMIN") {
     return {};
   }
 
-  // HOSTEL_ADMIN and USER only see their hostel's data
+  // If a non-super user does not have a hostel assignment, avoid invalid filters.
+  if (!user.hostel_id) {
+    return {};
+  }
+
   return { hostel_id: user.hostel_id };
 };
 

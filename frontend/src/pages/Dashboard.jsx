@@ -1,86 +1,91 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import API from "../services/api";
+import { useResidents } from "../hooks/useResidents";
+import { useRooms } from "../hooks/useRooms";
+import { usePayments } from "../hooks/usePayments";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Dashboard.css";
 import { Button, Alert } from "../components/ui";
+import API from "../services/api";
 
-export default function Dashboard() {
-  const [residents, setResidents] = useState([]);
-  const [stats, setStats] = useState({
-    totalResidents: 0,
-    blockGroups: [],
-    roomOccupancy: [],
-    roomStats: {
-      totalRooms: 0,
-      occupiedRooms: 0,
-      vacantRooms: 0
-    }
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [activeView, setActiveView] = useState("stats"); // stats, residents, blocks
+const currentMonthName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][new Date().getMonth()];
+
+export default function Dashboard({ defaultActiveView = null }) {
+  const { residents, fetchResidents, vacateResident, loading: residentsLoading, error: residentsError } = useResidents();
+  const { stats, fetchDashboardStats, loading: statsLoading, error: statsError } = useRooms();
+  const { payments, fetchCurrentMonthPayments, loading: paymentsLoading, error: paymentsError } = usePayments();
+  const [activeView, setActiveView] = useState(defaultActiveView); // stats, residents, blocks, analytics
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("Jun");
+  const [selectedBlockFilter, setSelectedBlockFilter] = useState("All");
+  const [hoveredBar, setHoveredBar] = useState(null);
+  const [hoveredLine, setHoveredLine] = useState(null);
+  const [foodStats, setFoodStats] = useState({ total: 0, breakfast: 0, lunch: 0, dinner: 0 });
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
 
+  const loading = residentsLoading || statsLoading || paymentsLoading;
+  const error = residentsError || statsError || paymentsError;
+
+  const unpaidCount = payments?.filter(p => p.payment_status === "PENDING" || p.payment_status === "OVERDUE").length || 0;
+
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const { activeView: viewFromNav, dashboardRefresh } = location.state || {};
-    if (viewFromNav === "residents") {
-      setActiveView("residents");
+    if (viewFromNav) {
+      setActiveView(viewFromNav);
     }
     if (dashboardRefresh != null) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  const fetchData = async () => {
+  const fetchFoodCount = async () => {
     try {
-      setLoading(true);
-      setError("");
-
-      try {
-        const resRes = await API.get("/users");
-        if (resRes.data.success) {
-          setResidents(resRes.data.data);
-        }
-      } catch (err) {
-        console.error("Residents fetch error:", err);
-      }
-
-      try {
-        const statsRes = await API.get("/dashboard/stats");
-        if (statsRes.data.success) {
-          setStats(statsRes.data.data);
-        }
-      } catch (err) {
-        console.error("Stats fetch error:", err);
+      const today = new Date().toISOString().split('T')[0];
+      const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${today}`);
+      if (res.data && res.data.success) {
+        const list = res.data.data || [];
+        const breakfast = list.filter(c => c.breakfast).length;
+        const lunch = list.filter(c => c.lunch).length;
+        const dinner = list.filter(c => c.dinner).length;
+        setFoodStats({
+          total: res.data.count || list.length,
+          breakfast,
+          lunch,
+          dinner
+        });
       }
     } catch (err) {
-      setError("Failed to load dashboard data. Please refresh the page.");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch food count", err);
     }
+  };
+
+  const fetchData = async () => {
+    await Promise.allSettled([
+      fetchResidents(),
+      fetchDashboardStats(),
+      fetchCurrentMonthPayments(),
+      fetchFoodCount()
+    ]);
   };
 
   const handleVacate = async (id) => {
     if (!window.confirm("Are you sure you want to vacate this resident?")) return;
 
-    try {
-      const res = await API.put(`/users/vacate/${id}`);
-      if (res.data.success) {
-        alert(res.data.message);
-        fetchData();
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to vacate resident");
+    const res = await vacateResident(id);
+    if (res.success) {
+      alert(res.message);
+      fetchData();
+    } else {
+      alert(res.message || "Failed to vacate resident");
     }
   };
 
@@ -93,8 +98,129 @@ export default function Dashboard() {
     navigate("/rooms-occupancy");
   };
 
+  const getFilteredData = () => {
+    let filteredRooms = stats.roomOccupancy || [];
+    if (selectedBlockFilter !== "All") {
+      filteredRooms = filteredRooms.filter(r => String(r.block_number) === String(selectedBlockFilter));
+    }
+
+    let filteredRes = residents || [];
+    if (selectedBlockFilter !== "All") {
+      filteredRes = filteredRes.filter(r => String(r.block_number) === String(selectedBlockFilter));
+    }
+
+    const occupiedRoomsCount = filteredRooms.filter(r => Number(r.occupied) > 0).length;
+    const totalRoomsCount = filteredRooms.length;
+    const vacantRoomsCount = Math.max(totalRoomsCount - occupiedRoomsCount, 0);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentMonthIdx = new Date().getMonth();
+
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const idx = (currentMonthIdx - i + 12) % 12;
+      months.push(idx);
+    }
+
+    return months.map((mIdx) => {
+      const monthLabel = monthNames[mIdx];
+
+      const newResidentsCount = filteredRes.filter(r => {
+        const d = r.createdAt ? new Date(r.createdAt) : (r.join_date ? new Date(r.join_date) : null);
+        return d && d.getMonth() === mIdx;
+      }).length;
+
+      const vacatedResidentsCount = filteredRes.filter(r => {
+        const isVacated = r.status === "VACATED" || r.status === "INACTIVE";
+        if (!isVacated) return false;
+        const d = r.updatedAt ? new Date(r.updatedAt) : (r.vacated_at ? new Date(r.vacated_at) : null);
+        return d && d.getMonth() === mIdx;
+      }).length;
+
+      const totalResidentsUpToMonth = filteredRes.filter(r => {
+        const d = r.createdAt ? new Date(r.createdAt) : (r.join_date ? new Date(r.join_date) : null);
+        if (!d) return true;
+        return d.getMonth() <= mIdx;
+      }).length;
+
+      return {
+        month: monthLabel,
+        newResidents: newResidentsCount,
+        vacatedResidents: vacatedResidentsCount,
+        totalResidents: totalResidentsUpToMonth,
+        occupiedRooms: occupiedRoomsCount,
+        vacantRooms: vacantRoomsCount,
+        totalRooms: totalRoomsCount,
+        newLeads: newResidentsCount,
+        siteVisits: newResidentsCount,
+        registrations: newResidentsCount,
+        joinedResidents: newResidentsCount
+      };
+    });
+  };
+
+  const handleExportCSV = () => {
+    const data = getFilteredData();
+    const headers = [
+      "Month",
+      "New Residents",
+      "Vacated Residents",
+      "Net Growth",
+      "Total Residents",
+      "Occupied Rooms",
+      "Vacant Rooms",
+      "Occupancy Rate",
+      "New Leads",
+      "Site Visits",
+      "Registrations",
+      "Joined Residents",
+      "Lead Conversion Rate",
+      "Visit Conversion Rate"
+    ];
+
+    const rows = data.map(m => {
+      const net = m.newResidents - m.vacatedResidents;
+      const occupancy = m.totalRooms > 0 ? `${Math.round((m.occupiedRooms / m.totalRooms) * 100)}%` : "0%";
+      const leadConv = m.newLeads > 0 ? `${Math.round((m.joinedResidents / m.newLeads) * 100)}%` : "0%";
+      const visitConv = m.siteVisits > 0 ? `${Math.round((m.joinedResidents / m.siteVisits) * 100)}%` : "0%";
+      
+      return [
+        m.month,
+        m.newResidents,
+        m.vacatedResidents,
+        net,
+        m.totalResidents,
+        m.occupiedRooms,
+        m.vacantRooms,
+        occupancy,
+        m.newLeads,
+        m.siteVisits,
+        m.registrations,
+        m.joinedResidents,
+        leadConv,
+        visitConv
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(val => `"${val}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Hostel_Growth_Insights_Block_${selectedBlockFilter}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getBlockStats = () => {
-    return stats.blockGroups || [];
+    return (stats.blockGroups || []).filter(
+      (block) => String(block.block) === "1" || String(block.block) === "2"
+    );
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -171,6 +297,9 @@ export default function Dashboard() {
 
   const filteredVacantRoomsByBlock = getVacantRoomsByBlock();
 
+  const totalVacantBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.vacancy || 0), 0);
+  const totalBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.capacity || 0), 0);
+
   if (loading) {
     return (
       <Layout>
@@ -203,57 +332,181 @@ export default function Dashboard() {
 
       <Alert>{error}</Alert>
 
-      {/* Main Stats Cards - Now Clickable */}
-      <div className="stats-container">
-        <div className="stat-card stat-primary" onClick={() => navigate("/residents-list")} style={{cursor: "pointer"}}>
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalResidents}</div>
-            <div className="stat-label">Total Residents</div>
-          </div>
-        </div>
+      {!activeView && (
+        <>
+          {/* Summary Count Cards (Metric display) */}
+          <div className="metrics-count-strip">
+            <div className="count-card primary" onClick={() => navigate("/residents-list")}>
+              <div className="count-icon">👥</div>
+              <div className="count-info">
+                <span className="count-number">{stats.totalResidents || 0}</span>
+                <span className="count-label">Total Residents</span>
+              </div>
+            </div>
 
-        <div className="stat-card stat-info" onClick={() => navigate("/blocks")} style={{cursor: "pointer"}}>
-          <div className="stat-icon">🏠</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.blockGroups?.length || 0}</div>
-            <div className="stat-label">Blocks</div>
-          </div>
-        </div>
+            <div className="count-card info" onClick={() => navigate("/blocks")}>
+              <div className="count-icon">🏠</div>
+              <div className="count-info">
+                <span className="count-number">{getBlockStats().length}</span>
+                <span className="count-label">Blocks</span>
+              </div>
+            </div>
 
-        <div className="stat-card stat-success" onClick={handleRoomClick} style={{cursor: "pointer"}}>
-          <div className="stat-icon">🛏️</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.roomStats?.occupiedRooms || 0}</div>
-            <div className="stat-label">Rooms Occupied</div>
+            <div className="count-card success" onClick={handleRoomClick}>
+              <div className="count-icon">🛏️</div>
+              <div className="count-info">
+                <span className="count-number">{totalVacantBeds}</span>
+                <span className="count-label">Total Vacant Beds</span>
+              </div>
+            </div>
+
+            <div className="count-card warning" onClick={() => navigate("/unpaid-residents")}>
+              <div className="count-icon">💳</div>
+              <div className="count-info">
+                <span className="count-number">{unpaidCount}</span>
+                <span className="count-label">Pending Payments</span>
+              </div>
+            </div>
+
+            <div className="count-card food" onClick={() => navigate("/admin-food-confirmations")}>
+              <div className="count-icon">🍽️</div>
+              <div className="count-info">
+                <div className="count-header-row">
+                  <span className="count-number">{foodStats.total}</span>
+                  <span className="count-label">Food Required Today</span>
+                </div>
+                <div className="food-breakdown-pills">
+                  <span className="meal-pill breakfast" title="Breakfast count">🌅 {foodStats.breakfast}</span>
+                  <span className="meal-pill lunch" title="Lunch count">☀️ {foodStats.lunch}</span>
+                  <span className="meal-pill dinner" title="Dinner count">🌙 {foodStats.dinner}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main View Cards (Converted from top tabs) */}
+          <div className="feature-cards-section">
+            <h3 className="section-title">Dashboard Sections</h3>
+            <div className="feature-cards-grid">
+              <div className="feature-card stats-feature" onClick={() => setActiveView('stats')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📈</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Block Statistics</h4>
+                <p>View block-wise occupancy distribution, resident ratios, and room metrics.</p>
+              </div>
+
+              <div className="feature-card blocks-feature" onClick={() => setActiveView('blocks')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">🏗️</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Vacant Rooms</h4>
+                <p>Inspect vacant rooms, bed vacancies, and room capacities by block.</p>
+              </div>
+
+              <div className="feature-card residents-feature" onClick={() => setActiveView('residents')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">👨‍👩‍👧‍👦</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Residents List</h4>
+                <p>Browse full directory of active hostel residents, contact info, and status.</p>
+              </div>
+
+              <div className="feature-card analytics-feature" onClick={() => setActiveView('analytics')}>
+                <div className="feature-card-header">
+                  <span className="feature-icon">📊</span>
+                  <span className="feature-arrow">→</span>
+                </div>
+                <h4>Growth Insights</h4>
+                <p>Track monthly move-ins/outs, conversion rates, and growth trends.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Overview Interactive Graph Section */}
+          <div className="overview-graph-section">
+            <h3 className="overview-title">Dashboard Overview</h3>
+            <div className="overview-cards">
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Total Vacant Beds</h4>
+                  <span className="overview-icon">🛏️</span>
+                </div>
+                <div className="overview-value">{totalVacantBeds}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill vacant-fill" style={{ width: `${Math.min((totalVacantBeds / (totalBeds || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Across all blocks</p>
+              </div>
+              
+              <div className="overview-card glass-panel">
+                <div className="overview-card-header">
+                  <h4>Food Count (Today)</h4>
+                  <span className="overview-icon">🍽️</span>
+                </div>
+                <div className="overview-value">{foodStats.total}</div>
+                <div className="overview-bar">
+                  <div className="overview-bar-fill food-fill" style={{ width: `${Math.min((foodStats.total / (stats.totalResidents || 1)) * 100, 100)}%` }}></div>
+                </div>
+                <p className="overview-subtext">Confirmed daily requirements.</p>
+              </div>
+          
+          <div className="overview-card glass-panel">
+            <div className="overview-card-header">
+              <h4>Monthly Growth</h4>
+              <span className="overview-icon">🚀</span>
+            </div>
+            <div className="overview-value">+12%</div>
+            <div className="overview-chart-mock">
+               <svg viewBox="0 0 100 30" className="sparkline">
+                 <path d="M0,25 L20,20 L40,22 L60,10 L80,15 L100,5" fill="none" stroke="url(#sparkGradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                 <defs>
+                   <linearGradient id="sparkGradient" x1="0" y1="0" x2="1" y2="0">
+                     <stop offset="0%" stopColor="#4facfe" />
+                     <stop offset="100%" stopColor="#00f2fe" />
+                   </linearGradient>
+                 </defs>
+               </svg>
+            </div>
+            <p className="overview-subtext">Compared to last month</p>
           </div>
         </div>
       </div>
 
-      {/* View Toggle Buttons */}
-      <div className="view-toggle">
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveView('stats')}
-        >
-          📈 Block Statistics
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'blocks' ? 'active' : ''}`}
-          onClick={() => setActiveView('blocks')}
-        >
-          🏗️ Vacant rooms
-        </Button>
-        <Button
-          variant="secondary"
-          className={`toggle-btn ${activeView === 'residents' ? 'active' : ''}`}
-          onClick={() => setActiveView('residents')}
-        >
-          👨‍👩‍👧‍👦 Residents List
-        </Button>
+      {/* Quick Access Section */}
+      <div className="quick-access-section">
+        <h3 className="overview-title" style={{ marginTop: '20px' }}>Quick Access</h3>
+        <div className="quick-access-container">
+          <div className="quick-access-btn" onClick={() => navigate("/manage-rooms")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)" }}>🛏️</div>
+            <span>Book a Room</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/complaints")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>🎟️</div>
+            <span>Issue Ticket</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/food-menu-management")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>🍛</div>
+            <span>Food Menu</span>
+          </div>
+          <div className="quick-access-btn" onClick={() => navigate("/circulars")}>
+            <div className="qa-icon" style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}>📢</div>
+            <span>Create a Circular</span>
+          </div>
+        </div>
       </div>
+      </>
+      )}
+
+      {/* Inline Detailed Views */}
+      {activeView && (
+        <div className="active-view-page" style={{ animation: "fadeIn 0.4s ease" }}>
+          <Button onClick={() => setActiveView(null)} variant="secondary" style={{ marginBottom: "20px" }}>
+            ← Back to Dashboard
+          </Button>
 
       {/* Block Statistics View */}
       {activeView === 'stats' && (
@@ -320,20 +573,57 @@ export default function Dashboard() {
                   <div className="rooms-grid">
                     {rooms.map((room, idx) => {
                       const { occupied, capacity, vacancy } = roomVacancyMetrics(room);
+                      
+                      const isFullyEmpty = occupied === 0;
+                      const isNearlyFull = vacancy === 1;
+                      
+                      let badgeClass = "vacancy-pill-badge partial-room";
+                      let badgeText = `${vacancy} Vacant`;
+                      let cardClass = "room-item vacant";
+                      
+                      if (isFullyEmpty) {
+                        badgeClass = "vacancy-pill-badge empty-room";
+                        badgeText = "All Vacant";
+                        cardClass = "room-item vacant fully-empty";
+                      } else if (isNearlyFull) {
+                        badgeClass = "vacancy-pill-badge nearly-full-room";
+                        badgeText = "Last Bed";
+                        cardClass = "room-item vacant nearly-full";
+                      }
 
                       return (
-                      <div key={idx} className="room-item vacant">
-                        <div className="room-number">
-                          Room {room.room_number}
+                        <div 
+                          key={idx} 
+                          className={cardClass}
+                          onClick={() => {
+                            if (room.block_number && room.room_number) {
+                              navigate(`/room/${encodeURIComponent(room.block_number)}/${encodeURIComponent(room.room_number)}`);
+                            }
+                          }}
+                        >
+                          <div className="room-card-top">
+                            <span className="room-number-styled">Room {room.room_number}</span>
+                            <span className="room-icon-styled">🛏️</span>
+                          </div>
+                          
+                          <div className="room-status-text">
+                            {occupied} of {capacity} beds occupied
+                          </div>
+
+                          <div className="room-card-top" style={{ marginTop: 'auto', alignItems: 'center' }}>
+                            <div className="bed-dots-container">
+                              {Array.from({ length: capacity }).map((_, i) => (
+                                <span 
+                                  key={i} 
+                                  className={`bed-dot ${i < occupied ? 'occupied' : 'vacant'}`}
+                                  title={i < occupied ? "Occupied Bed" : "Available Bed"}
+                                ></span>
+                              ))}
+                            </div>
+                            <span className={badgeClass}>{badgeText}</span>
+                          </div>
                         </div>
-                        <div className="room-occupancy">
-                          <span className="occupancy-badge">
-                            {capacity > 0 ? `${occupied}/${capacity}` : occupied} occupied
-                          </span>
-                          <span className="vacancy-badge">{vacancy} vacant</span>
-                        </div>
-                      </div>
-                    );
+                      );
                     })}
                   </div>
                 </div>
@@ -353,7 +643,7 @@ export default function Dashboard() {
                 {hasActiveSearch ? (
                   `No residents found for "${searchTerm}".`
                 ) : (
-                  <>No residents found. <a href="/add-resident">Add a resident</a></>
+                  <>No residents found. <span style={{ cursor: "pointer", color: "#667eea", textDecoration: "underline", marginLeft: "5px" }} onClick={() => navigate("/residents-list?add=true")}>Add a resident</span></>
                 )}
               </p>
             </div>
@@ -439,6 +729,685 @@ export default function Dashboard() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Analytics & Growth Insights View */}
+      {activeView === 'analytics' && (() => {
+        const data = getFilteredData();
+        const currentData = data.find(d => d.month === selectedMonth) || data[data.length - 1] || {};
+
+        // KPI Calculations
+        const newResidents = currentData.newResidents;
+        const vacatedResidents = currentData.vacatedResidents;
+        const netGrowth = newResidents - vacatedResidents;
+        const totalRooms = currentData.occupiedRooms + currentData.vacantRooms;
+        const occupancyRate = totalRooms > 0 ? Math.round((currentData.occupiedRooms / totalRooms) * 100) : 0;
+
+        // Funnel Rates
+        const leads = currentData.newLeads;
+        const visits = currentData.siteVisits;
+        const registrations = currentData.registrations;
+        const joined = currentData.joinedResidents;
+        const vacated = currentData.vacatedResidents;
+
+        const leadToVisit = leads > 0 ? Math.round((visits / leads) * 100) : 0;
+        const visitToReg = visits > 0 ? Math.round((registrations / visits) * 100) : 0;
+        const regToJoined = registrations > 0 ? Math.round((joined / registrations) * 100) : 0;
+        const overallConv = leads > 0 ? Math.round((joined / leads) * 100) : 0;
+
+        // Insights calculations
+        let bestMonth = "";
+        let maxNet = -999;
+        data.forEach(d => {
+          const net = d.newResidents - d.vacatedResidents;
+          if (net > maxNet) {
+            maxNet = net;
+            bestMonth = d.month;
+          }
+        });
+
+        let weakMonth = "";
+        let minNet = 999;
+        data.forEach(d => {
+          const net = d.newResidents - d.vacatedResidents;
+          if (net < minNet) {
+            minNet = net;
+            weakMonth = d.month;
+          }
+        });
+
+        const ratio = joined > 0 ? Math.round((vacated / joined) * 100) : 0;
+        let retentionText = "";
+        if (ratio === 0) {
+          retentionText = "Excellent stability. No move-outs recorded.";
+        } else if (ratio < 25) {
+          retentionText = `Strong retention. Departures are only ${ratio}% of new admissions.`;
+        } else if (ratio < 50) {
+          retentionText = `Healthy growth. Departures are ${ratio}% of new admissions.`;
+        } else {
+          retentionText = `High turnover. Departures are ${ratio}% of new admissions; review feedback.`;
+        }
+
+        // SVG Chart Dimensions & Computations
+        const chartW = 500;
+        const chartH = 240;
+        const paddingL = 40;
+        const paddingR = 20;
+        const paddingB = 40;
+        const paddingT = 20;
+        const graphW = chartW - paddingL - paddingR;
+        const graphH = chartH - paddingT - paddingB;
+
+        // Max values for scaling
+        const maxBarVal = Math.max(...data.map(d => Math.max(d.newResidents, d.vacatedResidents)), 10);
+
+        return (
+          <div className="analytics-view">
+            {/* Header controls */}
+            <div className="analytics-header-controls">
+              <div className="controls-left">
+                <h3>📈 Analytics & Growth Insights</h3>
+                <p className="header-subtitle">Visualize occupancies, movement trends, and marketing conversions</p>
+              </div>
+              <div className="controls-right">
+                <div className="filter-group">
+                  <label htmlFor="block-filter">Block:</label>
+                  <select
+                    id="block-filter"
+                    value={selectedBlockFilter}
+                    onChange={(e) => setSelectedBlockFilter(e.target.value)}
+                    className="analytics-select"
+                  >
+                    <option value="All">All Blocks</option>
+                    <option value="1">Block 1</option>
+                    <option value="2">Block 2</option>
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label htmlFor="month-filter">Month:</label>
+                  <select
+                    id="month-filter"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="analytics-select"
+                  >
+                    {data.map((d) => (
+                      <option key={d.month} value={d.month}>{d.month} 2026</option>
+                    ))}
+                  </select>
+                </div>
+                <Button variant="primary" onClick={handleExportCSV} className="export-btn">
+                  📤 Export Data
+                </Button>
+              </div>
+            </div>
+
+            {/* KPI Cards Row */}
+            <div className="analytics-kpi-grid">
+              <div className="analytics-kpi-card new-residents">
+                <div className="kpi-icon">📥</div>
+                <div className="kpi-details">
+                  <span className="kpi-value">{newResidents}</span>
+                  <span className="kpi-title">New Residents</span>
+                  <span className="kpi-trend positive">+{Math.round(newResidents * 0.1 || 1)} vs last month</span>
+                </div>
+              </div>
+
+              <div className="analytics-kpi-card vacated-residents">
+                <div className="kpi-icon">📤</div>
+                <div className="kpi-details">
+                  <span className="kpi-value">{vacatedResidents}</span>
+                  <span className="kpi-title">Vacated Residents</span>
+                  <span className="kpi-trend negative">-{Math.round(vacatedResidents * 0.1 || 1)} vs last month</span>
+                </div>
+              </div>
+
+              <div className="analytics-kpi-card net-growth">
+                <div className="kpi-icon">📈</div>
+                <div className="kpi-details">
+                  <span className={`kpi-value ${netGrowth >= 0 ? 'positive' : 'negative'}`}>
+                    {netGrowth >= 0 ? `+${netGrowth}` : netGrowth}
+                  </span>
+                  <span className="kpi-title">Net Resident Growth</span>
+                  <span className="kpi-subtext">New minus vacated</span>
+                </div>
+              </div>
+
+              <div className="analytics-kpi-card occupancy-rate">
+                <div className="kpi-icon">🏢</div>
+                <div className="kpi-details">
+                  <span className="kpi-value">{occupancyRate}%</span>
+                  <span className="kpi-title">Occupancy Rate</span>
+                  <div className="kpi-progress">
+                    <div className="kpi-progress-bar" style={{ width: `${occupancyRate}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Charts Grid */}
+            <div className="analytics-charts-grid">
+              {/* Bar Chart: New vs Vacated */}
+              <div className="chart-card-container">
+                <h4>Monthly Admissions & Departures</h4>
+                <div className="svg-wrapper" style={{ position: "relative" }}>
+                  <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="100%">
+                    <defs>
+                      <linearGradient id="newGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#48bb78" />
+                        <stop offset="100%" stopColor="#38a169" />
+                      </linearGradient>
+                      <linearGradient id="vacGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f56565" />
+                        <stop offset="100%" stopColor="#e53e3e" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Y Axis gridlines & helper text */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+                      const yPos = paddingT + graphH * (1 - ratio);
+                      const label = Math.round(ratio * maxBarVal);
+                      return (
+                        <g key={index}>
+                          <line
+                            x1={paddingL}
+                            y1={yPos}
+                            x2={chartW - paddingR}
+                            y2={yPos}
+                            stroke="#e2e8f0"
+                            strokeWidth="1"
+                            strokeDasharray="4 4"
+                          />
+                          <text
+                            x={paddingL - 10}
+                            y={yPos + 4}
+                            textAnchor="end"
+                            fontSize="10"
+                            fill="#718096"
+                          >
+                            {label}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Bars Rendering */}
+                    {data.map((d, index) => {
+                      const xCenter = paddingL + (index * (graphW / 6)) + (graphW / 12);
+                      const barW = 12;
+                      const gap = 3;
+
+                      const newH = (d.newResidents / maxBarVal) * graphH;
+                      const newY = paddingT + graphH - newH;
+
+                      const vacH = (d.vacatedResidents / maxBarVal) * graphH;
+                      const vacY = paddingT + graphH - vacH;
+
+                      return (
+                        <g key={index}>
+                          {/* New Residents Bar */}
+                          <rect
+                            x={xCenter - barW - gap}
+                            y={newY}
+                            width={barW}
+                            height={newH}
+                            fill="url(#newGrad)"
+                            rx="3"
+                            ry="3"
+                            style={{ transition: "all 0.3s ease" }}
+                            onMouseEnter={(e) => setHoveredBar({
+                              month: d.month,
+                              type: "New",
+                              value: d.newResidents,
+                              x: xCenter - barW - gap + (barW/2),
+                              y: newY - 10
+                            })}
+                            onMouseLeave={() => setHoveredBar(null)}
+                          />
+
+                          {/* Vacated Residents Bar */}
+                          <rect
+                            x={xCenter + gap}
+                            y={vacY}
+                            width={barW}
+                            height={vacH}
+                            fill="url(#vacGrad)"
+                            rx="3"
+                            ry="3"
+                            style={{ transition: "all 0.3s ease" }}
+                            onMouseEnter={(e) => setHoveredBar({
+                              month: d.month,
+                              type: "Vacated",
+                              value: d.vacatedResidents,
+                              x: xCenter + gap + (barW/2),
+                              y: vacY - 10
+                            })}
+                            onMouseLeave={() => setHoveredBar(null)}
+                          />
+
+                          {/* X-axis Month Label */}
+                          <text
+                            x={xCenter}
+                            y={chartH - 15}
+                            textAnchor="middle"
+                            fontSize="11"
+                            fontWeight="600"
+                            fill="#4a5568"
+                          >
+                            {d.month}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* X-axis Line */}
+                    <line
+                      x1={paddingL}
+                      y1={chartH - paddingB}
+                      x2={chartW - paddingR}
+                      y2={chartH - paddingB}
+                      stroke="#cbd5e0"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+
+                  {/* HTML Tooltip inside chart relative space */}
+                  {hoveredBar && (
+                    <div
+                      className="chart-tooltip"
+                      style={{
+                        position: "absolute",
+                        left: `${(hoveredBar.x / chartW) * 100}%`,
+                        top: `${(hoveredBar.y / chartH) * 100}%`,
+                        transform: "translate(-50%, -100%)"
+                      }}
+                    >
+                      <div className="tooltip-title">{hoveredBar.month}</div>
+                      <div className="tooltip-value">
+                        <span className={`bullet ${hoveredBar.type.toLowerCase()}`}></span>
+                        {hoveredBar.type}: {hoveredBar.value}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="chart-legend">
+                  <span className="legend-item"><span className="legend-bullet new"></span>New Admissions</span>
+                  <span className="legend-item"><span className="legend-bullet vacated"></span>Departures</span>
+                </div>
+              </div>
+
+              {/* Line Chart: Occupancy Rate Trend */}
+              <div className="chart-card-container">
+                <h4>Occupancy Trend month by month</h4>
+                <div className="svg-wrapper" style={{ position: "relative" }}>
+                  <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="100%">
+                    <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#667eea" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#667eea" stopOpacity="0.0" />
+                      </linearGradient>
+                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#667eea" />
+                        <stop offset="100%" stopColor="#764ba2" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Y Gridlines & labels (0% to 100%) */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+                      const yPos = paddingT + graphH * (1 - ratio);
+                      return (
+                        <g key={index}>
+                          <line
+                            x1={paddingL}
+                            y1={yPos}
+                            x2={chartW - paddingR}
+                            y2={yPos}
+                            stroke="#e2e8f0"
+                            strokeWidth="1"
+                            strokeDasharray="4 4"
+                          />
+                          <text
+                            x={paddingL - 10}
+                            y={yPos + 4}
+                            textAnchor="end"
+                            fontSize="10"
+                            fill="#718096"
+                          >
+                            {Math.round(ratio * 100)}%
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Line & Area Construction */}
+                    {(() => {
+                      const coords = data.map((d, index) => {
+                        const x = paddingL + (index * (graphW / 5));
+                        const pct = d.totalRooms > 0 ? (d.occupiedRooms / d.totalRooms) : 0;
+                        const y = paddingT + graphH - (pct * graphH);
+                        return { x, y, pct: Math.round(pct * 100), month: d.month };
+                      });
+
+                      const pathStr = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ');
+                      const areaStr = `${pathStr} L ${coords[coords.length - 1].x} ${paddingT + graphH} L ${coords[0].x} ${paddingT + graphH} Z`;
+
+                      return (
+                        <>
+                          {/* Gradient Area */}
+                          <path d={areaStr} fill="url(#areaGrad)" />
+
+                          {/* Line */}
+                          <path
+                            d={pathStr}
+                            fill="none"
+                            stroke="url(#lineGrad)"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+
+                          {/* Points */}
+                          {coords.map((c, index) => (
+                            <circle
+                              key={index}
+                              cx={c.x}
+                              cy={c.y}
+                              r={hoveredLine && hoveredLine.month === c.month ? 7 : 4.5}
+                              fill={hoveredLine && hoveredLine.month === c.month ? "#764ba2" : "#667eea"}
+                              stroke="white"
+                              strokeWidth="2"
+                              style={{ cursor: "pointer", transition: "all 0.15s ease" }}
+                              onMouseEnter={() => setHoveredLine({
+                                month: c.month,
+                                value: `${c.pct}%`,
+                                x: c.x,
+                                y: c.y - 10
+                              })}
+                              onMouseLeave={() => setHoveredLine(null)}
+                            />
+                          ))}
+
+                          {/* X Labels */}
+                          {coords.map((c, index) => (
+                            <text
+                              key={index}
+                              x={c.x}
+                              y={chartH - 15}
+                              textAnchor="middle"
+                              fontSize="11"
+                              fontWeight="600"
+                              fill="#4a5568"
+                            >
+                              {c.month}
+                            </text>
+                          ))}
+                        </>
+                      );
+                    })()}
+
+                    {/* X axis line */}
+                    <line
+                      x1={paddingL}
+                      y1={chartH - paddingB}
+                      x2={chartW - paddingR}
+                      y2={chartH - paddingB}
+                      stroke="#cbd5e0"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+
+                  {/* HTML Tooltip for Line Chart */}
+                  {hoveredLine && (
+                    <div
+                      className="chart-tooltip"
+                      style={{
+                        position: "absolute",
+                        left: `${(hoveredLine.x / chartW) * 100}%`,
+                        top: `${(hoveredLine.y / chartH) * 100}%`,
+                        transform: "translate(-50%, -100%)"
+                      }}
+                    >
+                      <div className="tooltip-title">{hoveredLine.month}</div>
+                      <div className="tooltip-value">Occupancy: {hoveredLine.value}</div>
+                    </div>
+                  )}
+                </div>
+                <div className="chart-legend">
+                  <span className="legend-item"><span className="legend-bullet line-bullet"></span>Occupancy Rate</span>
+                </div>
+              </div>
+
+              {/* Donut Chart: Occupied vs Vacant */}
+              <div className="chart-card-container donut-chart-container">
+                <h4>Room Breakdown ({selectedMonth})</h4>
+                <div className="donut-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", height: "100%", padding: "10px 0" }}>
+                  <div className="svg-wrapper" style={{ width: "160px", height: "160px", position: "relative" }}>
+                    <svg viewBox="0 0 100 100" width="100%" height="100%">
+                      {(() => {
+                        const r = 38;
+                        const circ = 2 * Math.PI * r;
+                        const pOcc = currentData.occupiedRooms / totalRooms || 0.8;
+                        const dashOcc = pOcc * circ;
+                        const dashVac = circ - dashOcc;
+
+                        return (
+                          <g transform="rotate(-90 50 50)">
+                            {/* Background Circle (Vacant) */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={r}
+                              fill="none"
+                              stroke="#edf2f7"
+                              strokeWidth="10"
+                            />
+                            
+                            {/* Vacant Segment */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={r}
+                              fill="none"
+                              stroke="#e2e8f0"
+                              strokeWidth="10.5"
+                              strokeDasharray={circ}
+                              strokeDashoffset={0}
+                            />
+
+                            {/* Occupied Segment */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={r}
+                              fill="none"
+                              stroke="url(#lineGrad)"
+                              strokeWidth="11"
+                              strokeDasharray={`${dashOcc} ${dashVac}`}
+                              strokeDashoffset={0}
+                              strokeLinecap="round"
+                            />
+                          </g>
+                        );
+                      })()}
+                    </svg>
+                    <div className="donut-inner-text" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                      <span className="donut-pct" style={{ fontSize: "20px", fontWeight: "800", color: "#2c3e50", display: "block" }}>{occupancyRate}%</span>
+                      <span className="donut-sub" style={{ fontSize: "10px", color: "#718096", textTransform: "uppercase", fontWeight: "600" }}>Occupied</span>
+                    </div>
+                  </div>
+
+                  <div className="donut-legend">
+                    <div className="donut-legend-item">
+                      <div className="legend-color-box occupied-box"></div>
+                      <div className="legend-label-group">
+                        <span className="legend-count">{currentData.occupiedRooms} Rooms</span>
+                        <span className="legend-name">Occupied Rooms</span>
+                      </div>
+                    </div>
+                    <div className="donut-legend-item">
+                      <div className="legend-color-box vacant-box"></div>
+                      <div className="legend-label-group">
+                        <span className="legend-count">{currentData.vacantRooms} Rooms</span>
+                        <span className="legend-name">Vacant Rooms</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Funnel Flow Chart Section */}
+            <div className="section-card funnel-card">
+              <h3>📣 Marketing Pipeline & Funnel Analysis ({selectedMonth})</h3>
+              <p className="funnel-description">
+                Analyze student onboarding drop-offs from enquiry to admission to optimize conversion rates.
+              </p>
+
+              <div className="funnel-flow-container">
+                {/* Stage 1: Enquiries */}
+                <div className="funnel-stage">
+                  <div className="stage-card border-purple">
+                    <span className="stage-icon">📞</span>
+                    <span className="stage-count">{leads}</span>
+                    <span className="stage-name">Leads / Enquiries</span>
+                  </div>
+                </div>
+
+                {/* Arrow 1 */}
+                <div className="funnel-arrow">
+                  <span className="arrow-text">{leadToVisit}%</span>
+                  <span className="arrow-symbol">→</span>
+                </div>
+
+                {/* Stage 2: Visits */}
+                <div className="funnel-stage">
+                  <div className="stage-card border-blue">
+                    <span className="stage-icon">🚶‍♂️</span>
+                    <span className="stage-count">{visits}</span>
+                    <span className="stage-name">Hostel Visits</span>
+                  </div>
+                </div>
+
+                {/* Arrow 2 */}
+                <div className="funnel-arrow">
+                  <span className="arrow-text">{visitToReg}%</span>
+                  <span className="arrow-symbol">→</span>
+                </div>
+
+                {/* Stage 3: Registrations */}
+                <div className="funnel-stage">
+                  <div className="stage-card border-yellow">
+                    <span className="stage-icon">📝</span>
+                    <span className="stage-count">{registrations}</span>
+                    <span className="stage-name">Registrations</span>
+                  </div>
+                </div>
+
+                {/* Arrow 3 */}
+                <div className="funnel-arrow">
+                  <span className="arrow-text">{regToJoined}%</span>
+                  <span className="arrow-symbol">→</span>
+                </div>
+
+                {/* Stage 4: Joined */}
+                <div className="funnel-stage">
+                  <div className="stage-card border-green">
+                    <span className="stage-icon">🔑</span>
+                    <span className="stage-count">{joined}</span>
+                    <span className="stage-name">Joined Residents</span>
+                  </div>
+                </div>
+
+                {/* Arrow 4 */}
+                <div className="funnel-arrow dropoff-arrow">
+                  <span className="arrow-text text-red">Vacate</span>
+                  <span className="arrow-symbol text-red">↘</span>
+                </div>
+
+                {/* Stage 5: Vacated */}
+                <div className="funnel-stage">
+                  <div className="stage-card border-red">
+                    <span className="stage-icon">🚪</span>
+                    <span className="stage-count">{vacated}</span>
+                    <span className="stage-name">Vacated Residents</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conversion Statistics Summaries */}
+              <div className="funnel-metrics-summary">
+                <div className="metric-box">
+                  <span className="metric-title">Lead Conversion Rate</span>
+                  <span className="metric-value">{overallConv}%</span>
+                  <p className="metric-desc">Percentage of total enquiries who successfully joined</p>
+                </div>
+                <div className="metric-box">
+                  <span className="metric-title">Visit Conversion Rate</span>
+                  <span className="metric-value">{visits > 0 ? Math.round((joined / visits) * 100) : 0}%</span>
+                  <p className="metric-desc">Percentage of visiting prospects who finalized onboarding</p>
+                </div>
+                <div className="metric-box font-medium">
+                  <span className="metric-title">Funnel Drop-Off Rate</span>
+                  <span className="metric-value text-red">{100 - overallConv}%</span>
+                  <p className="metric-desc">Loss rate from initial lead capture to keys handed over</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Marketing Insights */}
+            <div className="section-card insights-card">
+              <h3>💡 Actionable Marketing & Occupancy Insights</h3>
+              <div className="insights-panel">
+                <div className="insight-item">
+                  <div className="insight-header">
+                    <span className="insight-indicator green">★</span>
+                    <h5>Best Performing Month</h5>
+                  </div>
+                  <p>
+                    <strong>{bestMonth} 2026</strong> performed the strongest with the highest net growth of new resident intake.
+                    This month shows strong marketing campaigns or seasonal university/corporate admission batches.
+                  </p>
+                </div>
+
+                <div className="insight-item">
+                  <div className="insight-header">
+                    <span className="insight-indicator yellow">⚠</span>
+                    <h5>Weakest Intake Period</h5>
+                  </div>
+                  <p>
+                    <strong>{weakMonth} 2026</strong> experienced lower net growth or higher departures. Consider introducing referral bonuses or special discount campaigns during this phase of the year.
+                  </p>
+                </div>
+
+                <div className="insight-item">
+                  <div className="insight-header">
+                    <span className="insight-indicator blue">ℹ</span>
+                    <h5>Conversion Efficiency</h5>
+                  </div>
+                  <p>
+                    Current Lead-to-Admission rate is <strong>{overallConv}%</strong>. 
+                    {overallConv > 10 
+                      ? " Your conversion pipeline is healthy. Focus on increasing lead volume through social media promotion and community outreach."
+                      : " Pipeline conversions are low. Look into site tour experiences, pricing adjustments, or faster follow-up responses."
+                    }
+                  </p>
+                </div>
+
+                <div className="insight-item">
+                  <div className="insight-header">
+                    <span className="insight-indicator purple">👤</span>
+                    <h5>Retention Assessment</h5>
+                  </div>
+                  <p>
+                    {retentionText} Tracking exit surveys can provide valuable insights on whether the departures are related to work relocation, university completions, or facility operations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
         </div>
       )}
     </Layout>

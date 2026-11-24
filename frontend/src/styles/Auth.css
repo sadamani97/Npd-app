@@ -87,3 +87,122 @@ form button:disabled {
   margin-bottom: 20px;
   border-left: 4px solid #c62828;
 }
+
+/* Auth Method Tabs */
+.auth-tabs {
+  display: flex;
+  margin-bottom: 24px;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.auth-tab.active {
+  background-color: #ffffff;
+  color: #4f46e5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.demo-otp-banner {
+  background-color: #e0f2fe;
+  border-left: 4px solid #0284c7;
+  color: #0369a1;
+  padding: 12px 14px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.demo-otp-banner code {
+  background-color: #bae6fd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.otp-step-header {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.otp-step-header p {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.phone-change-btn {
+  background: none !important;
+  border: none !important;
+  color: #4f46e5 !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  width: auto !important;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+}
+
+.resend-container {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.resend-btn {
+  background: none !important;
+  border: none !important;
+  color: #4f46e5 !important;
+  font-weight: 600;
+  padding: 0 !important;
+  width: auto !important;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline;
+}
+
+.resend-btn:disabled {
+  color: #94a3b8 !important;
+  text-decoration: none !important;
+  cursor: not-allowed;
+}
+
+.otp-toggle-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #3498db !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 6px 12px !important;
+  width: auto !important;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.otp-toggle-btn:hover {
+  color: #2980b9 !important;
+}
+
+

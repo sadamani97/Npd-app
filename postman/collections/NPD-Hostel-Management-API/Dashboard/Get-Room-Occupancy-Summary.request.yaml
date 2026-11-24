@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Room Occupancy Summary
+method: GET
+order: 3000
+url: '{{base_url}}/api/dashboard/rooms'

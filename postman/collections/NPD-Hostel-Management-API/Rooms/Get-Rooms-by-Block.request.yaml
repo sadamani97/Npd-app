@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Rooms by Block
+method: GET
+order: 2000
+url: '{{base_url}}/api/rooms/block/:blockNumber'
+pathVariables:
+  - key: blockNumber
+    value: '1'
+    description: 'Block number (e.g. 1)'

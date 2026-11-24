@@ -1,0 +1,8 @@
+$kind: http-request
+name: Delete Room (Admin)
+method: DELETE
+order: 6000
+url: '{{base_url}}/api/rooms/:roomId'
+pathVariables:
+  - key: roomId
+    value: '1'

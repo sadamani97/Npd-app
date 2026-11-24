@@ -8,7 +8,7 @@ import {
   createRoom,
   updateRoom,
   deleteRoom
-} from "../Controllers/roomController.js";
+} from "../controllers/room.controller.js";
 
 const router = express.Router();
 

@@ -1,0 +1,9 @@
+$kind: http-request
+name: Vacate Resident (Admin)
+method: PUT
+order: 6000
+url: '{{base_url}}/api/users/vacate/:id'
+pathVariables:
+  - key: id
+    value: '1'
+    description: Resident ID

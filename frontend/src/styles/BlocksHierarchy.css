@@ -41,102 +41,24 @@
   transform: translateY(-1px);
 }
 
-.floors-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
-}
-
-.floor-card {
-  background: #fff !important;
-  color: #2c3e50 !important;
-  border-radius: 16px;
-  padding: 28px 22px;
-  text-align: center;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(151, 164, 190, 0.2);
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 140px;
-}
-
-.floor-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(102, 126, 234, 0.18);
-  border-color: rgba(102, 126, 234, 0.3);
-}
-
-.floor-card-title {
-  margin: 0 0 8px;
-  font-size: 22px;
-  color: #2c3e50;
-}
-
-.floor-card-meta {
-  margin: 0;
-  font-size: 14px;
-  color: #667d94;
-}
-
+.floors-grid,
 .room-number-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 18px;
-  align-items: stretch;
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: 900px !important;
+  margin: 0 auto !important;
 }
 
-.room-number-tile {
-  background: #fff !important;
-  color: #2c3e50 !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 140px;
-  padding: 18px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: #fcfdff;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: center;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+/* Dynamic occupancy gradients for room card headers */
+.room-number-tile.vacant .block-simple-header {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important; /* Green gradient for vacant rooms */
 }
 
-.room-number-tile:hover {
-  border-color: rgba(102, 126, 234, 0.35);
-  background: #f3f6ff;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.08);
-}
-
-.room-number-tile.vacant .tile-label,
-.room-number-tile.occupied .tile-label {
-  color: #1e293b;
-}
-
-.room-number-tile.occupied {
-  border-color: rgba(72, 187, 120, 0.35);
-  background: #f4fbf5;
-}
-
-.tile-label {
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  color: #1f2937;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tile-meta {
-  font-size: 13px;
-  color: #546a7b;
+.room-number-tile.occupied .block-simple-header {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important; /* Orange gradient for occupied rooms */
 }
 
 .hierarchy-empty {
@@ -144,13 +66,17 @@
   text-align: center;
 }
 
-.blocks-page-simple .blocks-simple-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+.blocks-hierarchy .blocks-simple-grid {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
 }
 
-.blocks-page-simple .block-simple-card {
+.blocks-hierarchy .block-simple-card {
   background: #ffffff !important;
   color: #2c3e50 !important;
   border-radius: 18px;
@@ -158,8 +84,10 @@
   box-shadow: 0 10px 32px rgba(102, 126, 234, 0.12);
   cursor: pointer;
   border: 1px solid rgba(102, 126, 234, 0.18);
-  width: 100%;
-  text-align: left;
+  flex: 1;
+  min-width: 260px;
+  max-width: 280px;
+  text-align: center;
   padding: 0;
   font-family: inherit;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
@@ -167,40 +95,38 @@
   min-height: 150px;
 }
 
-.blocks-page-simple .block-simple-card .block-simple-header {
+.blocks-hierarchy .block-simple-card .block-simple-header {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   min-height: 140px;
 }
 
-.blocks-page-simple .block-simple-card .block-simple-header h3 {
+.blocks-hierarchy .block-simple-card .block-simple-header h3 {
   margin: 0;
   color: #ffffff !important;
   font-size: 24px;
   line-height: 1.1;
+  text-align: center;
 }
 
-.blocks-page-simple .block-simple-card .block-simple-hint {
+.blocks-hierarchy .block-simple-card .block-simple-hint {
   padding: 16px 22px 22px;
   margin: 0;
   font-size: 14px;
   color: #556b90;
   background: #f5f7ff;
+  text-align: center;
 }
 
-.blocks-page-simple .block-simple-card:hover {
-  transform: translateY(-2px);
+.blocks-hierarchy .block-simple-card:hover {
+  transform: translateY(-4px);
   box-shadow: 0 16px 45px rgba(102, 126, 234, 0.15);
   border-color: rgba(102, 126, 234, 0.2);
 }
 
-.blocks-page-simple .block-simple-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-}
-
-.blocks-page-simple .block-simple-header {
+.blocks-hierarchy .block-simple-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: #fff;
   padding: 28px 24px;
@@ -208,29 +134,23 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
-.blocks-page-simple .block-simple-header h3 {
+.blocks-hierarchy .block-simple-header h3 {
   margin: 0;
   font-size: 26px;
   line-height: 1.05;
   letter-spacing: 0.02em;
 }
 
-.blocks-page-simple .block-simple-header h3 strong,
-.blocks-page-simple .block-simple-header h3 span {
+.blocks-hierarchy .block-simple-header h3 strong,
+.blocks-hierarchy .block-simple-header h3 span {
   color: #fff;
 }
 
-.blocks-page-simple .block-simple-hint {
-  margin: 14px 0 0;
-  padding: 0 22px 20px;
-  font-size: 14px;
-  color: #556b90;
-  background: #f6f8ff;
-}
-
-.blocks-page-simple .block-simple-hint {
+.blocks-hierarchy .block-simple-hint {
   margin: 0;
   padding: 14px 22px 20px;
   font-size: 14px;

@@ -3,14 +3,16 @@ import express from "express";
 import { 
   getDashboardStats, 
   getBlockSummary, 
-  getRoomOccupancySummary 
-} from "../Controllers/dashboardController.js";
+  getRoomOccupancySummary,
+  getIndividualRoomOccupancy
+} from "../controllers/dashboard.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router.get("/stats", protect, getDashboardStats);
 router.get("/block/:blockNumber", protect, getBlockSummary);
-router.get("/rooms/occupancy-summary", protect, getRoomOccupancySummary);
+router.get("/rooms", protect, getRoomOccupancySummary);
+router.get("/rooms/:roomNumber", protect, getIndividualRoomOccupancy);
 
 export default router;

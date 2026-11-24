@@ -1,0 +1,21 @@
+$kind: http-request
+name: Update Resident Details
+method: PUT
+order: 5000
+url: '{{base_url}}/api/users/:id'
+pathVariables:
+  - key: id
+    value: '1'
+    description: Resident ID
+body:
+  type: formdata
+  content:
+    - key: name
+      type: text
+      value: Jane Resident Updated
+    - key: occupation
+      type: text
+      value: Software Engineer Intern
+    - key: company_name
+      type: text
+      value: Tech Corp

@@ -91,6 +91,7 @@ const mergeOccupancyData = (summaryRooms = [], dashboardData = {}, residents = [
 
   return sourceRooms
     .map(normalizeRoom)
+    .filter((room) => room.block_number === "1" || room.block_number === "2")
     .sort((a, b) => {
       const blockCompare = compareRoomNumbers(a.block_number, b.block_number);
       return blockCompare || compareRoomNumbers(a.room_number, b.room_number);
@@ -114,7 +115,7 @@ export default function RoomOccupancyPage() {
       setError("");
 
       const [summaryResult, statsResult, usersResult] = await Promise.allSettled([
-        API.get("/dashboard/rooms/occupancy-summary"),
+        API.get("/dashboard/rooms"),
         API.get("/dashboard/stats"),
         API.get("/users")
       ]);

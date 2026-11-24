@@ -1,0 +1,8 @@
+$kind: http-request
+name: Reset Meter (Admin)
+method: POST
+order: 6000
+url: '{{base_url}}/api/electricity-meters/:meterId/reset'
+pathVariables:
+  - key: meterId
+    value: '1'

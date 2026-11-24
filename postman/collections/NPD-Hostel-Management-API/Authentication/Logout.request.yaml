@@ -1,0 +1,5 @@
+$kind: http-request
+name: Logout
+method: POST
+order: 7000
+url: '{{base_url}}/api/auth/logout'

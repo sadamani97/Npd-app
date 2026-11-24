@@ -89,7 +89,7 @@ export default function BlockDetailsPage() {
               <Button
                 key={floorKey}
                 type="button"
-                className="floor-card"
+                className="block-simple-card floor-card"
                 variant="secondary"
                 onClick={() =>
                   navigate(
@@ -97,8 +97,10 @@ export default function BlockDetailsPage() {
                   )
                 }
               >
-                <h3 className="floor-card-title">{label}</h3>
-                <p className="floor-card-meta">{roomCount} room(s)</p>
+                <div className="block-simple-header">
+                  <h3>{label}</h3>
+                </div>
+                <p className="block-simple-hint">{roomCount} room(s) →</p>
               </Button>
             ))}
           </div>

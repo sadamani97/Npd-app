@@ -1,0 +1,18 @@
+$kind: http-request
+name: Create Meter (Admin)
+method: POST
+order: 1000
+url: '{{base_url}}/api/electricity-meters'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "meter_number": "M-1-103",
+      "block_number": "1",
+      "floor_number": "1",
+      "room_number": "103",
+      "rate_per_unit": 14.00
+    }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import { Button, Input, Select, Textarea, Alert } from "../components/ui";
@@ -10,8 +10,7 @@ export default function FoodMenuManagement() {
   const navigate = useNavigate();
   const user = getCurrentUser();
 
-  const [menus, setMenus] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { menus, fetchMenus, addMenu, updateMenu, deleteMenu, loading, error: hookError } = useFoodMenu();
   const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [showForm, setShowForm] = useState(false);
@@ -31,33 +30,18 @@ export default function FoodMenuManagement() {
       navigate("/user-dashboard");
       return;
     }
-    fetchMenusForDate(selectedDate);
+    fetchMenus({ date: selectedDate });
   }, []);
 
   useEffect(() => {
-    fetchMenusForDate(selectedDate);
+    fetchMenus({ date: selectedDate });
   }, [selectedDate]);
 
-  const fetchMenusForDate = async (date) => {
-    try {
-      setLoading(true);
-      setError("");
-      const res = await API.get("/food-menus", {
-        params: { date }
-      });
-      
-      if (res.data.success) {
-        // Filter by date on frontend
-        const filtered = res.data.data.filter(menu => menu.menu_date === date);
-        setMenus(filtered);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load menus");
-      setMenus([]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (hookError) {
+      setError(hookError);
     }
-  };
+  }, [hookError]);
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
@@ -85,27 +69,25 @@ export default function FoodMenuManagement() {
       menu_date: selectedDate
     };
 
-    try {
-      if (editingId) {
-        // Update existing menu
-        const res = await API.put(`/food-menus/${editingId}`, submitData);
-        if (res.data.success) {
-          setMenus(menus.map(m => m.id === editingId ? res.data.data : m));
-          setShowForm(false);
-          setEditingId(null);
-          resetForm();
-        }
+    if (editingId) {
+      const res = await updateMenu(editingId, submitData);
+      if (res.success) {
+        setShowForm(false);
+        setEditingId(null);
+        resetForm();
+        fetchMenus({ date: selectedDate });
       } else {
-        // Create new menu
-        const res = await API.post("/food-menus", submitData);
-        if (res.data.success) {
-          setMenus([...menus, res.data.data]);
-          setShowForm(false);
-          resetForm();
-        }
+        setError(res.message);
       }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to save menu item");
+    } else {
+      const res = await addMenu(submitData);
+      if (res.success) {
+        setShowForm(false);
+        resetForm();
+        fetchMenus({ date: selectedDate });
+      } else {
+        setError(res.message);
+      }
     }
   };
 
@@ -125,13 +107,11 @@ export default function FoodMenuManagement() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this menu item?")) return;
 
-    try {
-      const res = await API.delete(`/food-menus/${id}`);
-      if (res.data.success) {
-        setMenus(menus.filter(m => m.id !== id));
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete menu item");
+    const res = await deleteMenu(id);
+    if (res.success) {
+      fetchMenus({ date: selectedDate });
+    } else {
+      setError(res.message);
     }
   };
 

@@ -12,11 +12,11 @@ const startServer = async () => {
     console.log("Database connected successfully");
 
     // Sync database models
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false, force: false });
     console.log("Database synced successfully");
 
     // Start server
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`http://localhost:${PORT}`);
     });

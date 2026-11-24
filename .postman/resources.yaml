@@ -1,0 +1,8 @@
+# Use this workspace to collaborate
+workspace:
+  id: c2d0c6cd-775e-4e25-abda-6d045d49037a
+
+localResources:
+  collections:
+    - ..\Npd_Hostel_Management_API.postman_collection.json
+    - ..\postman\div_testing.postman_collection.json

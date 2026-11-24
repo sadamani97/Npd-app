@@ -1,0 +1,3 @@
+$kind: collection
+name: Payments
+description: Endpoints for resident bills and payments — record, update, and query payment history and summaries.

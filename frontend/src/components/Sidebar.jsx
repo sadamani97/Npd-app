@@ -1,34 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import API from "../services/api";
-import { getCurrentUser } from "../utils/authUtils";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/Sidebar.css";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = getCurrentUser();
+  const { currentUser: user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = user.role === "ADMIN";
+  const isAdmin = user.role === "ADMIN" || user.role === "HOSTEL_ADMIN";
   const isSuperAdmin = user.role === "SUPER_ADMIN";
 
-  const handleLogout = async () => {
-    try {
-      // Call logout API
-      await API.post("/auth/logout");
-    } catch (err) {
-      console.error("Logout error:", err);
-    } finally {
-      // Clear all auth data
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("admin");
-
-      // Always redirect to login page
-      navigate("/login", { replace: true });
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
   const isActive = (path) => {
@@ -37,8 +23,9 @@ export default function Sidebar() {
 
   const adminNavLinks = [
     { path: "/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/add-resident", label: "Add Resident", icon: "➕" },
+    { path: "/residents-list", label: "Resident Details", icon: "👥" },
     { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
+    { path: "/electricity-billing", label: "Electricity Billing", icon: "⚡" },
     { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },
     { path: "/complaints", label: "Complaint Management", icon: "📝" },
     { path: "/circulars", label: "Circular Management", icon: "📢" },
@@ -47,20 +34,18 @@ export default function Sidebar() {
   ];
 
   const superAdminNavLinks = [
-    { path: "/superadmin/dashboard", label: "SuperAdmin Home", icon: "🛡️" },
-    { path: "/dashboard", label: "Admin Dashboard", icon: "📊" },
-    { path: "/complaints", label: "Complaint Management", icon: "📝" },
-    { path: "/circulars", label: "Circular Management", icon: "📢" },
-    { path: "/manage-rooms", label: "Manage Rooms", icon: "🛏️" },
-    { path: "/food-menu-management", label: "Food Menu", icon: "🍛" },
-    { path: "/admin-food-confirmations", label: "Food Confirmations", icon: "🍽️" },
-    { path: "/vacated", label: "Vacated List", icon: "👥" },
+    { path: "/superadmin/dashboard", label: "SuperAdmin Control", icon: "🛡️" },
+    { path: "/superadmin/hostels", label: "Hostel Management", icon: "🏢" },
+    { path: "/superadmin/users", label: "User Management", icon: "👥" },
+    { path: "/superadmin/reports", label: "Financial Reports", icon: "💰" },
+    { path: "/superadmin/activities", label: "Activity Logs", icon: "📋" },
   ];
 
   const userNavLinks = [
     { path: "/user-dashboard", label: "Home", icon: "🏠" },
     { path: "/food-menu", label: "Today Food Menu", icon: "🍽️" },
     { path: "/food-confirmation", label: "Food Confirmation", icon: "✅" },
+    { path: "/user-payments", label: "My Payments", icon: "💳" },
     { path: "/user-complaints", label: "My Complaints", icon: "📝" },
     { path: "/user-circulars", label: "Announcements", icon: "📢" },
     { path: "/user-profile", label: "Profile", icon: "👤" },
@@ -88,7 +73,7 @@ export default function Sidebar() {
         </div>
         
         <div className="user-role-badge">
-          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : "👤 User"}
+          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : `👤 ${user.name || "User"}`}
         </div>
 
         <nav className="sidebar-nav">
@@ -108,12 +93,8 @@ export default function Sidebar() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-info">
-            <p className="user-name">{user.name || "User"}</p>
-            <p className="user-email">{user.email || "N/A"}</p>
-          </div>
           <button onClick={handleLogout} className="btn-logout">
-            🚪 Logout
+            🚪 LOGOUT
           </button>
         </div>
       </aside>

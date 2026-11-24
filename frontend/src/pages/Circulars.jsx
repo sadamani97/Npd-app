@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import API from "../services/api";
+import { useCirculars } from "../hooks/useCirculars";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Circulars.css";
 import { Button, Alert } from "../components/ui";
 
 export default function Circulars() {
-  const [circulars, setCirculars] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { circulars, loading, error, fetchCirculars, publishCircular, removeCircular } = useCirculars();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -21,22 +19,6 @@ export default function Circulars() {
   useEffect(() => {
     fetchCirculars();
   }, []);
-
-  const fetchCirculars = async () => {
-    try {
-      setLoading(true);
-      const res = await API.get("/circulars");
-      
-      if (res.data.success) {
-        setCirculars(res.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load circulars");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,42 +33,29 @@ export default function Circulars() {
       return;
     }
 
-    try {
-      setLoading(true);
-      const res = await API.post("/circulars", formData);
-      
-      if (res.data.success) {
-        // Show detailed feedback about send results
-        const { stats } = res.data;
-        if (stats && stats.failureCount > 0) {
-          alert(`Circular sent!\n✅ Delivered to ${stats.successCount} users\n⚠️ Failed to send to ${stats.failureCount} users\n\nCheck server logs for failed numbers.`);
-        } else {
-          alert("Circular sent successfully to all residents!");
-        }
-        setFormData({ title: "", message: "", sentVia: "WHATSAPP" });
-        setShowForm(false);
-        fetchCirculars();
+    const res = await publishCircular(formData);
+    if (res.success) {
+      const { stats } = res;
+      if (stats && stats.failureCount > 0) {
+        alert(`Circular sent!\n✅ Delivered to ${stats.successCount} users\n⚠️ Failed to send to ${stats.failureCount} users\n\nCheck server logs for failed numbers.`);
+      } else {
+        alert("Circular sent successfully to all residents!");
       }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to send circular");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
+      setFormData({ title: "", message: "", sentVia: "WHATSAPP" });
+      setShowForm(false);
+      fetchCirculars();
+    } else {
+      alert(res.message || "Failed to send circular");
     }
   };
 
-  const deleteCircular = async (id) => {
+  const handleDeleteCircular = async (id) => {
     if (!window.confirm("Are you sure you want to delete this circular?")) return;
-
-    try {
-      const res = await API.delete(`/circulars/${id}`);
-      
-      if (res.data.success) {
-        fetchCirculars();
-        alert("Circular deleted");
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete circular");
+    const res = await removeCircular(id);
+    if (res.success) {
+      alert("Circular deleted");
+    } else {
+      alert(res.message || "Failed to delete circular");
     }
   };
 
@@ -185,7 +154,7 @@ export default function Circulars() {
                 <Button 
                   className="btn btn-sm btn-danger"
                   variant="secondary"
-                  onClick={() => deleteCircular(circular.id)}
+                  onClick={() => handleDeleteCircular(circular.id)}
                 >
                   Delete
                 </Button>

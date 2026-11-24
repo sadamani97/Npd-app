@@ -1,6 +1,6 @@
 // routes/auth.routes.js
 import express from "express";
-import { login, register, requestOTP, verifyOTP, logout, superAdminLogin, createHostelAdmin } from "../Controllers/authController.js";
+import { login, register, requestOTP, verifyOTP, logout, superAdminLogin, createHostelAdmin } from "../controllers/auth.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { requireSuperAdmin } from "../middlewares/roleAuth.middleware.js";
 

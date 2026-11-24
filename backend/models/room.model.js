@@ -19,6 +19,10 @@ export const Room = sequelize.define("Room", {
     type: DataTypes.ENUM("SINGLE_SHARE", "DOUBLE_SHARE", "TRIPLE_SHARE", "FOUR_SHARE", "FIVE_SHARE", "SIX_SHARE"),
     defaultValue: "DOUBLE_SHARE"
   },
+  is_premium: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
   ac_status: {
     type: DataTypes.ENUM("AC", "NON_AC"),
     defaultValue: "NON_AC"

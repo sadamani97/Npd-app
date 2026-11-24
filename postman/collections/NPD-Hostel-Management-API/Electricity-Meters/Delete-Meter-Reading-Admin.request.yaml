@@ -1,0 +1,8 @@
+$kind: http-request
+name: Delete Meter Reading (Admin)
+method: DELETE
+order: 5000
+url: '{{base_url}}/api/electricity-meters/:meterId/reading'
+pathVariables:
+  - key: meterId
+    value: '1'

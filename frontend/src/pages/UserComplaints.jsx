@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useComplaints } from "../hooks/useComplaints";
 import Layout from "../components/Layout";
 import "../styles/UserComplaints.css";
 import { Button, Input, Select, Textarea, Alert } from "../components/ui";
@@ -8,9 +8,7 @@ import { Button, Input, Select, Textarea, Alert } from "../components/ui";
 export default function UserComplaints() {
   const navigate = useNavigate();
   const [view, setView] = useState("list"); // list or form
-  const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { complaints, loading, error, fetchComplaints, submitComplaint } = useComplaints();
   const [successMessage, setSuccessMessage] = useState("");
 
   const [formData, setFormData] = useState({
@@ -18,26 +16,10 @@ export default function UserComplaints() {
     description: "",
     category: "OTHER"
   });
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchComplaints();
   }, []);
-
-  const fetchComplaints = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const res = await API.get("/complaints");
-      if (res.data.success) {
-        setComplaints(res.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load complaints");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -49,30 +31,22 @@ export default function UserComplaints() {
 
   const handleSubmitComplaint = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setError("");
     setSuccessMessage("");
 
-    try {
-      const res = await API.post("/complaints", formData);
-      if (res.data.success) {
-        setSuccessMessage("✅ Complaint registered successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          category: "OTHER"
-        });
-        fetchComplaints();
+    const res = await submitComplaint(formData);
+    if (res.success) {
+      setSuccessMessage("✅ Complaint registered successfully!");
+      setFormData({
+        title: "",
+        description: "",
+        category: "OTHER"
+      });
+      fetchComplaints();
 
-        setTimeout(() => {
-          setView("list");
-          setSuccessMessage("");
-        }, 2000);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to submit complaint");
-    } finally {
-      setSubmitting(false);
+      setTimeout(() => {
+        setView("list");
+        setSuccessMessage("");
+      }, 2000);
     }
   };
 
@@ -232,11 +206,11 @@ export default function UserComplaints() {
 
               <Button
                 type="submit"
-                disabled={submitting || !formData.title || !formData.description}
+                disabled={loading || !formData.title || !formData.description}
                 className="submit-btn"
                 variant="primary"
               >
-                {submitting ? "Submitting..." : "Submit Complaint"}
+                {loading ? "Submitting..." : "Submit Complaint"}
               </Button>
             </form>
 

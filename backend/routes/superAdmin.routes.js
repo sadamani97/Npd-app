@@ -11,7 +11,7 @@ import {
   getPaymentAnalytics,
   getComplaintAnalytics,
   getResidentStats
-} from "../Controllers/superAdminController.js";
+} from "../controllers/superAdmin.controller.js";
 
 const router = express.Router();
 

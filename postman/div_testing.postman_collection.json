@@ -1,0 +1,1964 @@
+{
+  "info": {
+    "name": "Div Testing Collection",
+    "description": "Postman collection for developer testing of the NPD Hostel Management API. Includes environment variables, authentication inheritance, test scripts to auto-save JWT tokens, and detailed body schemas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints relating to user, admin, and superadmin login, registration, and OTP verification.",
+      "item": [
+        {
+          "name": "Admin Registration (Legacy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hostel Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Login (Legacy)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "    console.log(\"Saved Admin JWT Token to collection variables!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Super Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "    console.log(\"Saved Super Admin JWT Token to collection variables!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"super123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/super-admin/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "super-admin",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Hostel Admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Hostel Admin\",\n  \"email\": \"newadmin@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"9876543210\",\n  \"hostel_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/hostel-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "hostel-admin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request OTP (Resident)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"9876543210\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/request-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "request-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP (Resident)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                  "    console.log(\"Saved Resident JWT Token to collection variables!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard statistics and room occupancy summaries.",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Block Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/block/:blockNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "block",
+                ":blockNumber"
+              ],
+              "variable": [
+                {
+                  "key": "blockNumber",
+                  "value": "1",
+                  "description": "Block number to get details for (e.g. 1 or 2)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Room Occupancy Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/rooms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "rooms"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Individual Room Occupancy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/rooms/:roomNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "rooms",
+                ":roomNumber"
+              ],
+              "variable": [
+                {
+                  "key": "roomNumber",
+                  "value": "101",
+                  "description": "Room number to query details for"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Residents",
+      "description": "Management of hostel residents.",
+      "item": [
+        {
+          "name": "Add Resident (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Jane Resident",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "9112345678",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "jane@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "resident123",
+                  "type": "text"
+                },
+                {
+                  "key": "block_number",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "room_number",
+                  "value": "101",
+                  "type": "text"
+                },
+                {
+                  "key": "room_type",
+                  "value": "DOUBLE_SHARE",
+                  "type": "text"
+                },
+                {
+                  "key": "ac_status",
+                  "value": "AC",
+                  "type": "text"
+                },
+                {
+                  "key": "father_name",
+                  "value": "Robert Resident",
+                  "type": "text"
+                },
+                {
+                  "key": "father_phone",
+                  "value": "9111222333",
+                  "type": "text"
+                },
+                {
+                  "key": "emergency_name",
+                  "value": "Robert Resident",
+                  "type": "text"
+                },
+                {
+                  "key": "emergency_phone",
+                  "value": "9111222333",
+                  "type": "text"
+                },
+                {
+                  "key": "occupation",
+                  "value": "Student",
+                  "type": "text"
+                },
+                {
+                  "key": "college_name",
+                  "value": "NPD University",
+                  "type": "text"
+                },
+                {
+                  "key": "rent_amount",
+                  "value": "8500",
+                  "type": "text"
+                },
+                {
+                  "key": "electricity_meter_reading",
+                  "value": "120.5",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Active Residents (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vacated Residents (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/vacated",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "vacated"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Resident Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Resident ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Resident Details",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Jane Resident Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "occupation",
+                  "value": "Software Engineer Intern",
+                  "type": "text"
+                },
+                {
+                  "key": "company_name",
+                  "value": "Tech Corp",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Resident ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Vacate Resident (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/vacate/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "vacate",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Resident ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Resident (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Resident ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "description": "Endpoints for managing rooms and blocks.",
+      "item": [
+        {
+          "name": "Get All Blocks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rooms/blocks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms",
+                "blocks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Rooms by Block",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rooms/block/:blockNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms",
+                "block",
+                ":blockNumber"
+              ],
+              "variable": [
+                {
+                  "key": "blockNumber",
+                  "value": "1",
+                  "description": "Block number (e.g. 1)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Specific Room Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rooms/:blockNumber/:roomNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms",
+                ":blockNumber",
+                ":roomNumber"
+              ],
+              "variable": [
+                {
+                  "key": "blockNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "roomNumber",
+                  "value": "101"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Room (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"block_number\": \"1\",\n  \"floor_number\": \"1\",\n  \"room_number\": \"102\",\n  \"room_type\": \"DOUBLE_SHARE\",\n  \"is_premium\": false,\n  \"ac_status\": \"AC\",\n  \"capacity\": 2,\n  \"base_rent\": 8500,\n  \"electricity_meter_number\": \"M-1-102\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rooms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Room (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"room_type\": \"DOUBLE_SHARE\",\n  \"is_premium\": true,\n  \"ac_status\": \"AC\",\n  \"capacity\": 2,\n  \"base_rent\": 9500,\n  \"electricity_meter_number\": \"M-1-102-UPDATED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rooms/:roomId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms",
+                ":roomId"
+              ],
+              "variable": [
+                {
+                  "key": "roomId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Room (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/rooms/:roomId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "rooms",
+                ":roomId"
+              ],
+              "variable": [
+                {
+                  "key": "roomId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Electricity Meters",
+      "description": "Endpoints for monitoring and recording electricity meter readings.",
+      "item": [
+        {
+          "name": "Create Meter (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"meter_number\": \"M-1-103\",\n  \"block_number\": \"1\",\n  \"floor_number\": \"1\",\n  \"room_number\": \"103\",\n  \"rate_per_unit\": 14.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meters by Block",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/block/:blockNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                "block",
+                ":blockNumber"
+              ],
+              "variable": [
+                {
+                  "key": "blockNumber",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meter Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/:meterId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                ":meterId"
+              ],
+              "variable": [
+                {
+                  "key": "meterId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Reading (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_reading\": 250.00,\n  \"rate_per_unit\": 14.00,\n  \"reading_date\": \"2026-06-08\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/:meterId/reading",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                ":meterId",
+                "reading"
+              ],
+              "variable": [
+                {
+                  "key": "meterId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Meter Reading (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/:meterId/reading",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                ":meterId",
+                "reading"
+              ],
+              "variable": [
+                {
+                  "key": "meterId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Meter (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/:meterId/reset",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                ":meterId",
+                "reset"
+              ],
+              "variable": [
+                {
+                  "key": "meterId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Meter (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/:meterId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                ":meterId"
+              ],
+              "variable": [
+                {
+                  "key": "meterId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Consumption Report (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/electricity-meters/report/:blockNumber",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "electricity-meters",
+                "report",
+                ":blockNumber"
+              ],
+              "variable": [
+                {
+                  "key": "blockNumber",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Endpoints for resident bills and payments.",
+      "item": [
+        {
+          "name": "Record Payment (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"amount\": 9500,\n  \"month\": \"2026-06\",\n  \"payment_method\": \"UPI\",\n  \"receipt_number\": \"REC-UPI-9922\",\n  \"notes\": \"June rent + electricity share\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_status\": \"PAID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/:paymentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                ":paymentId"
+              ],
+              "variable": [
+                {
+                  "key": "paymentId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Resident Payment History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/history/:userId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "history",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Overdue Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/overdue/list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "overdue",
+                "list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Monthly Payment Summary (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/summary/monthly",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "summary",
+                "monthly"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Month Payment Status (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/status/current-month",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "status",
+                "current-month"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complaints",
+      "description": "Endpoints for registering and addressing complaints.",
+      "item": [
+        {
+          "name": "Add Complaint",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Wifi not working\",\n  \"description\": \"The wifi in block 1 room 101 has very high latency and keeps disconnecting.\",\n  \"category\": \"WIFI\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/complaints",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Complaints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/complaints",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Complaint Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/complaints/:id/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Complaint (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/complaints/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Circulars",
+      "description": "Broadcasting notifications and circulars via WhatsApp and Email.",
+      "item": [
+        {
+          "name": "Send Circular (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hostel Maintenance Notice\",\n  \"message\": \"Please note that the water supply will be suspended for routine maintenance on Sunday from 10 AM to 1 PM.\",\n  \"sentVia\": \"BOTH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/circulars",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "circulars"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Circulars",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/circulars",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "circulars"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Circular (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/circulars/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "circulars",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Food Menu",
+      "description": "Endpoints for registering and fetching food menus.",
+      "item": [
+        {
+          "name": "Add Food Menu (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"menu_date\": \"2026-06-08\",\n  \"meal_type\": \"BREAKFAST\",\n  \"item_name\": \"Idli and Vada\",\n  \"description\": \"Served with warm sambhar and coconut chutney.\",\n  \"is_veg\": true,\n  \"is_available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/food-menus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-menus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Food Menu by Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-menus/date?date=2026-06-08",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-menus",
+                "date"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-06-08"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Food Menus (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-menus?date=2026-06-08",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-menus"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-06-08"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Food Menu (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item_name\": \"Masala Dosa\",\n  \"description\": \"Served with sambhar and red/white chutneys.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/food-menus/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-menus",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Food Menu (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-menus/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-menus",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Food Confirmations",
+      "description": "Endpoints for residents to confirm attendance for meals and for admins to see statistics.",
+      "item": [
+        {
+          "name": "Submit Food Confirmation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmation_date\": \"2026-06-08\",\n  \"breakfast\": true,\n  \"lunch\": false,\n  \"dinner\": true,\n  \"notes\": \"No lunch required today\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Food Confirmation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmation_date\": \"2026-06-08\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Confirmation for Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations/user/date?confirmation_date=2026-06-08",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations",
+                "user",
+                "date"
+              ],
+              "query": [
+                {
+                  "key": "confirmation_date",
+                  "value": "2026-06-08"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Confirmation History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations/user/history?limit=30",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations",
+                "user",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Confirmations by Date (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations/admin/by-date?confirmation_date=2026-06-08&meal_type=BREAKFAST",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations",
+                "admin",
+                "by-date"
+              ],
+              "query": [
+                {
+                  "key": "confirmation_date",
+                  "value": "2026-06-08"
+                },
+                {
+                  "key": "block_number",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "meal_type",
+                  "value": "BREAKFAST"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Food Confirmation List (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/food-confirmations/admin/list?confirmation_date=2026-06-08&is_confirmed=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "food-confirmations",
+                "admin",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "confirmation_date",
+                  "value": "2026-06-08"
+                },
+                {
+                  "key": "is_confirmed",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Super Admin",
+      "description": "Management of multi-tenant hostels and cross-hostel analytics.",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/dashboard/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "dashboard",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Hostels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/hostels?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "hostels"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Hostel",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hostel_name\": \"Downtown Comforts\",\n  \"owner_name\": \"John Owner\",\n  \"owner_phone\": \"9888777666\",\n  \"owner_email\": \"owner@example.com\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Metropolis\",\n  \"state\": \"NY\",\n  \"subscription_plan\": \"BASIC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/hostels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "hostels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Hostel",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/hostels/:hostelId/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "hostels",
+                ":hostelId",
+                "approve"
+              ],
+              "variable": [
+                {
+                  "key": "hostelId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hostel Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/hostels/:hostelId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "hostels",
+                ":hostelId"
+              ],
+              "variable": [
+                {
+                  "key": "hostelId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hostel Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/hostels/:hostelId/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "hostels",
+                ":hostelId",
+                "analytics"
+              ],
+              "variable": [
+                {
+                  "key": "hostelId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/analytics/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "analytics",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Complaint Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/analytics/complaints",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "analytics",
+                "complaints"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Resident Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/super-admin/analytics/residents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "super-admin",
+                "analytics",
+                "residents"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "PASTE_YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

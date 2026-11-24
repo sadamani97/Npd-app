@@ -1,0 +1,18 @@
+$kind: http-request
+name: Create Hostel Admin
+method: POST
+order: 4000
+url: '{{base_url}}/api/auth/hostel-admin'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "New Hostel Admin",
+      "email": "newadmin@example.com",
+      "password": "password123",
+      "phone": "9876543210",
+      "hostel_id": 1
+    }

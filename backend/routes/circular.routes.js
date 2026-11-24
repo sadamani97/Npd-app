@@ -4,7 +4,7 @@ import {
   sendCircular, 
   getCirculars,
   deleteCircular
-} from "../Controllers/circular.controller.js";
+} from "../controllers/circular.controller.js";
 
 const router = express.Router();
 

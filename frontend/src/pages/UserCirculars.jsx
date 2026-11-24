@@ -1,35 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { useCirculars } from "../hooks/useCirculars";
 import Layout from "../components/Layout";
 import "../styles/UserCirculars.css";
 
 export default function UserCirculars() {
   const navigate = useNavigate();
-  const [circulars, setCirculars] = useState([]);
+  const { circulars, loading, error, fetchCirculars } = useCirculars();
   const [selectedCircular, setSelectedCircular] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filter, setFilter] = useState("all"); // all, high, normal
 
   useEffect(() => {
     fetchCirculars();
   }, []);
-
-  const fetchCirculars = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const res = await API.get("/circulars");
-      if (res.data.success) {
-        setCirculars(res.data.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load circulars");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getFilteredCirculars = () => {
     if (filter === "all") return circulars;
@@ -94,7 +77,7 @@ export default function UserCirculars() {
               <div className="description-section">
                 <h3>📌 Details</h3>
                 <div className="description-text">
-                  {selectedCircular.description}
+                  {selectedCircular.message}
                 </div>
               </div>
 
@@ -164,7 +147,7 @@ export default function UserCirculars() {
                     {getPriorityBadge(circular.priority)}
                   </div>
 
-                  <p className="circular-description">{circular.description}</p>
+                  <p className="circular-description">{circular.message}</p>
 
                   <div className="circular-footer">
                     <span className="date">

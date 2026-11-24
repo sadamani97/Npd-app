@@ -21,3 +21,30 @@ html, body, #root {
   height: 100%;
 }
 
+/* Consistent design color for every back button in the system */
+.back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: #1f2a48 !important; /* Elegant dark navy blue */
+  border: 1px solid #1f2a48 !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(31, 42, 72, 0.15) !important;
+  transition: all 0.2s ease-in-out !important;
+  text-decoration: none !important;
+  line-height: 1.2 !important;
+}
+
+.back-btn:hover {
+  background: #14203a !important;
+  border-color: #14203a !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(31, 42, 72, 0.25) !important;
+}
+

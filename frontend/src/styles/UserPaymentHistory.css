@@ -1,0 +1,173 @@
+/* UserPaymentHistory.css */
+
+.user-payments-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.payments-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.payments-header .subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.due-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.due-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.due-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.due-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.due-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.penalty-box {
+  background: #fef2f2;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.penalty-text {
+  color: #dc2626;
+}
+
+.total-box {
+  background: #e0e7ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.total-text {
+  color: #3730a3;
+  font-size: 26px;
+}
+
+.due-banner {
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.due-banner.info-banner {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.due-banner.warning-banner {
+  background: #fffbe6;
+  color: #92400e;
+  border: 1px solid #ffe58f;
+}
+
+.due-pay-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.razorpay-pay-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: white !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 14px 28px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.payment-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-payment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-payment-table th {
+  background: #f8fafc;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.user-payment-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.status-pill.status-paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-pill.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.status-overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.empty-history {
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+}

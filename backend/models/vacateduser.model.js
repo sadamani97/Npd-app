@@ -25,6 +25,22 @@ export const VacatedUser = sequelize.define("VacatedUser", {
     type: DataTypes.ENUM("ADMIN", "USER"),
     defaultValue: "USER"
   },
+  block_number: DataTypes.STRING,
+  floor_number: DataTypes.STRING,
+  room_number: DataTypes.STRING,
+  join_date: DataTypes.DATE,
+  rent_amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00
+  },
+  electricity_charges: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00
+  },
+  total_charges: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00
+  },
   vacatedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

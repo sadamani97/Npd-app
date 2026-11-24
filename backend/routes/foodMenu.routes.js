@@ -1,6 +1,6 @@
 // routes/foodMenu.routes.js
 import express from "express";
-import * as foodMenuController from "../Controllers/foodMenu.controller.js";
+import * as foodMenuController from "../controllers/foodMenu.controller.js";
 import { protect, isAdmin } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();

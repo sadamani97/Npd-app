@@ -15,6 +15,21 @@ export default function RoomDetailsPage() {
     fetchRoomDetails();
   }, [blockNumber, roomNumber]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const d = e.detail || {};
+        if (String(d.block) === String(blockNumber) && String(d.room) === String(roomNumber)) {
+          fetchRoomDetails();
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    window.addEventListener("electricityUpdated", handler);
+    return () => window.removeEventListener("electricityUpdated", handler);
+  }, [blockNumber, roomNumber]);
+
   const fetchRoomDetails = async () => {
     try {
       setLoading(true);

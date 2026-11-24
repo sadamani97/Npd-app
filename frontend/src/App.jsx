@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
 
 // Admin Pages
 import Dashboard from "./pages/Dashboard.jsx";
-import AddResident from "./pages/AddResident.jsx";
 import EditResident from "./pages/EditResident.jsx";
 import Complaints from "./pages/Complaints.jsx";
 import Circulars from "./pages/Circulars.jsx";
@@ -17,8 +16,8 @@ import RoomDetailsPage from "./pages/RoomDetailsPage.jsx";
 import PaymentTrackingPage from "./pages/PaymentTrackingPage.jsx";
 import RoomOccupancyPage from "./pages/RoomOccupancyPage.jsx";
 import ResidentsListPage from "./pages/ResidentsListPage.jsx";
+import UnpaidResidents from "./pages/UnpaidResidents.jsx";
 import ManageRoomsPage from "./pages/ManageRoomsPage.jsx";
-import AdminComplaintManagement from "./pages/AdminComplaintManagement.jsx";
 import AdminFoodConfirmationList from "./pages/AdminFoodConfirmationList.jsx";
 import FoodMenuManagement from "./pages/FoodMenuManagement.jsx";
 
@@ -29,36 +28,21 @@ import UserComplaints from "./pages/UserComplaints.jsx";
 import UserCirculars from "./pages/UserCirculars.jsx";
 import FoodMenu from "./pages/FoodMenu.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
+import UserPaymentHistory from "./pages/UserPaymentHistory.jsx";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
-import { getCurrentUser } from "./utils/authUtils";
+import ElectricityBillingPage from "./pages/ElectricityBillingPage.jsx";
+import { useAuth } from "./hooks/useAuth";
 
 import "./App.css";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const currentUser = getCurrentUser();
-
-  useEffect(() => {
-    const userToken = localStorage.getItem("userToken");
-    const adminToken = localStorage.getItem("adminToken");
-    const userInfo = localStorage.getItem("user");
-    const adminInfo = localStorage.getItem("admin");
-
-    if ((userToken && userInfo) || (adminToken && adminInfo)) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
-  }, []);
-
-  const getRedirectPath = () => {
-    if (currentUser.role === "SUPER_ADMIN") return "/superadmin/dashboard";
-    if (currentUser.role === "ADMIN") return "/dashboard";
-    if (currentUser.role === "USER") return "/user-dashboard";
-    return "/login";
-  };
+  const {
+    isAuthenticated,
+    loading,
+    currentUser,
+    getRedirectPath,
+    setIsAuthenticated
+  } = useAuth();
 
   if (loading) {
     return (
@@ -81,6 +65,14 @@ function App() {
               : <Login setIsAuthenticated={setIsAuthenticated} />
           }
         />
+        <Route
+          path="/signup"
+          element={
+            currentUser.role
+              ? <Navigate to={getRedirectPath()} replace />
+              : <Signup />
+          }
+        />
 
         {/* SuperAdmin Routes */}
         <Route
@@ -92,14 +84,18 @@ function App() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Admin Routes - Only accessible to ADMIN and HOSTEL_ADMIN */}
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN")
+              ? <Dashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/add-resident" 
-          element={isAuthenticated ? <AddResident /> : <Navigate to="/login" replace />} 
+          element={isAuthenticated ? <Navigate to="/residents-list?add=true" replace /> : <Navigate to="/login" replace />} 
         />
         <Route 
           path="/edit-resident/:id" 
@@ -149,9 +145,19 @@ function App() {
           path="/residents-list" 
           element={isAuthenticated ? <ResidentsListPage /> : <Navigate to="/login" replace />} 
         />
+        <Route 
+          path="/unpaid-residents" 
+          element={isAuthenticated ? <UnpaidResidents /> : <Navigate to="/login" replace />} 
+        />
         <Route
           path="/manage-rooms"
           element={isAuthenticated ? <ManageRoomsPage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/electricity-billing"
+          element={isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" || currentUser.role === "SUPER_ADMIN")
+            ? <ElectricityBillingPage />
+            : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />}
         />
         <Route
           path="/admin-food-confirmations"
@@ -160,10 +166,14 @@ function App() {
           path="/food-menu-management"
           element={isAuthenticated ? <FoodMenuManagement /> : <Navigate to="/login" replace />}
         />
-        {/* User Routes */}
+        {/* User Routes - Only accessible to USER role */}
         <Route 
           path="/user-dashboard" 
-          element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" replace />} 
+          element={
+            isAuthenticated && currentUser.role === "USER"
+              ? <UserDashboard /> 
+              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" ? "/dashboard" : "/login"} replace />
+          } 
         />
         <Route 
           path="/food-menu" 
@@ -180,6 +190,10 @@ function App() {
         <Route 
           path="/user-circulars" 
           element={isAuthenticated ? <UserCirculars /> : <Navigate to="/login" replace />} 
+        />
+        <Route 
+          path="/user-payments" 
+          element={isAuthenticated ? <UserPaymentHistory /> : <Navigate to="/login" replace />} 
         />
         <Route 
           path="/user-profile" 
