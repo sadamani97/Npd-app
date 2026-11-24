@@ -117,6 +117,20 @@ app.use("/api/food-menus", foodMenuRoutes);
 app.use("/api/food-confirmations", foodConfirmationRoutes);
 app.use("/api/super-admin", superAdminRoutes);
 
+// Compatibility aliases for deployments that configure the backend origin
+// without /api. Canonical routes remain under /api.
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/complaints", complaintRoutes);
+app.use("/circulars", circularRoutes);
+app.use("/dashboard", dashboardRoutes);
+app.use("/rooms", roomRoutes);
+app.use("/payments", paymentRoutes);
+app.use("/electricity-meters", electricityMeterRoutes);
+app.use("/food-menus", foodMenuRoutes);
+app.use("/food-confirmations", foodConfirmationRoutes);
+app.use("/super-admin", superAdminRoutes);
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
