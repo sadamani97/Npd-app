@@ -4,7 +4,7 @@ import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/ResidentsList.css";
 import { useResidents } from "../hooks/useResidents";
-import { Input, Select, Alert } from "../components/ui";
+import { Input, Select, Alert, TableSkeleton } from "../components/ui";
 
 const DEFAULT_RESIDENT_FORM = {
   name: "",
@@ -155,15 +155,16 @@ export default function ResidentsListPage() {
     }
   };
 
-  const uniqueBlocks = [...new Set(residents.map((r) => r.block_number))].sort();
+  const uniqueBlocks = [...new Set(residents.map((r) => r.block_number ? String(r.block_number).trim() : null).filter(Boolean))].sort();
 
   if (loading) {
     return (
       <Layout>
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading Residents...</p>
+        <div className="page-header">
+          <h1 className="page-title">Resident Directory</h1>
+          <p className="page-subtitle">Loading resident profiles and room assignments from database...</p>
         </div>
+        <TableSkeleton rows={6} columns={6} />
       </Layout>
     );
   }
@@ -186,16 +187,6 @@ export default function ResidentsListPage() {
               onClick={() => {
                 resetForm();
                 setShowForm(true);
-              }}
-              style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
-                border: "none",
-                fontWeight: "700",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                boxShadow: "0 4px 10px rgba(102, 126, 234, 0.25)"
               }}
             >
               ➕ Add Resident

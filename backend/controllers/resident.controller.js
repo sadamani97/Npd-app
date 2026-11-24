@@ -202,18 +202,20 @@ export const addUser = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const where = { status: "ACTIVE", role: "USER" };
-    if (req.user.role !== "SUPER_ADMIN") {
+    if (req?.user?.role !== "SUPER_ADMIN") {
       Object.assign(where, getHostelFilter(req.user));
     }
+
+    // Exclude heavy Base64 photo in list view to avoid massive payloads
     const users = await User.findAll({
       where,
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "photo"] },
       order: [["createdAt", "DESC"]]
     });
 
     res.json({ success: true, data: users });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: err?.message || "Failed to fetch residents" });
   }
 };
 

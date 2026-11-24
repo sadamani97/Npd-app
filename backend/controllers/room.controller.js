@@ -1,9 +1,10 @@
-// Controllers/roomController.js
+// controllers/room.controller.js
 import { Room } from "../models/room.model.js";
 import { User } from "../models/user.model.js";
 import { Sequelize } from "sequelize";
-import { normalizeAcStatus, normalizeRoomType, syncRoomsFromActiveResidents, calculateRoomRent } from "../utils/roomSync.js";
+import { normalizeAcStatus, normalizeRoomType, calculateRoomRent } from "../utils/roomSync.js";
 import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 const ROOM_TYPE_CAPACITY = {
   SINGLE_SHARE: 1,
@@ -37,19 +38,80 @@ const updateActiveRoomOccupantRent = async (blockNumber, roomNumber, rentAmount)
   await Promise.all(activeResidents.map(async (resident) => {
     resident.rent_amount = rentAmount;
     resident.total_charges = parseFloat((parseFloat(rentAmount || 0) + parseFloat(resident.electricity_charges || 0)).toFixed(2));
-    await resident.save();
+    await resident.save().catch(() => {});
   }));
 };
 
-// Get all blocks with their details
+// Get all rooms (with resident occupancy)
+export const getAllRooms = async (req, res) => {
+  try {
+    const where = {};
+    if (req?.user?.role !== "SUPER_ADMIN") {
+      Object.assign(where, getHostelFilter(req.user));
+    }
+    if (req.query.block_number) {
+      where.block_number = req.query.block_number;
+    }
+    if (req.query.status) {
+      where.status = req.query.status;
+    }
+
+    const rooms = await Room.findAll({
+      where,
+      order: [
+        ['block_number', 'ASC'],
+        ['floor_number', 'ASC'],
+        ['room_number', 'ASC']
+      ]
+    });
+
+    const activeResidents = await User.findAll({
+      attributes: ['id', 'name', 'phone', 'email', 'room_type', 'ac_status', 'block_number', 'room_number'],
+      where: {
+        status: "ACTIVE",
+        role: "USER",
+        ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
+      }
+    });
+
+    const roomResidentsMap = new Map();
+    activeResidents.forEach((resident) => {
+      const key = `${resident.block_number}_${resident.room_number}`;
+      if (!roomResidentsMap.has(key)) {
+        roomResidentsMap.set(key, []);
+      }
+      roomResidentsMap.get(key).push(resident);
+    });
+
+    const enrichedRooms = rooms.map((room) => {
+      const plain = room.get({ plain: true });
+      const residents = roomResidentsMap.get(`${plain.block_number}_${plain.room_number}`) || [];
+      const currentOccupancy = residents.length;
+      return {
+        ...plain,
+        residents_in_room: residents,
+        current_occupancy: currentOccupancy,
+        vacancy: Math.max((plain.capacity || 2) - currentOccupancy, 0),
+        status: currentOccupancy >= (plain.capacity || 2) ? "OCCUPIED" : plain.status
+      };
+    });
+
+    return successResponse(res, "Rooms retrieved successfully", enrichedRooms);
+  } catch (err) {
+    console.error("Error in getAllRooms:", err);
+    return errorResponse(res, err?.message || "Failed to load rooms", 500);
+  }
+};
+
+// Get all blocks with their summary
 export const getAllBlocks = async (req, res) => {
   try {
-    await syncRoomsFromActiveResidents();
-
     const blockWhere = {};
-    if (req.user.role !== "SUPER_ADMIN") {
+    if (req?.user?.role !== "SUPER_ADMIN") {
       Object.assign(blockWhere, getHostelFilter(req.user));
     }
+
+    // 1. Group rooms by block
     const roomsByBlock = await Room.findAll({
       attributes: [
         'block_number',
@@ -62,34 +124,43 @@ export const getAllBlocks = async (req, res) => {
       order: [['block_number', 'ASC']]
     });
 
-    const blocksData = await Promise.all(
-      roomsByBlock.map(async (block) => {
-        const residents = await User.count({
-            where: {
-              block_number: block.block_number,
-              status: "ACTIVE",
-              ...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
-            }
-        });
-        return {
-          block_number: block.block_number,
-          total_rooms: parseInt(block.total_rooms || 0),
-          occupied_rooms: parseInt(block.occupied_rooms || 0),
-          vacant_rooms: parseInt(block.total_rooms || 0) - parseInt(block.occupied_rooms || 0),
-          residents_count: residents
-        };
-      })
-    );
+    // 2. Single aggregated query for resident counts by block
+    const residentCounts = await User.findAll({
+      attributes: [
+        'block_number',
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'residents_count']
+      ],
+      where: {
+        status: "ACTIVE",
+        role: "USER",
+        ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
+      },
+      group: ['block_number'],
+      raw: true
+    });
 
-    res.status(200).json({
-      success: true,
-      data: blocksData
+    const resCountMap = new Map();
+    residentCounts.forEach(r => {
+      resCountMap.set(String(r.block_number || "").trim(), parseInt(r.residents_count || 0, 10));
     });
+
+    const blocksData = roomsByBlock.map((block) => {
+      const bn = String(block.block_number || "").trim();
+      const totalRooms = parseInt(block.total_rooms || 0, 10);
+      const occupiedRooms = parseInt(block.occupied_rooms || 0, 10);
+      return {
+        block_number: bn,
+        total_rooms: totalRooms,
+        occupied_rooms: occupiedRooms,
+        vacant_rooms: Math.max(totalRooms - occupiedRooms, 0),
+        residents_count: resCountMap.get(bn) || 0
+      };
+    });
+
+    return successResponse(res, "Blocks retrieved successfully", blocksData);
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    console.error("Error in getAllBlocks:", err);
+    return errorResponse(res, err?.message || "Failed to load blocks", 500);
   }
 };
 
@@ -97,48 +168,54 @@ export const getAllBlocks = async (req, res) => {
 export const getRoomsByBlock = async (req, res) => {
   try {
     const { blockNumber } = req.params;
-    await syncRoomsFromActiveResidents();
     const roomWhere = { block_number: blockNumber };
-    if (req.user.role !== "SUPER_ADMIN") {
+    if (req?.user?.role !== "SUPER_ADMIN") {
       Object.assign(roomWhere, getHostelFilter(req.user));
     }
+
     const rooms = await Room.findAll({
       where: roomWhere,
-      order: [['floor_number', 'ASC'], ['room_number', 'ASC']],
-      raw: false
+      order: [['floor_number', 'ASC'], ['room_number', 'ASC']]
     });
 
-    // Get resident info for each room
-    const roomsWithResidents = await Promise.all(
-      rooms.map(async (room) => {
-        const residents = await User.findAll({
-          where: {
-            block_number: blockNumber,
-            room_number: room.room_number,
-            status: "ACTIVE"
-            ,...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
-          },
-          attributes: ['id', 'name', 'phone', 'email', 'room_type', 'ac_status']
-        });
+    // Single batch query for all active residents in this block
+    const residents = await User.findAll({
+      where: {
+        block_number: blockNumber,
+        status: "ACTIVE",
+        role: "USER",
+        ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
+      },
+      attributes: ['id', 'name', 'phone', 'email', 'room_type', 'ac_status', 'room_number']
+    });
 
-        return {
-          ...room.toJSON(),
-          residents_in_room: residents,
-          current_occupancy: residents.length
-        };
-      })
-    );
+    const residentsByRoom = new Map();
+    residents.forEach(res => {
+      const rn = String(res.room_number || "").trim();
+      if (!residentsByRoom.has(rn)) {
+        residentsByRoom.set(rn, []);
+      }
+      residentsByRoom.get(rn).push(res);
+    });
 
-    res.status(200).json({
+    const roomsWithResidents = rooms.map((room) => {
+      const rn = String(room.room_number || "").trim();
+      const inRoom = residentsByRoom.get(rn) || [];
+      return {
+        ...room.toJSON(),
+        residents_in_room: inRoom,
+        current_occupancy: inRoom.length
+      };
+    });
+
+    return res.status(200).json({
       success: true,
       block_number: blockNumber,
       data: roomsWithResidents
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    console.error("Error in getRoomsByBlock:", err);
+    return errorResponse(res, err?.message || "Failed to load rooms for block", 500);
   }
 };
 
@@ -146,13 +223,12 @@ export const getRoomsByBlock = async (req, res) => {
 export const getRoomDetails = async (req, res) => {
   try {
     const { blockNumber, roomNumber } = req.params;
-    await syncRoomsFromActiveResidents();
 
     const roomWhere = {
       block_number: blockNumber,
       room_number: roomNumber
     };
-    if (req.user.role !== "SUPER_ADMIN") {
+    if (req?.user?.role !== "SUPER_ADMIN") {
       Object.assign(roomWhere, getHostelFilter(req.user));
     }
     const room = await Room.findOne({
@@ -160,69 +236,54 @@ export const getRoomDetails = async (req, res) => {
     });
 
     if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found"
-      });
+      return errorResponse(res, "Room not found", 404);
     }
 
     const residents = await User.findAll({
       where: {
         block_number: blockNumber,
         room_number: roomNumber,
-        status: "ACTIVE"
-        ,...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
+        status: "ACTIVE",
+        ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {})
       },
       attributes: ['id', 'name', 'phone', 'email', 'join_date', 'rent_amount', 'electricity_charges', 'total_charges']
     });
 
-    res.status(200).json({
-      success: true,
-      data: {
-        ...room.toJSON(),
-        residents: residents,
-        occupancy: residents.length,
-        capacity: room.capacity
-      }
+    return successResponse(res, "Room details retrieved", {
+      ...room.toJSON(),
+      residents,
+      occupancy: residents.length,
+      capacity: room.capacity
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    return errorResponse(res, err?.message || "Failed to load room details", 500);
   }
 };
 
 // Create new room
 export const createRoom = async (req, res) => {
   try {
-    const roomType = normalizeRoomType(req.body.room_type);
-    const acStatus = normalizeAcStatus(req.body.ac_status);
-    const block_number = sanitizeText(req.body.block_number);
-    const floor_number = sanitizeText(req.body.floor_number);
-    const room_number = sanitizeText(req.body.room_number);
+    const roomType = normalizeRoomType(req?.body?.room_type);
+    const acStatus = normalizeAcStatus(req?.body?.ac_status);
+    const block_number = sanitizeText(req?.body?.block_number);
+    const floor_number = sanitizeText(req?.body?.floor_number);
+    const room_number = sanitizeText(req?.body?.room_number);
 
     if (!block_number || !floor_number || !room_number) {
-      return res.status(400).json({
-        success: false,
-        message: "Block number, floor number and room number are required"
-      });
+      return errorResponse(res, "Block number, floor number and room number are required", 400);
     }
 
     const existingRoom = await Room.findOne({
-      where: { block_number, room_number, ...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {}) }
+      where: { block_number, room_number, ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {}) }
     });
 
     if (existingRoom) {
-      return res.status(400).json({
-        success: false,
-        message: "Room already exists in this block"
-      });
+      return errorResponse(res, "Room already exists in this block", 400);
     }
 
-    const isPremium = Boolean(req.body.is_premium);
+    const isPremium = Boolean(req?.body?.is_premium);
     const suggestedRent = calculateRoomRent(roomType, acStatus, isPremium);
-    const roomBaseRent = suggestedRent || sanitizeMoney(req.body.base_rent);
+    const roomBaseRent = suggestedRent || sanitizeMoney(req?.body?.base_rent);
 
     const room = await Room.create({
       block_number,
@@ -231,25 +292,18 @@ export const createRoom = async (req, res) => {
       room_type: roomType,
       is_premium: isPremium,
       ac_status: acStatus,
-      capacity: deriveCapacity(roomType, req.body.capacity),
+      capacity: deriveCapacity(roomType, req?.body?.capacity),
       base_rent: roomBaseRent,
-      electricity_meter_number: sanitizeText(req.body.electricity_meter_number),
+      electricity_meter_number: sanitizeText(req?.body?.electricity_meter_number) || `M-${block_number}-${room_number}`,
       status: "AVAILABLE",
-      hostel_id: req.user.hostel_id || null
+      hostel_id: req?.user?.hostel_id || null
     });
 
     await updateActiveRoomOccupantRent(block_number, room_number, roomBaseRent);
 
-    res.status(201).json({
-      success: true,
-      message: "Room created successfully",
-      data: room
-    });
+    return successResponse(res, "Room created successfully", room, 201);
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    return errorResponse(res, err?.message || "Failed to create room", 500);
   }
 };
 
@@ -260,42 +314,33 @@ export const updateRoom = async (req, res) => {
     const room = await Room.findByPk(roomId);
 
     if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found"
-      });
+      return errorResponse(res, "Room not found", 404);
     }
 
-    const roomType = normalizeRoomType(req.body.room_type ?? room.room_type);
-    const acStatus = normalizeAcStatus(req.body.ac_status ?? room.ac_status);
-    const block_number = sanitizeText(req.body.block_number ?? room.block_number);
-    const floor_number = sanitizeText(req.body.floor_number ?? room.floor_number);
-    const room_number = sanitizeText(req.body.room_number ?? room.room_number);
+    const roomType = normalizeRoomType(req?.body?.room_type ?? room.room_type);
+    const acStatus = normalizeAcStatus(req?.body?.ac_status ?? room.ac_status);
+    const block_number = sanitizeText(req?.body?.block_number ?? room.block_number);
+    const floor_number = sanitizeText(req?.body?.floor_number ?? room.floor_number);
+    const room_number = sanitizeText(req?.body?.room_number ?? room.room_number);
 
     if (!block_number || !floor_number || !room_number) {
-      return res.status(400).json({
-        success: false,
-        message: "Block number, floor number and room number are required"
-      });
+      return errorResponse(res, "Block number, floor number and room number are required", 400);
     }
 
     const duplicateRoom = await Room.findOne({
-      where: { block_number, room_number, ...(req.user.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {}) }
+      where: { block_number, room_number, ...(req?.user?.role !== "SUPER_ADMIN" ? getHostelFilter(req.user) : {}) }
     });
     if (duplicateRoom && duplicateRoom.id !== room.id) {
-      return res.status(400).json({
-        success: false,
-        message: "Another room already exists with this block and room number"
-      });
+      return errorResponse(res, "Another room already exists with this block and room number", 400);
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && room.hostel_id && req.user.hostel_id !== room.hostel_id) {
-      return res.status(403).json({ success: false, message: "Access denied" });
+    if (req?.user?.role !== "SUPER_ADMIN" && room.hostel_id && req?.user?.hostel_id !== room.hostel_id) {
+      return errorResponse(res, "Access denied", 403);
     }
 
-    const isPremium = Boolean(req.body.is_premium ?? room.is_premium);
+    const isPremium = Boolean(req?.body?.is_premium ?? room.is_premium);
     const suggestedRent = calculateRoomRent(roomType, acStatus, isPremium);
-    const roomBaseRent = suggestedRent || sanitizeMoney(req.body.base_rent ?? room.base_rent);
+    const roomBaseRent = suggestedRent || sanitizeMoney(req?.body?.base_rent ?? room.base_rent);
 
     await room.update({
       block_number,
@@ -304,26 +349,19 @@ export const updateRoom = async (req, res) => {
       room_type: roomType,
       is_premium: isPremium,
       ac_status: acStatus,
-      capacity: deriveCapacity(roomType, req.body.capacity ?? room.capacity),
+      capacity: deriveCapacity(roomType, req?.body?.capacity ?? room.capacity),
       base_rent: roomBaseRent,
       electricity_meter_number: sanitizeText(
-        req.body.electricity_meter_number ?? room.electricity_meter_number
+        req?.body?.electricity_meter_number ?? room.electricity_meter_number
       ),
-      hostel_id: req.user.hostel_id || room.hostel_id || null
+      hostel_id: req?.user?.hostel_id || room.hostel_id || null
     });
 
     await updateActiveRoomOccupantRent(block_number, room_number, roomBaseRent);
 
-    res.status(200).json({
-      success: true,
-      message: "Room updated successfully",
-      data: room
-    });
+    return successResponse(res, "Room updated successfully", room);
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    return errorResponse(res, err?.message || "Failed to update room", 500);
   }
 };
 
@@ -334,10 +372,7 @@ export const deleteRoom = async (req, res) => {
     const room = await Room.findByPk(roomId);
 
     if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found"
-      });
+      return errorResponse(res, "Room not found", 404);
     }
 
     const residentsCount = await User.count({
@@ -348,28 +383,18 @@ export const deleteRoom = async (req, res) => {
       }
     });
 
-    if (req.user.role !== "SUPER_ADMIN" && room.hostel_id && req.user.hostel_id !== room.hostel_id) {
-      return res.status(403).json({ success: false, message: "Access denied" });
+    if (req?.user?.role !== "SUPER_ADMIN" && room.hostel_id && req?.user?.hostel_id !== room.hostel_id) {
+      return errorResponse(res, "Access denied", 403);
     }
 
     if (residentsCount > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete room with active residents"
-      });
+      return errorResponse(res, "Cannot delete room with active residents", 400);
     }
 
     await room.destroy();
 
-    res.status(200).json({
-      success: true,
-      message: "Room deleted successfully"
-    });
+    return successResponse(res, "Room deleted successfully");
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    return errorResponse(res, err?.message || "Failed to delete room", 500);
   }
 };
-

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/ManageRooms.css";
-import { Button, Input, Select, Alert } from "../components/ui";
+import { Button, Input, Select, Alert, CardSkeleton } from "../components/ui";
 
 const ROOM_TYPE_OPTIONS = [
   { value: "SINGLE_SHARE", label: "Single Sharing", capacity: 1 },
@@ -60,17 +60,20 @@ export default function ManageRoomsPage() {
     try {
       setLoading(true);
       setError("");
-      const blocksResult = await API.get("/rooms/blocks");
-      const blocks = blocksResult?.data?.data || [];
-
-      const roomResponses = await Promise.all(
-        blocks.map((block) => API.get(`/rooms/block/${encodeURIComponent(block.block_number)}`))
-      );
-
-      const allRooms = roomResponses.flatMap((response) => response?.data?.data || []);
-      setRooms(allRooms);
+      const res = await API.get("/rooms");
+      if (res?.data?.success && Array.isArray(res?.data?.data)) {
+        setRooms(res.data.data);
+      } else {
+        const blocksResult = await API.get("/rooms/blocks");
+        const blocksList = blocksResult?.data?.data || [];
+        const roomResponses = await Promise.all(
+          blocksList.map((block) => API.get(`/rooms/block/${encodeURIComponent(block.block_number)}`))
+        );
+        const allRooms = roomResponses.flatMap((response) => response?.data?.data || []);
+        setRooms(allRooms);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load rooms");
+      setError(err?.response?.data?.message || "Failed to load rooms");
     } finally {
       setLoading(false);
     }
@@ -80,7 +83,10 @@ export default function ManageRoomsPage() {
     fetchRooms();
   }, []);
 
-  const blocks = ["1", "2"];
+  const blocks = useMemo(() => {
+    const list = [...new Set(rooms.map((r) => String(r.block_number || "").trim()).filter(Boolean))].sort();
+    return list.length > 0 ? list : ["1", "2"];
+  }, [rooms]);
 
   const visibleRooms = useMemo(() => {
     const list = filterBlock === "all"
@@ -254,9 +260,10 @@ export default function ManageRoomsPage() {
               </div>
 
               {loading ? (
-                <div className="rooms-loading-state">
-                  <div className="spinner"></div>
-                  <p>Loading rooms directory...</p>
+                <div className="cards-grid" style={{ padding: "16px 0" }}>
+                  <CardSkeleton lines={3} height="140px" />
+                  <CardSkeleton lines={3} height="140px" />
+                  <CardSkeleton lines={3} height="140px" />
                 </div>
               ) : visibleRooms.length === 0 ? (
                 <div className="rooms-empty-state">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import { getCurrentUser } from "../utils/authUtils";
 
 export function usePayments() {
   const [payments, setPayments] = useState([]);
@@ -27,16 +28,8 @@ export function usePayments() {
       setError("");
       let id = userId;
       if (!id) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          id = JSON.parse(storedUser).id;
-        }
-      }
-      if (!id) {
-        const storedAdmin = localStorage.getItem("admin");
-        if (storedAdmin) {
-          id = JSON.parse(storedAdmin).id;
-        }
+        const currentUser = getCurrentUser();
+        id = currentUser?.id;
       }
       if (!id) throw new Error("User ID is required");
 

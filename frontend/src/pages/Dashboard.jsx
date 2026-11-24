@@ -6,7 +6,7 @@ import { usePayments } from "../hooks/usePayments";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
 import "../styles/Dashboard.css";
-import { Button, Alert } from "../components/ui";
+import { Button, Alert, StatsGridSkeleton, TableSkeleton } from "../components/ui";
 import API from "../services/api";
 
 export default function Dashboard({ defaultActiveView = null }) {
@@ -297,15 +297,21 @@ export default function Dashboard({ defaultActiveView = null }) {
 
   const filteredVacantRoomsByBlock = getVacantRoomsByBlock();
 
-  const totalVacantBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.vacancy || 0), 0);
-  const totalBeds = (stats.roomOccupancy || []).reduce((sum, room) => sum + (room.capacity || 0), 0);
+  const totalVacantBeds = (stats?.roomOccupancy || []).reduce((sum, room) => sum + (room?.vacancy || 0), 0);
+  const totalBeds = (stats?.roomOccupancy || []).reduce((sum, room) => sum + (room?.capacity || 0), 0);
 
   if (loading) {
     return (
       <Layout>
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading Dashboard...</p>
+        <div className="dashboard-header" style={{ marginBottom: "24px" }}>
+          <div>
+            <h2>Hostel Management Dashboard</h2>
+            <p className="header-subtitle">Loading metrics & reports...</p>
+          </div>
+        </div>
+        <StatsGridSkeleton count={4} />
+        <div style={{ marginTop: "24px" }}>
+          <TableSkeleton rows={4} columns={5} />
         </div>
       </Layout>
     );
@@ -317,7 +323,7 @@ export default function Dashboard({ defaultActiveView = null }) {
       <div className="dashboard-header">
         <div>
           <h2>Hostel Management Dashboard</h2>
-          <p className="header-subtitle">Welcome back, {user.name}!</p>
+          <p className="header-subtitle">Welcome back, {user?.name || "Admin"}!</p>
         </div>
         <div className="dashboard-search">
           <input

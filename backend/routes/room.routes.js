@@ -2,6 +2,7 @@
 import express from "express";
 import { protect, isAdmin } from "../middlewares/auth.middleware.js";
 import {
+  getAllRooms,
   getAllBlocks,
   getRoomsByBlock,
   getRoomDetails,
@@ -11,6 +12,9 @@ import {
 } from "../controllers/room.controller.js";
 
 const router = express.Router();
+
+// Get all rooms
+router.get("/", protect, getAllRooms);
 
 // Get all blocks
 router.get("/blocks", protect, getAllBlocks);

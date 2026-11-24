@@ -1,69 +1,68 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import API from "../services/api.jsx";
+import { getCurrentUser, getCurrentToken } from "../utils/authUtils";
 
-// Check for browser session initialization (forces login page on fresh launch)
-if (typeof window !== "undefined" && !sessionStorage.getItem("sessionStarted")) {
-  localStorage.removeItem("userToken");
-  localStorage.removeItem("adminToken");
-  localStorage.removeItem("user");
-  localStorage.removeItem("admin");
-  sessionStorage.setItem("sessionStarted", "true");
-}
-
-// Helper function to get current user from localStorage
+// Helper function to get initial user decoded directly from token
 const getInitialUser = () => {
-  try {
-    const admin = localStorage.getItem("admin");
-    const user = localStorage.getItem("user");
-    if (admin) return JSON.parse(admin);
-    if (user) return JSON.parse(user);
-  } catch (e) {
-    console.error("Error parsing user from localStorage", e);
-  }
-  return {};
+  return getCurrentUser();
 };
 
-// Helper function to check if user is authenticated initially
+// Helper function to check if user has a valid token
 const getInitialIsAuthenticated = () => {
-  const userToken = localStorage.getItem("userToken");
-  const adminToken = localStorage.getItem("adminToken");
-  const userInfo = localStorage.getItem("user");
-  const adminInfo = localStorage.getItem("admin");
-  return !!((userToken && userInfo) || (adminToken && adminInfo));
+  return Boolean(getCurrentToken());
 };
 
-// Async thunk for user login
+// Async thunk to fetch fresh live user profile from TiDB database via backend
+export const fetchMe = createAsyncThunk(
+  "auth/fetchMe",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = getCurrentToken();
+      if (!token) return rejectWithValue("No token found");
+
+      const res = await API.get("/auth/me");
+      if (res?.data?.success) {
+        return res.data.data;
+      }
+      return rejectWithValue(res?.data?.message || "Failed to fetch user");
+    } catch (err) {
+      return rejectWithValue(err?.response?.data?.message || err?.message || "Failed to fetch user");
+    }
+  }
+);
+
+// Async thunk for user login (Stores ONLY token in localStorage)
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async ({ email, password }, { rejectWithValue }) => {
+  async ({ email, password }, { dispatch, rejectWithValue }) => {
     try {
-      // Clear any existing tokens to prevent concurrent login conflicts
+      // Clear any previous token and legacy user/admin keys
+      localStorage.removeItem("authToken");
       localStorage.removeItem("userToken");
       localStorage.removeItem("adminToken");
       localStorage.removeItem("user");
       localStorage.removeItem("admin");
 
-      const loginEndpoint = email.trim().toLowerCase() === "superadmin@hostel.com"
+      const cleanEmail = email.trim().toLowerCase();
+      const loginEndpoint = cleanEmail === "superadmin@hostel.com"
         ? "/auth/super-admin/login"
         : "/auth/login";
 
       const res = await API.post(loginEndpoint, { email, password });
 
-      if (res.data.success) {
+      if (res?.data?.success) {
         const user = res.data.user;
         const token = res.data.token;
-        const userRole = user.role;
+        const userRole = user?.role;
 
-        // Store tokens and user in localStorage based on role
+        // Store ONLY the token in localStorage as per requirement
+        localStorage.setItem("authToken", token);
         if (userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "HOSTEL_ADMIN") {
           localStorage.setItem("adminToken", token);
-          localStorage.setItem("admin", JSON.stringify(user));
         } else {
           localStorage.setItem("userToken", token);
-          localStorage.setItem("user", JSON.stringify(user));
         }
 
-        // Notify other parts of the app that may listen to this event
         window.dispatchEvent(new Event("authChanged"));
 
         return { user, role: userRole };
@@ -85,9 +84,9 @@ export const registerUser = createAsyncThunk(
         name,
         email,
         password,
-        role: "USER" // By default, registration registers user role
+        role: "USER"
       });
-      if (res.data.success) {
+      if (res?.data?.success) {
         return res.data;
       }
       return rejectWithValue("Registration failed");
@@ -123,10 +122,10 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      // API call to logout if backend supports session termination
       await API.post("/auth/logout").catch(() => {});
       
-      // Clean up localStorage
+      // Clean up only tokens from localStorage
+      localStorage.removeItem("authToken");
       localStorage.removeItem("userToken");
       localStorage.removeItem("adminToken");
       localStorage.removeItem("user");
@@ -140,14 +139,13 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-
-
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     currentUser: getInitialUser(),
     isAuthenticated: getInitialIsAuthenticated(),
     loading: false,
+    profileLoading: false,
     error: null,
   },
   reducers: {
@@ -156,10 +154,26 @@ const authSlice = createSlice({
     },
     setAuthenticated: (state, action) => {
       state.isAuthenticated = action.payload;
+    },
+    setUser: (state, action) => {
+      state.currentUser = action.payload;
     }
   },
   extraReducers: (builder) => {
     builder
+      // Fetch me (profile direct from TiDB DB)
+      .addCase(fetchMe.pending, (state) => {
+        state.profileLoading = true;
+      })
+      .addCase(fetchMe.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.currentUser = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchMe.rejected, (state) => {
+        state.profileLoading = false;
+      })
+
       // Login flow
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -190,19 +204,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Test user registration flow
-      .addCase(registerTestUserThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(registerTestUserThunk.fulfilled, (state) => {
-        state.loading = false;
-        state.error = null;
-      })
-      .addCase(registerTestUserThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+
       // Logout flow
       .addCase(logoutUser.fulfilled, (state) => {
         state.currentUser = {};
@@ -218,5 +220,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setAuthenticated } = authSlice.actions;
+export const { clearError, setAuthenticated, setUser } = authSlice.actions;
 export default authSlice.reducer;

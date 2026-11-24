@@ -1,9 +1,9 @@
 /* FoodConfirmation.css - Web Desktop Application Layout */
 
 .food-confirmation-web-page {
-  padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .confirmation-web-container {

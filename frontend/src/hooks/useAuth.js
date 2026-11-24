@@ -4,7 +4,8 @@ import {
   logoutUser, 
   registerUser, 
   registerTestUserThunk, 
-  setAuthenticated 
+  setAuthenticated,
+  fetchMe
 } from "../redux/authSlice.jsx";
 
 export function useAuth() {
@@ -17,7 +18,7 @@ export function useAuth() {
     try {
       const resultAction = await dispatch(loginUser({ email, password }));
       if (loginUser.fulfilled.match(resultAction)) {
-        return { success: true, role: resultAction.payload.user.role };
+        return { success: true, role: resultAction.payload?.role || resultAction.payload?.user?.role };
       } else {
         return { success: false, message: resultAction.payload || "Login failed" };
       }
@@ -69,6 +70,10 @@ export function useAuth() {
     dispatch(setAuthenticated(val));
   };
 
+  const fetchUserProfile = () => {
+    return dispatch(fetchMe());
+  };
+
   return {
     currentUser,
     isAuthenticated,
@@ -78,6 +83,7 @@ export function useAuth() {
     signup,
     registerTestUser,
     getRedirectPath,
-    setIsAuthenticated
+    setIsAuthenticated,
+    fetchUserProfile
   };
 }

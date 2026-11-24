@@ -7,7 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "seed": "node seed.js",
+    "migrate": "node bin/migrate.js up",
+    "migrate:seed": "node bin/migrate.js seed",
+    "migrate:setup": "node bin/migrate.js setup",
+    "migrate:status": "node bin/migrate.js status",
+    "migrate:reset": "node bin/migrate.js reset",
+    "seed": "node bin/migrate.js seed",
     "create-tidb-database": "node create-tidb-database.js",
     "test-tidb": "node test-tidb.js",
     "test": "echo \"Error: no test specified\" && exit 1"

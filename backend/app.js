@@ -58,12 +58,26 @@ const envAllowedOrigins = (process.env.CLIENT_ORIGIN || "")
 
 const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Postman, curl, server-to-server, mobile native
+  if (allowedOrigins.includes(origin)) return true;
+  if (process.env.CLIENT_ORIGIN === "*") return true;
+  // Dynamic localhost / 127.0.0.1 matching
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  // Common cloud deployment platforms
+  if (/^https:\/\/.*\.vercel\.app$/.test(origin) ||
+      /^https:\/\/.*\.onrender\.com$/.test(origin) ||
+      /^https:\/\/.*\.netlify\.app$/.test(origin)) {
+    return true;
+  }
+  return false;
+};
+
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-
     const corsError = new Error(`CORS blocked for origin: ${origin}`);
     corsError.status = 403;
     return callback(corsError);

@@ -9,8 +9,8 @@ export default function Sidebar() {
   const { currentUser: user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = user.role === "ADMIN" || user.role === "HOSTEL_ADMIN";
-  const isSuperAdmin = user.role === "SUPER_ADMIN";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "HOSTEL_ADMIN";
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
   const handleLogout = () => {
     logout();
@@ -58,22 +58,32 @@ export default function Sidebar() {
       <button 
         className="mobile-toggle" 
         onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle navigation menu"
       >
         ☰
       </button>
+
+      {mobileOpen && (
+        <div 
+          className="mobile-overlay" 
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-header">
           <h1>🏠 Hostel</h1>
           <button 
             className="mobile-close"
             onClick={() => setMobileOpen(false)}
+            aria-label="Close navigation menu"
           >
             ✕
           </button>
         </div>
         
         <div className="user-role-badge">
-          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : `👤 ${user.name || "User"}`}
+          {isSuperAdmin ? "🛡️ SuperAdmin" : isAdmin ? "👨‍💼 Admin" : `👤 ${user?.name || "Resident"}`}
         </div>
 
         <nav className="sidebar-nav">

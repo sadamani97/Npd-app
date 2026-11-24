@@ -1,3 +1,5 @@
+import { Op } from "sequelize";
+
 /**
  * Hostel Data Isolation Middleware
  * Ensures that users only access data belonging to their hostel
@@ -67,7 +69,12 @@ export const getHostelFilter = (user) => {
     return {};
   }
 
-  return { hostel_id: user.hostel_id };
+  return {
+    [Op.or]: [
+      { hostel_id: user.hostel_id },
+      { hostel_id: null }
+    ]
+  };
 };
 
 /**

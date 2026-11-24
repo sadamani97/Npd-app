@@ -591,10 +591,6 @@
 
 /* Responsive Design */
 @media (max-width: 1200px) {
-  .main-content {
-    padding: 30px;
-  }
-
   .stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -614,11 +610,6 @@
 }
 
 @media (max-width: 1024px) {
-  .main-content {
-    margin-left: 250px;
-    padding: 25px;
-  }
-
   .dashboard-header h2 {
     font-size: 28px;
   }
@@ -659,11 +650,6 @@
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 15px;
-  }
-
   .dashboard-header {
     margin-bottom: 25px;
   }
@@ -1919,4 +1905,78 @@
 .feature-card.blocks-feature:hover { border-left: 5px solid #10b981; }
 .feature-card.residents-feature:hover { border-left: 5px solid #f59e0b; }
 .feature-card.analytics-feature:hover { border-left: 5px solid #ec4899; }
+
+/* ==========================================================================
+   Responsive Breakpoints for Dashboard (Mobile-First)
+   ========================================================================== */
+
+/* Mobile Portrait (320px - 479px) */
+@media (max-width: 479px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+  .dashboard-header h2 {
+    font-size: 1.4rem;
+  }
+  .dashboard-search {
+    width: 100%;
+    margin-left: 0;
+  }
+  .count-cards-grid,
+  .feature-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .count-card {
+    padding: 16px;
+  }
+}
+
+/* Mobile Landscape / Small Tablet (480px - 767px) */
+@media (min-width: 480px) and (max-width: 767px) {
+  .count-cards-grid,
+  .feature-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Tablet Portrait (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-header {
+    flex-direction: row;
+    align-items: center;
+  }
+  .count-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .feature-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Laptop / Desktop (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .count-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .feature-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Large Desktop / Ultra-Wide (1280px+) */
+@media (min-width: 1280px) {
+  .count-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .feature-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
 

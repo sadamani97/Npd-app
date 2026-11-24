@@ -4,3 +4,6 @@ export { default as Select } from "./Select";
 export { default as Textarea } from "./Textarea";
 export { default as Alert } from "./Alert";
 export { default as Card } from "./Card";
+export { default as Badge } from "./Badge";
+export { Shimmer, CardSkeleton, StatsGridSkeleton, TableSkeleton } from "./Shimmer";
+export { Tabs, TabPanel } from "./Tabs";

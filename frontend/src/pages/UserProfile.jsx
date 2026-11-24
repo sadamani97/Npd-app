@@ -5,7 +5,7 @@ import { useResidents } from "../hooks/useResidents";
 import API from "../services/api";
 import Layout from "../components/Layout";
 import "../styles/UserProfile.css";
-import { Button } from "../components/ui";
+import { Button, CardSkeleton } from "../components/ui";
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -24,17 +24,16 @@ export default function UserProfile() {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const res = await API.get(`/users/${storedUser.id}`);
+      const res = await API.get("/auth/me");
       
-      if (res.data.success) {
+      if (res?.data?.success) {
         setUser(res.data.data);
         setFormData(res.data.data);
       } else {
         setError("Failed to load profile");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load profile");
+      setError(err?.response?.data?.message || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -47,13 +46,12 @@ export default function UserProfile() {
 
   const handleSave = async () => {
     const res = await editResident(user.id, formData);
-    if (res.success) {
+    if (res?.success) {
       setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
       setIsEditing(false);
       setError("");
     } else {
-      setError(res.message);
+      setError(res?.message || "Failed to update profile");
     }
   };
 
@@ -65,7 +63,9 @@ export default function UserProfile() {
   if (loading) {
     return (
       <Layout>
-        <div className="loading">Loading profile...</div>
+        <div className="user-profile-container">
+          <CardSkeleton lines={6} height="350px" />
+        </div>
       </Layout>
     );
   }

@@ -1,36 +1,40 @@
 // middleware/auth.middleware.js
-import jwt from "jsonwebtoken";
+import { verifyToken } from "../utils/jwt.js";
 import { User } from "../models/user.model.js";
 import { Hostel } from "../models/hostel.model.js";
+import { errorResponse } from "../utils/response.js";
 
 export const protect = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req?.headers?.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ success: false, msg: "No token provided" });
+    return errorResponse(res, "No authorization token provided", 401);
   }
 
   try {
     const [scheme, token] = authHeader.split(" ");
     if (scheme !== "Bearer" || !token) {
-      return res.status(401).json({ success: false, msg: "Invalid authorization format" });
+      return errorResponse(res, "Invalid authorization format. Must be Bearer <token>", 401);
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return errorResponse(res, "Invalid or expired token", 401);
+    }
+
     req.user = decoded;
 
-    // Recover missing hostel assignment for authenticated users if token was issued without it.
-    if (req.user.role !== "SUPER_ADMIN" && !req.user.hostel_id && req.user.id) {
+    // Recover missing hostel assignment for authenticated users if token was issued without it
+    if (req.user?.role !== "SUPER_ADMIN" && !req.user?.hostel_id && req.user?.id) {
       const dbUser = await User.findByPk(req.user.id);
       if (dbUser) {
         if (dbUser.hostel_id) {
           req.user.hostel_id = dbUser.hostel_id;
         } else {
-          // Automatically assign to the first hostel if not associated with any
           const firstHostel = await Hostel.findOne();
           if (firstHostel) {
             dbUser.hostel_id = firstHostel.id;
-            await dbUser.save();
+            await dbUser.save().catch(() => {});
             req.user.hostel_id = firstHostel.id;
           }
         }
@@ -39,48 +43,40 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(401).json({ success: false, msg: "Invalid token" });
+    return errorResponse(res, "Authentication failed: " + (err?.message || "Invalid token"), 401);
   }
 };
 
 export const authMiddleware = protect;
 
 export const isAdmin = (req, res, next) => {
-  if (req.user.role === "ADMIN" || req.user.role === "HOSTEL_ADMIN" || req.user.role === "SUPER_ADMIN") {
+  const role = req?.user?.role;
+  if (role === "ADMIN" || role === "HOSTEL_ADMIN" || role === "SUPER_ADMIN") {
     return next();
   }
-  return res.status(403).json({
-    success: false,
-    msg: "Access denied. Admin rights required"
-  });
+  return errorResponse(res, "Access denied. Admin rights required", 403);
 };
 
 export const isHostelAdmin = (req, res, next) => {
-  if (req.user.role !== "HOSTEL_ADMIN" && req.user.role !== "ADMIN") {
-    return res.status(403).json({
-      success: false,
-      msg: "Access denied. Hostel Admin rights required"
-    });
+  const role = req?.user?.role;
+  if (role !== "HOSTEL_ADMIN" && role !== "ADMIN") {
+    return errorResponse(res, "Access denied. Hostel Admin rights required", 403);
   }
   next();
 };
 
 export const isSuperAdmin = (req, res, next) => {
-  if (req.user.role !== "SUPER_ADMIN") {
-    return res.status(403).json({
-      success: false,
-      msg: "Access denied. Super Admin rights required"
-    });
+  const role = req?.user?.role;
+  if (role !== "SUPER_ADMIN") {
+    return errorResponse(res, "Access denied. Super Admin rights required", 403);
   }
   next();
 };
 
 export const isUser = (req, res, next) => {
-  if (req.user.role !== "USER") {
-    return res.status(403).json({
-      success: false,
-      msg: "Access denied. User rights required"
-    });
+  const role = req?.user?.role;
+  if (role !== "USER") {
+    return errorResponse(res, "Access denied. User rights required", 403);
   }
   next();
 };

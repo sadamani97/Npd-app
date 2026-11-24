@@ -1,18 +1,34 @@
-// services/api.js
+// services/api.jsx
 import axios from "axios";
 
+// Determine appropriate base URL with graceful fallback
+const getBaseURL = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (isLocal) {
+      return "http://localhost:5001/api";
+    }
+    // If deployed on the same domain or behind reverse proxy
+    return "/api";
+  }
+  return "http://localhost:5001/api";
+};
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5001/api",
-  timeout: 10000
+  baseURL: getBaseURL(),
+  timeout: 15000
 });
 
-// Request interceptor - add token (supports both user and admin tokens)
+// Request interceptor - add token (pure token storage)
 API.interceptors.request.use(
   (req) => {
-    // Try user token first, then admin token
-    const userToken = localStorage.getItem("userToken");
-    const adminToken = localStorage.getItem("adminToken");
-    const token = userToken || adminToken;
+    const token =
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("userToken") ||
+      localStorage.getItem("adminToken");
     
     if (token) {
       req.headers.Authorization = `Bearer ${token}`;
@@ -22,19 +38,23 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle errors
+// Response interceptor - handle errors without disrupting login/signup view
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Remove both tokens on auth failure
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("admin");
-      
-      // Always redirect to login page
-      window.location.href = "/login";
+    if (error?.response?.status === 401) {
+      const isAuthPage = typeof window !== "undefined" && 
+        (window.location.pathname === "/login" || window.location.pathname === "/signup");
+
+      // Don't force page reload if user is already attempting to login/signup
+      if (!isAuthPage) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("admin");
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

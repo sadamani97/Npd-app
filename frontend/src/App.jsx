@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -38,20 +38,18 @@ import "./App.css";
 function App() {
   const {
     isAuthenticated,
-    loading,
     currentUser,
     getRedirectPath,
-    setIsAuthenticated
+    setIsAuthenticated,
+    fetchUserProfile
   } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   return (
     <Router>
@@ -60,7 +58,7 @@ function App() {
         <Route
           path="/login"
           element={
-            currentUser.role
+            currentUser?.role
               ? <Navigate to={getRedirectPath()} replace />
               : <Login setIsAuthenticated={setIsAuthenticated} />
           }
@@ -68,7 +66,7 @@ function App() {
         <Route
           path="/signup"
           element={
-            currentUser.role
+            currentUser?.role
               ? <Navigate to={getRedirectPath()} replace />
               : <Signup />
           }
@@ -78,7 +76,7 @@ function App() {
         <Route
           path="/superadmin/dashboard"
           element={
-            isAuthenticated && currentUser.role === "SUPER_ADMIN"
+            isAuthenticated && currentUser?.role === "SUPER_ADMIN"
               ? <SuperAdminDashboard />
               : <Navigate to="/login" replace />
           }
@@ -88,9 +86,9 @@ function App() {
         <Route 
           path="/dashboard" 
           element={
-            isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN")
+            isAuthenticated && (currentUser?.role === "ADMIN" || currentUser?.role === "HOSTEL_ADMIN")
               ? <Dashboard /> 
-              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />
+              : <Navigate to={currentUser?.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser?.role === "USER" ? "/user-dashboard" : "/login"} replace />
           } 
         />
         <Route 
@@ -155,9 +153,9 @@ function App() {
         />
         <Route
           path="/electricity-billing"
-          element={isAuthenticated && (currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" || currentUser.role === "SUPER_ADMIN")
+          element={isAuthenticated && (currentUser?.role === "ADMIN" || currentUser?.role === "HOSTEL_ADMIN" || currentUser?.role === "SUPER_ADMIN")
             ? <ElectricityBillingPage />
-            : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "USER" ? "/user-dashboard" : "/login"} replace />}
+            : <Navigate to={currentUser?.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser?.role === "USER" ? "/user-dashboard" : "/login"} replace />}
         />
         <Route
           path="/admin-food-confirmations"
@@ -170,9 +168,9 @@ function App() {
         <Route 
           path="/user-dashboard" 
           element={
-            isAuthenticated && currentUser.role === "USER"
+            isAuthenticated && currentUser?.role === "USER"
               ? <UserDashboard /> 
-              : <Navigate to={currentUser.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser.role === "ADMIN" || currentUser.role === "HOSTEL_ADMIN" ? "/dashboard" : "/login"} replace />
+              : <Navigate to={currentUser?.role === "SUPER_ADMIN" ? "/superadmin/dashboard" : currentUser?.role === "ADMIN" || currentUser?.role === "HOSTEL_ADMIN" ? "/dashboard" : "/login"} replace />
           } 
         />
         <Route 

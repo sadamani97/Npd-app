@@ -6,7 +6,6 @@ import { useAuth } from "../hooks/useAuth";
 import "../styles/Auth.css";
 import { Button, Input, Alert, Card } from "../components/ui";
 
-// Validation schema for legacy email/password login
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
     .required("Email or Phone Number is required")
@@ -25,55 +24,99 @@ const LoginSchema = Yup.object().shape({
     .required("Password is required"),
 });
 
+const DEMO_ACCOUNTS = {
+  admin: {
+    label: "👨‍💼 Hostel Admin",
+    email: "admin@hostel.com",
+    password: "admin123"
+  },
+  resident: {
+    label: "👤 Resident",
+    email: "user@hostel.com",
+    password: "user1234"
+  },
+  superadmin: {
+    label: "🛡️ SuperAdmin",
+    email: "superadmin@hostel.com",
+    password: "superadmin123"
+  }
+};
+
 export default function Login({ setIsAuthenticated }) {
   const [apiError, setApiError] = useState("");
+  const [selectedRole, setSelectedRole] = useState("admin");
   const navigate = useNavigate();
 
-  const { login, registerTestUser, getRedirectPath, loading } = useAuth();
+  const { login, getRedirectPath, loading } = useAuth();
 
-
-
-  // Password-based Formik handler
   const formik = useFormik({
     initialValues: {
-      email: "",
-      password: "",
+      email: DEMO_ACCOUNTS.admin.email,
+      password: DEMO_ACCOUNTS.admin.password,
     },
     validationSchema: LoginSchema,
     onSubmit: async (values) => {
       setApiError("");
       const res = await login(values.email, values.password);
-      if (res.success) {
-        setIsAuthenticated(true);
+      if (res?.success) {
+        if (typeof setIsAuthenticated === "function") {
+          setIsAuthenticated(true);
+        }
         navigate(getRedirectPath(res.role), { replace: true });
       } else {
-        setApiError(res.message);
+        setApiError(res?.message || "Invalid credentials. Please verify your email and password.");
       }
     },
   });
 
-  // Helper to quickly create test user
-  const handleCreateTestUser = async () => {
+  const handleSelectRole = (roleKey) => {
+    setSelectedRole(roleKey);
     setApiError("");
-    const res = await registerTestUser();
-    if (res.success) {
-      alert("✅ Test user created successfully!\nPhone: 0987654321\nEmail: user@hostel.com\nPassword: user1234");
-    } else {
-      if (res.message.includes("already exists")) {
-        alert("✅ Test user already exists!\nPhone: 0987654321\nEmail: user@hostel.com\nPassword: user1234");
-      } else {
-        alert("Error: " + res.message);
-      }
+    const account = DEMO_ACCOUNTS[roleKey];
+    if (account) {
+      formik.setFieldValue("email", account.email);
+      formik.setFieldValue("password", account.password);
     }
   };
 
   return (
     <div className="auth-container">
-      <Card>
-        <h1>Hostel Management</h1>
-        <h2>Account Login</h2>
+      <Card className="auth-card">
+        <div className="auth-header">
+          <h1>Hostel Management</h1>
+          <h2>Account Portal Login</h2>
+        </div>
 
-        {apiError && <Alert variant="danger">{apiError}</Alert>}
+        {/* Quick Role Switcher Tabs */}
+        <div className="auth-role-tabs">
+          <button
+            type="button"
+            className={`role-tab-btn ${selectedRole === "admin" ? "active" : ""}`}
+            onClick={() => handleSelectRole("admin")}
+          >
+            Admin
+          </button>
+          <button
+            type="button"
+            className={`role-tab-btn ${selectedRole === "resident" ? "active" : ""}`}
+            onClick={() => handleSelectRole("resident")}
+          >
+            Resident
+          </button>
+          <button
+            type="button"
+            className={`role-tab-btn ${selectedRole === "superadmin" ? "active" : ""}`}
+            onClick={() => handleSelectRole("superadmin")}
+          >
+            SuperAdmin
+          </button>
+        </div>
+
+        {apiError && (
+          <Alert variant="danger" className="auth-alert">
+            {apiError}
+          </Alert>
+        )}
 
         <form onSubmit={formik.handleSubmit}>
           <Input
@@ -84,10 +127,10 @@ export default function Login({ setIsAuthenticated }) {
             value={formik.values.email}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="Enter your email or phone number"
+            placeholder="Enter email or 10-digit phone"
           />
           {formik.touched.email && formik.errors.email ? (
-            <div className="error-feedback" style={{ color: "#e74c3c", fontSize: "0.8rem", marginTop: "-10px", marginBottom: "15px", textAlign: "left" }}>
+            <div className="error-feedback">
               {formik.errors.email}
             </div>
           ) : null}
@@ -100,43 +143,41 @@ export default function Login({ setIsAuthenticated }) {
             value={formik.values.password}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="Enter your password"
+            placeholder="Enter password"
           />
           {formik.touched.password && formik.errors.password ? (
-            <div className="error-feedback" style={{ color: "#e74c3c", fontSize: "0.8rem", marginTop: "-10px", marginBottom: "15px", textAlign: "left" }}>
+            <div className="error-feedback">
               {formik.errors.password}
             </div>
           ) : null}
 
-          <Button type="submit" variant="primary" disabled={loading || formik.isSubmitting}>
-            {loading || formik.isSubmitting ? "Logging in..." : "Login"}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={loading || formik.isSubmitting}
+            className="auth-submit-btn"
+          >
+            {loading || formik.isSubmitting ? "Logging in..." : `Login as ${selectedRole.toUpperCase()}`}
           </Button>
         </form>
 
-        <div className="text-center mt-3" style={{ fontSize: "0.9rem", color: "#666" }}>
-          <p style={{ margin: "5px 0" }}>
+        <div className="auth-footer-help">
+          <div className="demo-credentials-box">
+            <span className="demo-label">Demo Credentials:</span>
+            <code>{formik.values.email}</code> | <code>{formik.values.password}</code>
+          </div>
+
+          <p className="signup-link-text">
             Don't have an account?{" "}
             <span
               onClick={() => navigate("/signup")}
-              style={{ color: "#3498db", cursor: "pointer", fontWeight: "bold", textDecoration: "underline" }}
+              className="auth-link"
             >
-              Sign Up
+              Sign Up as Resident
             </span>
           </p>
-          <hr style={{ border: "0", borderTop: "1px solid #eee", margin: "15px 0" }} />
-          <p style={{ margin: "5px 0" }}><strong>Admin Email:</strong> admin@hostel.com | admin123</p>
-
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleCreateTestUser}
-            style={{ marginTop: "10px", padding: "5px 10px", fontSize: "0.8rem" }}
-          >
-            🛠️ Click here to create Test User if needed
-          </Button>
         </div>
       </Card>
     </div>
   );
 }
-

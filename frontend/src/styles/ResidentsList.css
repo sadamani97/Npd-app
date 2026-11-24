@@ -814,19 +814,59 @@
   flex-direction: column;
 }
 
-/* Modal Animations */
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* ==========================================================================
+   Responsive Breakpoints for Residents Directory
+   ========================================================================== */
+
+/* Mobile Portrait (320px - 479px) */
+@media (max-width: 479px) {
+  .residents-list-container {
+    padding: 12px;
+  }
+  .residents-list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .header-actions,
+  .residents-list-header .btn {
+    width: 100%;
+  }
+  .residents-filters {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  .table-responsive,
+  .residents-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.98);
+/* Mobile Landscape / Small Tablet (480px - 767px) */
+@media (min-width: 480px) and (max-width: 767px) {
+  .residents-list-container {
+    padding: 16px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  .residents-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Tablet (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .residents-list-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* Large Desktop (1280px+) */
+@media (min-width: 1280px) {
+  .residents-list-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px;
   }
 }

@@ -5,7 +5,7 @@ import { useCirculars } from "../hooks/useCirculars";
 import { useComplaints } from "../hooks/useComplaints";
 import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
-import { Card, Button, Alert } from "../components/ui";
+import { Card, Button, Alert, StatsGridSkeleton, CardSkeleton } from "../components/ui";
 import API from "../services/api";
 import "../styles/UserDashboard.css";
 
@@ -152,21 +152,8 @@ export default function UserDashboard() {
   const renderOverview = () => (
     <div className="user-dashboard-overview">
       {recentFoodUpdate && (
-        <div style={{
-          background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-          border: "1px solid #f59e0b",
-          borderRadius: "12px",
-          padding: "15px 20px",
-          marginBottom: "20px",
-          color: "#78350f",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          fontWeight: "600",
-          fontSize: "14px"
-        }}>
-          <span style={{ fontSize: "20px" }}>🍽️</span>
+        <div className="food-alert-banner">
+          <span className="food-alert-icon">🍽️</span>
           <div>
             <strong>Food Update:</strong> {recentFoodUpdate.message}
           </div>
@@ -350,9 +337,14 @@ export default function UserDashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading User Dashboard...</p>
+        <div className="page-header">
+          <h2 className="page-title">Resident Dashboard</h2>
+          <p className="page-subtitle">Loading your accommodation details...</p>
+        </div>
+        <StatsGridSkeleton count={3} />
+        <div className="cards-grid" style={{ marginTop: "20px" }}>
+          <CardSkeleton lines={4} height="180px" />
+          <CardSkeleton lines={4} height="180px" />
         </div>
       </Layout>
     );
