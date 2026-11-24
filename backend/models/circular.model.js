@@ -17,8 +17,8 @@ export const Circular = sequelize.define("Circular", {
     allowNull: false
   },
   sentVia: {
-    type: DataTypes.ENUM("WHATSAPP", "EMAIL", "BOTH"),
-    defaultValue: "WHATSAPP"
+    type: DataTypes.ENUM("EMAIL"),
+    defaultValue: "EMAIL"
   },
   sentAt: {
     type: DataTypes.DATE,

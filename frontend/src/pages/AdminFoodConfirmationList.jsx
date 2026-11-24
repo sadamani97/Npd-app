@@ -27,6 +27,7 @@ export default function AdminFoodConfirmationList() {
     const formattedDate = tomorrow.toISOString().split("T")[0];
     setSelectedDate(formattedDate);
     fetchConfirmations(formattedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConfirmations = async (date) => {
@@ -66,28 +67,25 @@ export default function AdminFoodConfirmationList() {
     return confirmations.filter((c) => c[mealType] === true).length;
   };
 
-  const getMealsForConfirmation = (conf) => {
-    const meals = [];
-    if (conf.breakfast) meals.push("Breakfast");
-    if (conf.lunch) meals.push("Lunch");
-    if (conf.dinner) meals.push("Dinner");
-    return meals.length > 0 ? meals.join(", ") : "None";
-  };
+
 
   const exportToCSV = () => {
     const filteredData = getFilteredConfirmations();
     const headers = ["Room", "Name", "Phone", "Block", "Breakfast", "Lunch", "Dinner", "Notes", "Confirmed At"];
-    const rows = filteredData.map((conf) => [
-      `${conf.User?.block_number}-${conf.User?.room_number}`,
-      conf.User?.name,
-      conf.User?.phone,
-      conf.User?.block_number,
+    const rows = filteredData.map((conf) => {
+      const u = conf.User || conf.user;
+      return [
+        `${u?.block_number || ""}-${u?.room_number || ""}`,
+        u?.name || "",
+        u?.phone || "",
+        u?.block_number || "",
       conf.breakfast ? "Yes" : "No",
       conf.lunch ? "Yes" : "No",
       conf.dinner ? "Yes" : "No",
       conf.notes || "-",
       new Date(conf.confirmed_at).toLocaleString()
-    ]);
+      ];
+    });
 
     let csv = headers.join(",") + "\n";
     rows.forEach((row) => {
@@ -224,16 +222,18 @@ export default function AdminFoodConfirmationList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredConfirmations.map((confirmation) => (
-                    <tr key={confirmation.id}>
-                      <td>
-                        <strong>
-                          {confirmation.User?.room_number}
-                        </strong>
-                      </td>
-                      <td>{confirmation.User?.name}</td>
-                      <td>{confirmation.User?.phone}</td>
-                      <td>{confirmation.User?.block_number}</td>
+                  {filteredConfirmations.map((confirmation) => {
+                    const u = confirmation.User || confirmation.user;
+                    return (
+                      <tr key={confirmation.id}>
+                        <td>
+                          <strong>
+                            {u?.room_number}
+                          </strong>
+                        </td>
+                        <td>{u?.name}</td>
+                        <td>{u?.phone}</td>
+                        <td>{u?.block_number}</td>
                       <td className="meal-cell">
                         <span className={confirmation.breakfast ? "yes" : "no"}>
                           {confirmation.breakfast ? "✅" : "-"}
@@ -253,8 +253,9 @@ export default function AdminFoodConfirmationList() {
                         {new Date(confirmation.confirmed_at).toLocaleString()}
                       </td>
                       <td className="notes-cell">{confirmation.notes || "-"}</td>
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

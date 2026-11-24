@@ -6,12 +6,14 @@ import { useComplaints } from "../hooks/useComplaints";
 import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
 import { Card, Button, Alert } from "../components/ui";
+import API from "../services/api";
 import "../styles/UserDashboard.css";
 
 export default function UserDashboard() {
   const navigate = useNavigate();
   const { currentUser: user } = useAuth();
-  const [activeView, setActiveView] = useState("overview");
+  const [profile, setProfile] = useState(user);
+
   const { circulars, fetchCirculars, loading: circLoading } = useCirculars();
   const { complaints, fetchComplaints, loading: compLoading } = useComplaints();
   const { menuForDate: todayMenu, fetchMenuForDate, loading: menuLoading, error: menuError } = useFoodMenu();
@@ -61,20 +63,30 @@ export default function UserDashboard() {
   };
 
   const baseRent = getSharingRentAmount(
-    user?.room_type || user?.sharing_type,
-    user?.ac_status,
-    user?.is_premium,
-    user?.rent_amount || user?.rent
+    profile?.room_type || profile?.sharing_type,
+    profile?.ac_status,
+    profile?.is_premium,
+    profile?.rent_amount || profile?.rent
   );
-  const electricityCharges = Number(user?.electricity_charges || 0);
+  const electricityCharges = Number(profile?.electricity_charges || 0);
   const totalPayable = baseRent + electricityCharges + lateFeePenalty;
 
   useEffect(() => {
     fetchUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUserData = async () => {
     const todayStr = new Date().toISOString().split("T")[0];
+    
+    if (user?.id) {
+      API.get(`/users/${user.id}`).then((res) => {
+        if (res.data.success) {
+          setProfile(res.data.data);
+        }
+      }).catch((err) => console.error("Error fetching fresh user profile:", err));
+    }
+
     await Promise.allSettled([
       fetchCirculars(),
       fetchComplaints(),
@@ -108,15 +120,15 @@ export default function UserDashboard() {
       amount: totalPayable * 100, // Amount in paise
       currency: "INR",
       name: "Hostel Management System",
-      description: `Rent & EB Payment for ${user.name || "Resident"}`,
+      description: `Rent & EB Payment for ${profile?.name || "Resident"}`,
       image: "https://cdn-icons-png.flaticon.com/512/1046/1046784.png",
       handler: function (response) {
         alert(`🎉 Payment Successful!\nPayment ID: ${response.razorpay_payment_id}`);
       },
       prefill: {
-        name: user.name || "Resident",
-        email: user.email || "user@hostel.com",
-        contact: user.phone || "9999999999"
+        name: profile?.name || "Resident",
+        email: profile?.email || "user@hostel.com",
+        contact: profile?.phone || "9999999999"
       },
       theme: {
         color: "#6366f1"
@@ -131,17 +143,44 @@ export default function UserDashboard() {
     }
   };
 
+  const foodUpdates = (circulars || []).filter(
+    (c) => c.title && c.title.toLowerCase().includes("food")
+  );
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const recentFoodUpdate = foodUpdates.find((c) => new Date(c.createdAt) > oneDayAgo);
+
   const renderOverview = () => (
     <div className="user-dashboard-overview">
+      {recentFoodUpdate && (
+        <div style={{
+          background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+          border: "1px solid #f59e0b",
+          borderRadius: "12px",
+          padding: "15px 20px",
+          marginBottom: "20px",
+          color: "#78350f",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          fontWeight: "600",
+          fontSize: "14px"
+        }}>
+          <span style={{ fontSize: "20px" }}>🍽️</span>
+          <div>
+            <strong>Food Update:</strong> {recentFoodUpdate.message}
+          </div>
+        </div>
+      )}
       {/* Welcome Banner Card */}
       <Card variant="welcome" className="welcome-user-card">
         <div className="welcome-banner-content">
-          <h2>Welcome, {user.name || "Resident"}! 👋</h2>
+          <h2>Welcome, {profile?.name || "Resident"}! 👋</h2>
           <div className="user-details-pills">
-            <span className="user-pill">Block {user.block_number || "1"}</span>
-            <span className="user-pill">Floor {user.floor_number || "1"}</span>
-            <span className="user-pill">Room {user.room_number || "101"}</span>
-            <span className="user-pill highlight">Sharing: {user.room_type || user.sharing_type || "4 Sharing"}</span>
+            <span className="user-pill">Block {profile?.block_number || "1"}</span>
+            <span className="user-pill">Floor {profile?.floor_number || "1"}</span>
+            <span className="user-pill">Room {profile?.room_number || "101"}</span>
+            <span className="user-pill highlight">Sharing: {profile?.room_type || profile?.sharing_type || "4 Sharing"}</span>
           </div>
         </div>
       </Card>
@@ -323,7 +362,7 @@ export default function UserDashboard() {
     <Layout>
       <div className="user-dashboard">
         {error && <Alert variant="danger">{error}</Alert>}
-        {activeView === "overview" && renderOverview()}
+        {renderOverview()}
       </div>
     </Layout>
   );

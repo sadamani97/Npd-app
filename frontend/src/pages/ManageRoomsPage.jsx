@@ -268,14 +268,32 @@ export default function ManageRoomsPage() {
                     const isAc = room.ac_status === "AC";
                     const isPrem = room.is_premium;
 
+                    let sharingLabel = "";
+                    let sharingClass = "";
+                    if (room.capacity === 1) {
+                      sharingLabel = "👤 Single";
+                      sharingClass = "sharing-single";
+                    } else if (room.capacity === 2) {
+                      sharingLabel = "👥 Double";
+                      sharingClass = "sharing-double";
+                    } else {
+                      sharingLabel = `👥 ${room.capacity}-Share`;
+                      sharingClass = "sharing-multi";
+                    }
+
                     return (
-                      <div key={room.id} className={`room-card-item ${isPrem ? 'premium' : ''} ${isAc ? 'ac-room' : 'non-ac-room'}`}>
+                      <div key={room.id} className={`room-card-item ${isPrem ? 'premium' : isAc ? 'ac-room' : 'non-ac-room'} capacity-${room.capacity}`}>
                         {isPrem && <span className="premium-badge">★ Premium</span>}
                         <div className="room-card-header">
                           <span className="room-title">Room {room.room_number}</span>
-                          <span className={`room-ac-badge ${isAc ? 'ac' : 'non-ac'}`}>
-                            {isAc ? "❄ AC" : "Standard"}
-                          </span>
+                          <div className="room-badge-group">
+                            <span className={`room-sharing-badge ${sharingClass}`}>
+                              {sharingLabel}
+                            </span>
+                            <span className={`room-ac-badge ${isAc ? 'ac' : 'non-ac'}`}>
+                              {isAc ? "❄ AC" : "Standard"}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="room-card-body">

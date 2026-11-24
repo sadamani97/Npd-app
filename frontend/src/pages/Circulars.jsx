@@ -11,13 +11,14 @@ export default function Circulars() {
   const [formData, setFormData] = useState({
     title: "",
     message: "",
-    sentVia: "WHATSAPP"
+    sentVia: "EMAIL"
   });
 
   const user = getCurrentUser();
 
   useEffect(() => {
     fetchCirculars();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e) => {
@@ -41,7 +42,7 @@ export default function Circulars() {
       } else {
         alert("Circular sent successfully to all residents!");
       }
-      setFormData({ title: "", message: "", sentVia: "WHATSAPP" });
+      setFormData({ title: "", message: "", sentVia: "EMAIL" });
       setShowForm(false);
       fetchCirculars();
     } else {
@@ -105,19 +106,6 @@ export default function Circulars() {
                 required
               ></textarea>
             </div>
-
-            <div className="form-group">
-              <label>Send Via</label>
-              <select name="sentVia" value={formData.sentVia} onChange={handleChange}>
-                <option value="WHATSAPP">📱 WhatsApp (Fastest - but requires Twilio setup)</option>
-                <option value="EMAIL">📧 Email (Recommended - Gmail SMTP, quick to setup)</option>
-                <option value="BOTH">📱📧 Both (WhatsApp + Email to all residents)</option>
-              </select>
-              <small style={{color: '#666', marginTop: '8px', display: 'block'}}>
-                💡 First-time? Use <strong>Email</strong> - it's already configured for instant setup!
-              </small>
-            </div>
-
             <Button type="submit" className="btn btn-primary" variant="primary" disabled={loading}>
               {loading ? "Sending..." : "Send to All Residents"}
             </Button>
@@ -146,7 +134,7 @@ export default function Circulars() {
               <p className="circular-message">{circular.message}</p>
 
               <div className="circular-meta">
-                <span>📱 {circular.sentVia}</span>
+                <span>📧 {circular.sentVia}</span>
                 <span>📅 {new Date(circular.sentAt).toLocaleDateString()}</span>
               </div>
 

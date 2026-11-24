@@ -9,8 +9,6 @@ import "../styles/Dashboard.css";
 import { Button, Alert } from "../components/ui";
 import API from "../services/api";
 
-const currentMonthName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][new Date().getMonth()];
-
 export default function Dashboard({ defaultActiveView = null }) {
   const { residents, fetchResidents, vacateResident, loading: residentsLoading, error: residentsError } = useResidents();
   const { stats, fetchDashboardStats, loading: statsLoading, error: statsError } = useRooms();
@@ -49,8 +47,10 @@ export default function Dashboard({ defaultActiveView = null }) {
 
   const fetchFoodCount = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${today}`);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      const res = await API.get(`/food-confirmations/admin/by-date?confirmation_date=${tomorrowStr}`);
       if (res.data && res.data.success) {
         const list = res.data.data || [];
         const breakfast = list.filter(c => c.breakfast).length;
@@ -373,7 +373,7 @@ export default function Dashboard({ defaultActiveView = null }) {
               <div className="count-info">
                 <div className="count-header-row">
                   <span className="count-number">{foodStats.total}</span>
-                  <span className="count-label">Food Required Today</span>
+                  <span className="count-label">Food Required Tomorrow</span>
                 </div>
                 <div className="food-breakdown-pills">
                   <span className="meal-pill breakfast" title="Breakfast count">🌅 {foodStats.breakfast}</span>
@@ -444,7 +444,7 @@ export default function Dashboard({ defaultActiveView = null }) {
               
               <div className="overview-card glass-panel">
                 <div className="overview-card-header">
-                  <h4>Food Count (Today)</h4>
+                  <h4>Food Count (Tomorrow)</h4>
                   <span className="overview-icon">🍽️</span>
                 </div>
                 <div className="overview-value">{foodStats.total}</div>

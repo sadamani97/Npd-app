@@ -11,8 +11,8 @@ router.post("/", protect, isAdmin, foodMenuController.addFoodMenu);
 // Get food menu by date (for users to view menu)
 router.get("/date", protect, foodMenuController.getFoodMenuByDate);
 
-// Admin: Get all food menus
-router.get("/", protect, isAdmin, foodMenuController.getAllFoodMenus);
+// Get all food menus (weekly menu viewable by users)
+router.get("/", protect, foodMenuController.getAllFoodMenus);
 
 // Admin: Update food menu
 router.put("/:id", protect, isAdmin, foodMenuController.updateFoodMenu);

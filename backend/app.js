@@ -26,7 +26,6 @@ import {
   ElectricityMeter,
   FoodMenu,
   FoodConfirmation,
-  OtpVerification,
   Hostel,
   SuperAdmin
 } from "./models/index.js";

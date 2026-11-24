@@ -1,6 +1,7 @@
 // controllers/foodMenu.controller.js
 import { FoodMenu } from "../models/foodMenu.model.js";
 import { User } from "../models/user.model.js";
+import { Circular } from "../models/circular.model.js";
 import { getHostelFilter } from "../middlewares/hostelIsolation.middleware.js";
 
 export const addFoodMenu = async (req, res) => {
@@ -27,6 +28,19 @@ export const addFoodMenu = async (req, res) => {
       created_by: userId
       ,hostel_id: req.body.hostel_id || req.user.hostel_id || null
     });
+
+    // Create an announcement/circular for food menu change
+    try {
+      await Circular.create({
+        title: "🍽️ Food Menu Announcement",
+        message: `Food menu was changed: ${meal_type} for ${menu_date} has been updated to: ${item_name} (${is_veg !== false ? "Veg" : "Non-Veg"}).`,
+        sentVia: "EMAIL",
+        status: "SENT",
+        hostel_id: foodMenu.hostel_id
+      });
+    } catch (circErr) {
+      console.error("Failed to create food menu change announcement circular:", circErr.message);
+    }
 
     res.status(201).json({
       success: true,
@@ -114,6 +128,19 @@ export const updateFoodMenu = async (req, res) => {
       is_veg: is_veg !== undefined ? is_veg : foodMenu.is_veg,
       is_available: is_available !== undefined ? is_available : foodMenu.is_available
     });
+
+    // Create an announcement/circular for food menu change
+    try {
+      await Circular.create({
+        title: "🍽️ Food Menu Announcement",
+        message: `Food menu was changed: ${foodMenu.meal_type} for ${foodMenu.menu_date} has been updated to: ${foodMenu.item_name} (${foodMenu.is_veg ? "Veg" : "Non-Veg"}).`,
+        sentVia: "EMAIL",
+        status: "SENT",
+        hostel_id: foodMenu.hostel_id
+      });
+    } catch (circErr) {
+      console.error("Failed to create food menu change announcement circular:", circErr.message);
+    }
 
     res.json({ success: true, message: "Food menu updated", data: foodMenu });
   } catch (err) {

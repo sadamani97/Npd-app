@@ -9,7 +9,6 @@ import { Payment } from "./payment.model.js";
 import { ElectricityMeter } from "./electricityMeter.model.js";
 import { FoodMenu } from "./foodMenu.model.js";
 import { FoodConfirmation } from "./foodConfirmation.model.js";
-import { OtpVerification } from "./otpVerification.model.js";
 import { Hostel } from "./hostel.model.js";
 import { SuperAdmin } from "./superAdmin.model.js";
 
@@ -43,7 +42,6 @@ export {
   ElectricityMeter,
   FoodMenu,
   FoodConfirmation,
-  OtpVerification,
   Hostel,
   SuperAdmin
 };

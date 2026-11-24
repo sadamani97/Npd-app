@@ -13,6 +13,7 @@ export default function UnpaidResidents() {
 
   useEffect(() => {
     fetchCurrentMonthPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const unpaidResidents = payments?.filter(

@@ -140,7 +140,7 @@ export const getFoodConfirmationsByDate = async (req, res) => {
 
     const confirmations = await FoodConfirmation.findAll({
       where,
-      attributes: ["id", "user_id", "confirmation_date", "breakfast", "lunch", "dinner", "is_confirmed", "confirmed_at"],
+      attributes: ["id", "user_id", "confirmation_date", "breakfast", "lunch", "dinner", "is_confirmed", "confirmed_at", "notes"],
       include: [
         {
           association: "user",

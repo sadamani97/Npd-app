@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePayments } from "../hooks/usePayments";
 import Layout from "../components/Layout";
@@ -57,6 +57,7 @@ export default function UserPaymentHistory() {
 
   useEffect(() => {
     fetchUserPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadRazorpayScript = () => {

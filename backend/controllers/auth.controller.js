@@ -3,9 +3,7 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { User } from "../models/user.model.js";
 import { SuperAdmin } from "../models/superAdmin.model.js";
-import { OtpVerification } from "../models/otpVerification.model.js";
 import { Hostel } from "../models/hostel.model.js";
-import { generateOTP, sendOTPviaSMS, sendOTPviaWhatsApp } from "../utils/otpapi.js";
 
 /**
  * Legacy register - kept for admin only
@@ -87,204 +85,26 @@ export const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         hostel_id: user.hostel_id,
         block_number: user.block_number,
         floor_number: user.floor_number,
-        room_number: user.room_number
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, msg: err.message });
-  }
-};
-
-/**
- * Request OTP - Send OTP to phone number
- */
-export const requestOTP = async (req, res) => {
-  try {
-    const { phone_number, channel } = req.body;
-
-    // Validate input
-    if (!phone_number) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Phone number is required" 
-      });
-    }
-
-    // Normalize phone number
-    const normalizedPhone = phone_number.replace(/\D/g, "");
-    if (normalizedPhone.length < 10) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Please enter a valid 10-digit phone number" 
-      });
-    }
-
-    // Check if the user/resident exists in the database
-    const user = await User.findOne({ where: { phone: normalizedPhone } });
-    if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Please enter a registered mobile number" 
-      });
-    }
-
-    // Generate OTP
-    const otp = generateOTP();
-    
-    // Calculate expiration time (10 minutes)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    // Store OTP in database (remove previous unverified OTPs for this number)
-    await OtpVerification.destroy({ where: { phone_number: normalizedPhone, is_verified: false } });
-    
-    const otpRecord = await OtpVerification.create({
-      phone_number: normalizedPhone,
-      otp,
-      expires_at: expiresAt
-    });
-
-    // Send OTP via SMS (or WhatsApp if channel === 'WHATSAPP')
-    let result;
-    if (channel === "WHATSAPP") {
-      result = await sendOTPviaWhatsApp(normalizedPhone, otp);
-      if (!result.success && result.mode !== "DEMO") {
-        result = await sendOTPviaSMS(normalizedPhone, otp);
-      }
-    } else {
-      result = await sendOTPviaSMS(normalizedPhone, otp);
-    }
-    
-    if (!result.success && result.mode !== "DEMO") {
-      return res.status(500).json({ 
-        success: false, 
-        msg: "Failed to send OTP via SMS. Please try again." 
-      });
-    }
-
-    res.json({ 
-      success: true, 
-      msg: result.mode === "DEMO" 
-        ? "OTP generated (Demo Mode). Use code shown below." 
-        : "OTP sent via mobile SMS successfully",
-      channel: result.mode || "SMS",
-      phone: normalizedPhone,
-      data: {
-        otp_id: otpRecord.id,
-        expires_in_minutes: 10,
-        ...(result.mode === "DEMO" ? { demo_otp: otp } : {})
-      }
-    });
-  } catch (err) {
-    console.error("Error requesting OTP:", err);
-    res.status(500).json({ success: false, msg: err.message });
-  }
-};
-
-/**
- * Verify OTP and Login
- */
-export const verifyOTP = async (req, res) => {
-  try {
-    const { phone_number, otp } = req.body;
-
-    // Validate input
-    if (!phone_number || !otp) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Phone number and OTP are required" 
-      });
-    }
-
-    const normalizedPhone = phone_number.replace(/\D/g, "");
-
-    // Find OTP record
-    const otpRecord = await OtpVerification.findOne({
-      where: { phone_number: normalizedPhone, is_verified: false }
-    });
-
-    if (!otpRecord) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "OTP not found or already verified" 
-      });
-    }
-
-    // Check if OTP is expired
-    if (new Date() > otpRecord.expires_at) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "OTP has expired. Please request a new one." 
-      });
-    }
-
-    // Check attempts
-    if (otpRecord.attempts >= 5) {
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Too many failed attempts. Please request a new OTP." 
-      });
-    }
-
-    // Verify OTP
-    if (otpRecord.otp !== otp) {
-      await otpRecord.increment('attempts');
-      return res.status(400).json({ 
-        success: false, 
-        msg: "Invalid OTP" 
-      });
-    }
-
-    // Mark OTP as verified
-    await otpRecord.update({
-      is_verified: true,
-      verified_at: new Date()
-    });
-
-    // Find or create user
-    let user = await User.findOne({ where: { phone: normalizedPhone } });
-
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        msg: "User not found. Please contact admin to register." 
-      });
-    }
-
-    // Update user's phone verification status
-    await user.update({ is_phone_verified: true });
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, role: user.role, phone: user.phone, hostel_id: user.hostel_id },
-      process.env.JWT_SECRET || "secret",
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      success: true,
-      msg: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        block_number: user.block_number,
-        floor_number: user.floor_number,
         room_number: user.room_number,
         room_type: user.room_type,
-        role: user.role || "USER",
-        hostel_id: user.hostel_id
+        ac_status: user.ac_status,
+        rent_amount: user.rent_amount,
+        electricity_charges: user.electricity_charges,
+        total_charges: user.total_charges,
+        status: user.status
       }
     });
   } catch (err) {
-    console.error("Error verifying OTP:", err);
     res.status(500).json({ success: false, msg: err.message });
   }
 };
+
+
 
 /**
  * Logout

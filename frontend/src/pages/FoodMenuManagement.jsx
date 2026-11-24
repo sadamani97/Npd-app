@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useFoodMenu } from "../hooks/useFoodMenu";
 import Layout from "../components/Layout";
 import { getCurrentUser } from "../utils/authUtils";
@@ -8,11 +8,12 @@ import "../styles/FoodMenuManagement.css";
 
 export default function FoodMenuManagement() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getCurrentUser();
 
   const { menus, fetchMenus, addMenu, updateMenu, deleteMenu, loading, error: hookError } = useFoodMenu();
   const [error, setError] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(location.state?.defaultDate || new Date().toISOString().split("T")[0]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -31,10 +32,12 @@ export default function FoodMenuManagement() {
       return;
     }
     fetchMenus({ date: selectedDate });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     fetchMenus({ date: selectedDate });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {

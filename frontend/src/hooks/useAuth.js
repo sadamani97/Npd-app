@@ -4,8 +4,6 @@ import {
   logoutUser, 
   registerUser, 
   registerTestUserThunk, 
-  requestOtpThunk,
-  verifyOtpThunk,
   setAuthenticated 
 } from "../redux/authSlice.jsx";
 
@@ -28,36 +26,7 @@ export function useAuth() {
     }
   };
 
-  const requestOtp = async (phone_number, channel = "SMS") => {
-    try {
-      const resultAction = await dispatch(requestOtpThunk({ phone_number, channel }));
-      if (requestOtpThunk.fulfilled.match(resultAction)) {
-        return { 
-          success: true, 
-          message: resultAction.payload.msg, 
-          demoOtp: resultAction.payload.data?.demo_otp,
-          channel: resultAction.payload.channel
-        };
-      } else {
-        return { success: false, message: resultAction.payload || "Failed to send OTP" };
-      }
-    } catch (err) {
-      return { success: false, message: err.message };
-    }
-  };
 
-  const verifyOtp = async (phone_number, otp) => {
-    try {
-      const resultAction = await dispatch(verifyOtpThunk({ phone_number, otp }));
-      if (verifyOtpThunk.fulfilled.match(resultAction)) {
-        return { success: true, role: resultAction.payload.user.role };
-      } else {
-        return { success: false, message: resultAction.payload || "OTP verification failed" };
-      }
-    } catch (err) {
-      return { success: false, message: err.message };
-    }
-  };
 
   const signup = async (name, email, password) => {
     try {
@@ -106,8 +75,6 @@ export function useAuth() {
     loading,
     logout,
     login,
-    requestOtp,
-    verifyOtp,
     signup,
     registerTestUser,
     getRedirectPath,

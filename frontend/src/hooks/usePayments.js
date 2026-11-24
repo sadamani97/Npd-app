@@ -21,5 +21,35 @@ export function usePayments() {
     }
   };
 
-  return { payments, loading, error, fetchCurrentMonthPayments };
+  const fetchUserPayments = async (userId) => {
+    try {
+      setLoading(true);
+      setError("");
+      let id = userId;
+      if (!id) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          id = JSON.parse(storedUser).id;
+        }
+      }
+      if (!id) {
+        const storedAdmin = localStorage.getItem("admin");
+        if (storedAdmin) {
+          id = JSON.parse(storedAdmin).id;
+        }
+      }
+      if (!id) throw new Error("User ID is required");
+
+      const res = await API.get(`/payments/history/${id}`);
+      if (res.data.success) {
+        setPayments(res.data.data.payments || []);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to load payment history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { payments, loading, error, fetchCurrentMonthPayments, fetchUserPayments };
 }
