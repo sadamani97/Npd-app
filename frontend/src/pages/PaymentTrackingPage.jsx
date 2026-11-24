@@ -28,17 +28,15 @@ export default function PaymentTrackingPage() {
     } else {
       fetchCurrentMonthPayments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [residentId]);
 
   useEffect(() => {
-    const handler = (e) => {
+    const handler = () => {
       try {
-        const d = e.detail || {};
         if (residentId) {
-          // if individual resident page, refresh if their room/block matches
           fetchPaymentHistory();
         } else {
-          // on global payments view, refresh list
           fetchCurrentMonthPayments();
         }
       } catch (err) {
@@ -47,6 +45,7 @@ export default function PaymentTrackingPage() {
     };
     window.addEventListener("electricityUpdated", handler);
     return () => window.removeEventListener("electricityUpdated", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [residentId]);
 
   const fetchPaymentHistory = async () => {

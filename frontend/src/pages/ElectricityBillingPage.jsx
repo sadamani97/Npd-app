@@ -73,6 +73,7 @@ export default function ElectricityBillingPage() {
 
   useEffect(() => {
     fetchBlocks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function ElectricityBillingPage() {
       fetchMeters(selectedBlock);
       fetchRooms(selectedBlock);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlock]);
 
   const beginEditingMeter = (meter) => {

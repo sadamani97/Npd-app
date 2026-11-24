@@ -18,8 +18,7 @@ export default function Circulars() {
 
   useEffect(() => {
     fetchCirculars();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e) => {
     const { name, value } = e.target;

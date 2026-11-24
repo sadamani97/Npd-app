@@ -13,6 +13,7 @@ export default function RoomDetailsPage() {
 
   useEffect(() => {
     fetchRoomDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blockNumber, roomNumber]);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function RoomDetailsPage() {
     };
     window.addEventListener("electricityUpdated", handler);
     return () => window.removeEventListener("electricityUpdated", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blockNumber, roomNumber]);
 
   const fetchRoomDetails = async () => {

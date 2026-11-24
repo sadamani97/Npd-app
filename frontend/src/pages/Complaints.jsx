@@ -12,6 +12,7 @@ export default function Complaints() {
 
   useEffect(() => {
     fetchComplaints();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdateStatus = async (id, newStatus) => {

@@ -19,6 +19,7 @@ export default function UserComplaints() {
 
   useEffect(() => {
     fetchComplaints();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFormChange = (e) => {
